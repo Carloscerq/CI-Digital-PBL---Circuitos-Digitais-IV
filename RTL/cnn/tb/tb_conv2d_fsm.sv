@@ -50,16 +50,15 @@ module tb_conv2d_fsm();
                     end
                 end
                 
-                do begin
-                    @(negedge clk);
-                end while (!s_ready);
+                @(posedge clk);
+                while (!s_ready) @(posedge clk);
                 
                 s_valid = 1'b0;
                 s_last = 1'b0;
                 
                 // Allow occasional idle bubbles to test stability
                 if ($urandom_range(0, 2) == 0) begin
-                    repeat(2) @(negedge clk);
+                    repeat(2) @(posedge clk);
                 end
             end
         end
@@ -107,7 +106,7 @@ module tb_conv2d_fsm();
         m_ready = 1'b0;
         s_last = 1'b0;
         
-        #25 rst = 1'b0;
+        #22 rst = 1'b0;
         
         // Test 1: Positive Values (ReLU Passes)
         // Internal dummy weights are 0.00390625 (24'h00_0100)

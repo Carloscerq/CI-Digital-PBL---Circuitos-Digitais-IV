@@ -55,9 +55,8 @@ module tb_maxpool_2x2();
                         s_data[ch] = (r * 32 + c + 1);
                     end
                     
-                    do begin
-                        @(negedge clk);
-                    end while (!s_ready);
+                    @(posedge clk);
+                    while (!s_ready) @(posedge clk);
                 end
             end
             s_valid = 1'b0;
@@ -120,7 +119,7 @@ module tb_maxpool_2x2();
         s_valid = 1'b0;
         m_ready = 1'b0;
         
-        #25 rst = 1'b0;
+        #22 rst = 1'b0;
         
         fork
             feed_pool();

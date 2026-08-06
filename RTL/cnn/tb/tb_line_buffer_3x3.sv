@@ -53,9 +53,8 @@ module tb_line_buffer_3x3();
                     s_last = (r == 31 && c == 31);
                     
                     // Wait until the line buffer actually consumes the data
-                    do begin
-                        @(negedge clk);
-                    end while (!s_ready);
+                    @(posedge clk);
+                    while (!s_ready) @(posedge clk);
                 end
             end
             s_valid = 1'b0;
@@ -116,7 +115,7 @@ module tb_line_buffer_3x3();
         s_valid = 1'b0;
         m_ready = 1'b0;
         
-        #25 rst = 1'b0;
+        #22 rst = 1'b0;
         
         fork
             feed_image();

@@ -41,9 +41,8 @@ module tb_smma_cnn_top();
                     s_axis_data = 24'h01_0000; // 1.0
                     s_axis_last = (r == 31 && c == 31);
                     
-                    do begin
-                        @(negedge clk);
-                    end while (!s_axis_ready);
+                    @(posedge clk);
+                    while (!s_axis_ready) @(posedge clk);
                 end
             end
             s_axis_valid = 1'b0;
@@ -101,7 +100,7 @@ module tb_smma_cnn_top();
         s_axis_valid = 1'b0;
         m_axis_ready = 1'b0;
         
-        #25 rst = 1'b0;
+        #22 rst = 1'b0;
         
         fork
             feed_top();

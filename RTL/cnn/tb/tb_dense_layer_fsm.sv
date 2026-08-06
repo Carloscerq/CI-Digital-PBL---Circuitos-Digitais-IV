@@ -51,16 +51,15 @@ module tb_dense_layer_fsm();
                     s_data[ch] = 24'h01_0000; // 1.0 in Q8.16
                 end
                 
-                do begin
-                    @(negedge clk);
-                end while (!s_ready);
+                @(posedge clk);
+                while (!s_ready) @(posedge clk);
                 
                 s_valid = 1'b0;
                 s_last = 1'b0;
                 
                 // Inject realistic latency between pixel arrivals
                 if ($urandom_range(0, 3) == 0) begin
-                    @(negedge clk);
+                    @(posedge clk);
                 end
             end
         end
@@ -103,7 +102,7 @@ module tb_dense_layer_fsm();
         s_valid = 1'b0;
         m_ready = 1'b0;
         
-        #25 rst = 1'b0;
+        #22 rst = 1'b0;
         
         fork
             feed_dense();
