@@ -1,22 +1,31 @@
 `timescale 1ns / 1ps
 
-module dense_layer_fsm (
+module dense_layer_fsm #(
+    parameter int DATA_WIDTH = 24,
+    parameter int FRAC_BITS = 16,
+    parameter int IN_CHANNELS = 8,
+    parameter int OUT_CLASSES = 4,
+    parameter int IN_FEATURES = 2048 // Total flattened features
+)(
     input  logic               clk,
     input  logic               rst,
     
     // AXI4-Stream Slave Interface (from maxpool)
     input  logic               s_valid,
     output logic               s_ready,
-    input  logic signed [23:0] s_data [0:7],
+    input  logic signed [DATA_WIDTH-1:0] s_data [0:IN_CHANNELS-1],
     input  logic               s_last,
     
     // AXI4-Stream Master Interface (to ArgMax / Output)
     output logic               m_valid,
     input  logic               m_ready,
-    output logic signed [23:0] m_data [0:3],
+    output logic signed [DATA_WIDTH-1:0] m_data [0:OUT_CLASSES-1],
     output logic               m_last
 );
-
+	
+	 localparam TOTAL_WEIGHTS = OUT_CLASSES * IN_FEATURES;
+    localparam ADDR_WIDTH = $clog2(TOTAL_WEIGHTS);
+ 
     typedef enum logic [2:0] {
         ST_IDLE,
         ST_MAC,
@@ -26,14 +35,14 @@ module dense_layer_fsm (
     } state_t;
 
     state_t state, next_state;
-    logic [2:0] ch, next_ch;
+    logic [$clog2(IN_CHANNELS)-1:0] ch, next_ch;
     logic [1:0] wait_cnt, next_wait_cnt;
     
-    logic [11:0] rom_addr;
+    logic [$clog2(IN_FEATURES+1)-1:0] rom_addr;
     logic increment_addr;
     logic reset_addr;
 
-    logic signed [23:0] captured_data [0:7];
+    logic signed [DATA_WIDTH-1:0] captured_data [0:IN_CHANNELS-1];
 
     // State, channel, wait counter, and ROM address registers
     always_ff @(posedge clk) begin
@@ -58,45 +67,47 @@ module dense_layer_fsm (
     // Capture incoming pixel channels
     always_ff @(posedge clk) begin
         if (state == ST_IDLE && s_valid && s_ready) begin
-            for (int i = 0; i < 8; i++) begin
+            for (int i = 0; i < IN_CHANNELS; i++) begin
                 captured_data[i] <= s_data[i];
             end
         end
     end
 
-    // BRAM/ROM arrays for the 4 outputs (2048 weights each)
-    (* ramstyle = "M10K" *) logic signed [23:0] rom0_array [0:2047];
-    (* ramstyle = "M10K" *) logic signed [23:0] rom1_array [0:2047];
-    (* ramstyle = "M10K" *) logic signed [23:0] rom2_array [0:2047];
-    (* ramstyle = "M10K" *) logic signed [23:0] rom3_array [0:2047];
-
-    logic signed [23:0] biases [0:3];
+    // ============================================================================
+    // BRAM/ROM Arrays (Flattened 1D array for $readmemh compatibility)
+    // ============================================================================
+    logic signed [DATA_WIDTH-1:0] rom_array [0:(OUT_CLASSES * IN_FEATURES) - 1];
+    logic signed [DATA_WIDTH-1:0] biases [0:OUT_CLASSES-1];
     
-    logic signed [23:0] rom0_data;
-    logic signed [23:0] rom1_data;
-    logic signed [23:0] rom2_data;
-    logic signed [23:0] rom3_data;
+    logic signed [DATA_WIDTH-1:0] rom_data [0:OUT_CLASSES-1];
 
-    // RTL placeholder initialization for pre-trained weights
+    // ============================================================================
+    // ROM INITIALIZATION (Synthesizable M10K Inference)
+    // ============================================================================
+    // Quartus will read the .mem files during Analysis & Synthesis and 
+    // permanently burn these values into the FPGA block RAM.
+    
     initial begin
-        for (int i = 0; i < 2048; i++) begin
-            rom0_array[i] = 24'h00_0100;
-            rom1_array[i] = 24'h00_0100;
-            rom2_array[i] = 24'h00_0100;
-            rom3_array[i] = 24'h00_0100;
-        end
-        biases[0] = 24'd0;
-        biases[1] = 24'd0;
-        biases[2] = 24'd0;
-        biases[3] = 24'd0;
+        // Load the 8192 weights (4 classes * 2048 features)
+        $readmemh("dense_weights.mem", rom_array);
+        
+        // Load the 4 bias values
+        $readmemh("dense_biases.mem", biases);
+        
+        $display("[INIT] Dense Layer ROM and Biases successfully loaded from files.");
     end
 
-    // Synchronous read for BRAM inference
+    // ============================================================================
+    // Synchronous read for BRAM inference with flat addressing
+    // ============================================================================
     always_ff @(posedge clk) begin
-        rom0_data <= rom0_array[rom_addr];
-        rom1_data <= rom1_array[rom_addr];
-        rom2_data <= rom2_array[rom_addr];
-        rom3_data <= rom3_array[rom_addr];
+        for (int c = 0; c < OUT_CLASSES; c++) begin
+            // Prevent out-of-bounds ghost reads when rom_addr hits exactly IN_FEATURES
+            if (rom_addr < IN_FEATURES) begin
+                // Explicitly cast the mathematical result to the correct bus width (ADDR_WIDTH)
+                rom_data[c] <= rom_array[ ADDR_WIDTH'( (c * IN_FEATURES) + rom_addr ) ];
+            end
+        end
     end
 
     // FSM Combinational Logic
@@ -133,16 +144,16 @@ module dense_layer_fsm (
                 mac_en = 1'b1;
                 
                 // Clear MAC on the very first channel of the very first pixel
-                if (ch == 3'd0 && rom_addr == 12'd1) begin
+                if (ch == '0 && rom_addr == 1) begin
                     mac_clr = 1'b1;
                 end
                 
-                if (ch < 3'd7) begin
+                if (ch < IN_CHANNELS - 1) begin
                     increment_addr = 1'b1;
                     next_ch = ch + 1'b1;
                 end else begin
-                    // Finished the 8 channels for this pixel. Check if it's the last pixel of the frame.
-                    if (rom_addr == 12'd2048) begin
+                    // Finished the channels for this pixel. Check if it's the last pixel of the frame.
+                    if (rom_addr == IN_FEATURES) begin
                         next_state = ST_ADD_BIAS;
                     end else begin
                         next_state = ST_IDLE; // Go wait for the next pixel
@@ -178,27 +189,24 @@ module dense_layer_fsm (
         endcase
     end
 
-    // MAC Arrays (4 Parallel DSP Blocks)
-    logic signed [23:0] mac_a [0:3];
-    logic signed [23:0] mac_b [0:3];
-    logic signed [23:0] mac_out [0:3];
-
-    // Multiplexing between feature data and biases
-    assign mac_a[0] = (state == ST_ADD_BIAS) ? biases[0] : captured_data[ch];
-    assign mac_a[1] = (state == ST_ADD_BIAS) ? biases[1] : captured_data[ch];
-    assign mac_a[2] = (state == ST_ADD_BIAS) ? biases[2] : captured_data[ch];
-    assign mac_a[3] = (state == ST_ADD_BIAS) ? biases[3] : captured_data[ch];
-
-    // Multiply by 1.0 (Q8.16 = 24'h01_0000) when adding bias
-    assign mac_b[0] = (state == ST_ADD_BIAS) ? 24'h01_0000 : rom0_data;
-    assign mac_b[1] = (state == ST_ADD_BIAS) ? 24'h01_0000 : rom1_data;
-    assign mac_b[2] = (state == ST_ADD_BIAS) ? 24'h01_0000 : rom2_data;
-    assign mac_b[3] = (state == ST_ADD_BIAS) ? 24'h01_0000 : rom3_data;
+    // MAC Arrays (Parallel DSP Blocks)
+    logic signed [DATA_WIDTH-1:0] mac_a [0:OUT_CLASSES-1];
+    logic signed [DATA_WIDTH-1:0] mac_b [0:OUT_CLASSES-1];
+    logic signed [DATA_WIDTH-1:0] mac_out [0:OUT_CLASSES-1];
 
     genvar i;
     generate
-        for (i = 0; i < 4; i++) begin : gen_mac
-            mac_q8_16 mac_inst (
+        for (i = 0; i < OUT_CLASSES; i++) begin : gen_mac
+            // Multiplexing between feature data and biases
+            assign mac_a[i] = (state == ST_ADD_BIAS) ? biases[i] : captured_data[ch];
+            
+            // Multiply by 1.0 when adding bias
+            assign mac_b[i] = (state == ST_ADD_BIAS) ? (DATA_WIDTH'(1) << FRAC_BITS) : rom_data[i];
+
+            mac_q8_16 #(
+                .DATA_WIDTH(DATA_WIDTH),
+                .FRAC_BITS(FRAC_BITS)
+            ) mac_inst (
                 .clk(clk),
                 .rst(rst),
                 .en(mac_en),

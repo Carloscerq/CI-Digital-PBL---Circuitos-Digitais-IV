@@ -14,8 +14,12 @@ module tb_maxpool_2x2();
     logic signed [23:0] m_data [0:7];
     logic m_last;
 
-    // Instantiate MaxPool
-    maxpool_2x2 dut (
+    // Instantiate MaxPool 2x2
+    maxpool_2x2 #(
+        .DATA_WIDTH(24),
+        .IMG_WIDTH(32),
+        .CHANNELS(8)
+    ) dut (
         .clk(clk),
         .rst(rst),
         .s_valid(s_valid),

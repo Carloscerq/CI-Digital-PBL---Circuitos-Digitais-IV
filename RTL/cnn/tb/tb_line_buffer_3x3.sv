@@ -14,7 +14,12 @@ module tb_line_buffer_3x3();
     logic signed [23:0] m_window [0:2][0:2];
     logic m_last;
 
-    line_buffer_3x3 dut (
+    // Instantiate Line Buffer
+    line_buffer_3x3 #(
+        .DATA_WIDTH(24),
+        .IMG_WIDTH(32),
+        .IMG_HEIGHT(32)
+    ) dut (
         .clk(clk),
         .rst(rst),
         .s_valid(s_valid),

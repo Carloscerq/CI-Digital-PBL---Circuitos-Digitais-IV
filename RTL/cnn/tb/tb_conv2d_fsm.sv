@@ -15,7 +15,11 @@ module tb_conv2d_fsm();
     logic m_last;
 
     // Instantiate Conv2D FSM
-    conv2d_fsm dut (
+    conv2d_fsm #(
+        .DATA_WIDTH(24),
+        .FRAC_BITS(16),
+        .CHANNELS(8)
+    ) dut (
         .clk(clk),
         .rst(rst),
         .s_valid(s_valid),

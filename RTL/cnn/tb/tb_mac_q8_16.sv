@@ -11,7 +11,10 @@ module tb_mac_q8_16();
     logic signed [23:0] out;
 
     // Instantiate MAC
-    mac_q8_16 dut (
+    mac_q8_16 #(
+        .DATA_WIDTH(24),
+        .FRAC_BITS(16)
+    ) dut (
         .clk(clk),
         .rst(rst),
         .en(en),

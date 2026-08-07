@@ -1,39 +1,44 @@
 `timescale 1ns / 1ps
 
-module maxpool_2x2 (
+module maxpool_2x2 #(
+    parameter int DATA_WIDTH = 24,
+    parameter int IMG_WIDTH = 32,
+    parameter int CHANNELS = 8
+)(
     input  logic               clk,
     input  logic               rst,
     
     // AXI4-Stream Slave (from Conv2D)
     input  logic               s_valid,
     output logic               s_ready,
-    input  logic signed [23:0] s_data [0:7],
+    input  logic signed [DATA_WIDTH-1:0] s_data [0:CHANNELS-1],
     input  logic               s_last,
     
     // AXI4-Stream Master (to Flatten/Dense)
     output logic               m_valid,
     input  logic               m_ready,
-    output logic signed [23:0] m_data [0:7],
+    output logic signed [DATA_WIDTH-1:0] m_data [0:CHANNELS-1],
     output logic               m_last
 );
 
+    localparam int DELAY_ROW = IMG_WIDTH;
+    localparam int DELAY_ROW_PLUS_ONE = IMG_WIDTH + 1;
+
     // Shift registers for delaying lines. 
-    // Since width is 32, a row takes 32 cycles. 
-    // To get a 2x2 window, we need delays of 1, 32, and 33 cycles.
-    logic signed [23:0] sr [0:7][1:33];
+    logic signed [DATA_WIDTH-1:0] sr [0:CHANNELS-1][1:DELAY_ROW_PLUS_ONE];
     
     logic m_valid_reg;
     assign s_ready = m_ready || !m_valid_reg;
     
-    logic [4:0] col;
-    logic [4:0] row;
+    logic [$clog2(IMG_WIDTH)-1:0] col;
+    logic [$clog2(IMG_WIDTH)-1:0] row;
     
     always_ff @(posedge clk) begin
         if (rst) begin
             col <= '0;
             row <= '0;
         end else if (s_valid && s_ready) begin
-            if (col == 5'd31) begin
+            if (col == IMG_WIDTH - 1) begin
                 col <= '0;
                 row <= row + 1'b1;
             end else begin
@@ -45,9 +50,9 @@ module maxpool_2x2 (
     // Shift register advancement
     always_ff @(posedge clk) begin
         if (s_valid && s_ready) begin
-            for (int c = 0; c < 8; c++) begin
+            for (int c = 0; c < CHANNELS; c++) begin
                 sr[c][1] <= s_data[c];
-                for (int d = 2; d <= 33; d++) begin
+                for (int d = 2; d <= DELAY_ROW_PLUS_ONE; d++) begin
                     sr[c][d] <= sr[c][d-1];
                 end
             end
@@ -60,7 +65,7 @@ module maxpool_2x2 (
     assign is_output_cycle = s_valid && (col[0] == 1'b1) && (row[0] == 1'b1);
 
     // Registered output to break combinatorial critical paths
-    logic signed [23:0] m_data_reg [0:7];
+    logic signed [DATA_WIDTH-1:0] m_data_reg [0:CHANNELS-1];
     logic               m_last_reg;
 
     always_ff @(posedge clk) begin
@@ -72,23 +77,19 @@ module maxpool_2x2 (
             m_last_reg  <= s_last && is_output_cycle;
             
             if (is_output_cycle) begin
-                for (int c = 0; c < 8; c++) begin
+                for (int c = 0; c < CHANNELS; c++) begin
                     // Extract the 4 pixels of the 2x2 window
-                    logic signed [23:0] p_br;
-                    logic signed [23:0] p_bl;
-                    logic signed [23:0] p_tr;
-                    logic signed [23:0] p_tl;
-                    logic signed [23:0] max_b;
-                    logic signed [23:0] max_t;
+                    logic signed [DATA_WIDTH-1:0] p_br;
+                    logic signed [DATA_WIDTH-1:0] p_bl;
+                    logic signed [DATA_WIDTH-1:0] p_tr;
+                    logic signed [DATA_WIDTH-1:0] p_tl;
+                    logic signed [DATA_WIDTH-1:0] max_b;
+                    logic signed [DATA_WIDTH-1:0] max_t;
                     
-                    // Current pixel is bottom-right (row 1, col 1)
                     p_br = s_data[c];
-                    // Delayed by 1 is bottom-left (row 1, col 0)
                     p_bl = sr[c][1];
-                    // Delayed by 32 is top-right (row 0, col 1)
-                    p_tr = sr[c][32];
-                    // Delayed by 33 is top-left (row 0, col 0)
-                    p_tl = sr[c][33];
+                    p_tr = sr[c][DELAY_ROW];
+                    p_tl = sr[c][DELAY_ROW_PLUS_ONE];
                     
                     // Cascaded comparators for the maximum
                     max_b = (p_br > p_bl) ? p_br : p_bl;

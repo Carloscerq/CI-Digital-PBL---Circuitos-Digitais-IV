@@ -14,8 +14,14 @@ module tb_dense_layer_fsm();
     logic signed [23:0] m_data [0:3];
     logic m_last;
 
-    // Instantiate Dense FSM
-    dense_layer_fsm dut (
+    // Instantiate Dense Layer
+    dense_layer_fsm #(
+        .DATA_WIDTH(24),
+        .FRAC_BITS(16),
+        .IN_CHANNELS(8),
+        .OUT_CLASSES(4),
+        .IN_FEATURES(2048)
+    ) dut (
         .clk(clk),
         .rst(rst),
         .s_valid(s_valid),

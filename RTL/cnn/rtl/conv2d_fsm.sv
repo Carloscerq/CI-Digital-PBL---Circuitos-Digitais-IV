@@ -1,19 +1,23 @@
 `timescale 1ns / 1ps
 
-module conv2d_fsm (
+module conv2d_fsm #(
+    parameter int DATA_WIDTH = 24,
+    parameter int FRAC_BITS = 16,
+    parameter int CHANNELS = 8
+)(
     input  logic               clk,
     input  logic               rst,
     
     // AXI4-Stream Slave Interface (from line_buffer)
     input  logic               s_valid,
     output logic               s_ready,
-    input  logic signed [23:0] s_window [0:2][0:2],
+    input  logic signed [DATA_WIDTH-1:0] s_window [0:2][0:2],
     input  logic               s_last,
     
     // AXI4-Stream Master Interface (to maxpool)
     output logic               m_valid,
     input  logic               m_ready,
-    output logic signed [23:0] m_data [0:7],
+    output logic signed [DATA_WIDTH-1:0] m_data [0:CHANNELS-1],
     output logic               m_last
 );
 
@@ -28,7 +32,7 @@ module conv2d_fsm (
     logic [3:0] cnt, next_cnt;
     
     // Captured 3x3 window flattened
-    logic signed [23:0] captured_window [0:8];
+    logic signed [DATA_WIDTH-1:0] captured_window [0:8];
     logic               captured_last;
     
     // We only capture when accepting a new transaction from the line buffer
@@ -60,18 +64,21 @@ module conv2d_fsm (
         end
     end
 
-    // Weights and Biases (LUT-ROMs for TinyML)
-    logic signed [23:0] weights [0:7][0:8];
-    logic signed [23:0] biases [0:7];
+    // ============================================================================
+    // Weights and Biases (Flattened for $readmemh)
+    // ============================================================================
+    // 8 Channels * 9 pixels = 72 total kernel weights
+    logic signed [DATA_WIDTH-1:0] weights_flat [0:(CHANNELS * 9)-1];
+    logic signed [DATA_WIDTH-1:0] biases [0:CHANNELS-1];
 
-    always_comb begin
-        // Placeholder for pre-trained weights
-        for (int f = 0; f < 8; f++) begin
-            biases[f] = 24'd0;
-            for (int w = 0; w < 9; w++) begin
-                weights[f][w] = 24'h00_0100; // Example small weight
-            end
-        end
+    initial begin
+        // Load the 72 kernel weights
+        $readmemh("mem/cnn/conv2d_weights.mem", weights_flat);
+        
+        // Load the 8 bias values
+        $readmemh("mem/cnn/conv2d_biases.mem", biases);
+        
+        $display("[INIT] Conv2D ROM and Biases successfully loaded from files.");
     end
 
     // FSM Combinational Logic
@@ -144,20 +151,29 @@ module conv2d_fsm (
     end
 
     // MAC Array Instantiation
-    logic signed [23:0] mac_a [0:7];
-    logic signed [23:0] mac_b [0:7];
-    logic signed [23:0] mac_out [0:7];
+    logic signed [DATA_WIDTH-1:0] mac_a [0:CHANNELS-1];
+    logic signed [DATA_WIDTH-1:0] mac_b [0:CHANNELS-1];
+    logic signed [DATA_WIDTH-1:0] mac_out [0:CHANNELS-1];
 
     genvar i;
     generate
-        for (i = 0; i < 8; i++) begin : gen_mac
+        for (i = 0; i < CHANNELS; i++) begin : gen_mac
             // Multiplexer to feed either the window pixel or the bias
             assign mac_a[i] = (cnt < 9) ? captured_window[cnt] : biases[i];
             
-            // To add bias, multiply it by 1.0 (Q8.16 = 24'h01_0000)
-            assign mac_b[i] = (cnt < 9) ? weights[i][cnt] : 24'h01_0000;
+            // Safe Flat Addressing for Kernel Weights
+            logic [6:0] weight_idx;
 
-            mac_q8_16 mac_inst (
+            // Calculate 1D index: (channel * 9) + valid_pixel_counter
+            assign weight_idx = (i * 9) + ((cnt < 9) ? cnt : 4'd0);
+            
+            // To add bias, multiply it by 1.0 (Parameterized by FRAC_BITS)
+            assign mac_b[i] = (cnt < 9) ? weights_flat[weight_idx] : (DATA_WIDTH'(1) << FRAC_BITS);
+
+            mac_q8_16 #(
+                .DATA_WIDTH(DATA_WIDTH),
+                .FRAC_BITS(FRAC_BITS)
+            ) mac_inst (
                 .clk(clk),
                 .rst(rst),
                 .en(mac_en),
@@ -168,8 +184,8 @@ module conv2d_fsm (
             );
             
             // Combinational ReLU at the MAC output
-            logic signed [23:0] relu_out;
-            assign relu_out = (mac_out[i][23] == 1'b1) ? 24'd0 : mac_out[i];
+            logic signed [DATA_WIDTH-1:0] relu_out;
+            assign relu_out = (mac_out[i][DATA_WIDTH-1] == 1'b1) ? '0 : mac_out[i];
             
             assign m_data[i] = relu_out;
         end

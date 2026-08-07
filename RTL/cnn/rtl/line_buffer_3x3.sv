@@ -1,31 +1,33 @@
 `timescale 1ns / 1ps
 
-module line_buffer_3x3 (
+module line_buffer_3x3 #(
+    parameter int DATA_WIDTH = 24,
+    parameter int IMG_WIDTH  = 32,
+    parameter int IMG_HEIGHT = 32
+)(
     input  logic               clk,
     input  logic               rst,
     
     // AXI4-Stream slave interface (Input Pixels)
     input  logic               s_valid,
     output logic               s_ready,
-    input  logic signed [23:0] s_data,
+    input  logic signed [DATA_WIDTH-1:0] s_data,
     input  logic               s_last,
     
     // AXI4-Stream master interface (Output 3x3 Window)
     output logic               m_valid,
     input  logic               m_ready,
-    output logic signed [23:0] m_window [0:2][0:2],
+    output logic signed [DATA_WIDTH-1:0] m_window [0:2][0:2],
     output logic               m_last
 );
 
     // Image dimensions and padded dimensions
-    localparam int IMG_WIDTH  = 32;
-    localparam int IMG_HEIGHT = 32;
-    localparam int PAD_WIDTH  = IMG_WIDTH + 2;  // 34
-    localparam int PAD_HEIGHT = IMG_HEIGHT + 2; // 34
+    localparam int PAD_WIDTH  = IMG_WIDTH + 2;  
+    localparam int PAD_HEIGHT = IMG_HEIGHT + 2; 
 
-    // Counters to track position in the padded 34x34 grid
-    logic [5:0] px;
-    logic [5:0] py;
+    // Counters to track position in the padded grid
+    logic [$clog2(PAD_WIDTH)-1:0] px;
+    logic [$clog2(PAD_HEIGHT)-1:0] py;
 
     // Check if current coordinate is inside the active image area (1 to 32)
     logic is_active_pixel;
@@ -60,12 +62,12 @@ module line_buffer_3x3 (
     end
 
     // Select input data or 0 for padding
-    logic signed [23:0] current_pixel;
-    assign current_pixel = is_active_pixel ? s_data : 24'd0;
+    logic signed [DATA_WIDTH-1:0] current_pixel;
+    assign current_pixel = is_active_pixel ? s_data : '0;
 
-    // Shift registers for line buffering (length 34 maps to SRLs in FPGA)
-    logic signed [23:0] shift_reg1 [0:PAD_WIDTH-1];
-    logic signed [23:0] shift_reg2 [0:PAD_WIDTH-1];
+    // Shift registers for line buffering (length PAD_WIDTH maps to SRLs in FPGA)
+    logic signed [DATA_WIDTH-1:0] shift_reg1 [0:PAD_WIDTH-1];
+    logic signed [DATA_WIDTH-1:0] shift_reg2 [0:PAD_WIDTH-1];
 
     always_ff @(posedge clk) begin
         // No reset for shift registers to ensure SRL inference

@@ -1,22 +1,25 @@
 `timescale 1ns / 1ps
 
-module mac_q8_16 (
+module mac_q8_16 #(
+    parameter int DATA_WIDTH = 24,
+    parameter int FRAC_BITS = 16
+)(
     input  logic               clk,
     input  logic               rst,
     input  logic               en,
     input  logic               clr, // Clears the accumulator
-    input  logic signed [23:0] a,
-    input  logic signed [23:0] b,
-    output logic signed [23:0] out
+    input  logic signed [DATA_WIDTH-1:0] a,
+    input  logic signed [DATA_WIDTH-1:0] b,
+    output logic signed [DATA_WIDTH-1:0] out
 );
 
     // Pipeline registers to ensure proper DSP48 inference (3 stages)
-    logic signed [23:0] a_reg;
-    logic signed [23:0] b_reg;
+    logic signed [DATA_WIDTH-1:0] a_reg;
+    logic signed [DATA_WIDTH-1:0] b_reg;
     logic               clr_reg1;
     logic               clr_reg2;
-    (* multstyle = "dsp" *) logic signed [47:0] mult_reg;
-    logic signed [47:0] acc_reg;
+    (* multstyle = "dsp" *) logic signed [(DATA_WIDTH*2)-1:0] mult_reg;
+    logic signed [(DATA_WIDTH*2)-1:0] acc_reg;
 
     always_ff @(posedge clk) begin
         if (rst) begin
@@ -45,22 +48,22 @@ module mac_q8_16 (
         end
     end
 
-    // Combinational logic for safely extracting the Q8.16 result
-    // from the Q16.32 accumulator, applying saturation.
-    logic signed [23:0] truncated_out;
+    // Combinational logic for safely extracting the parameterized fixed-point result
+    // from the extended accumulator, applying saturation.
+    logic signed [DATA_WIDTH-1:0] truncated_out;
     logic overflow;
     logic underflow;
 
     always_comb begin
-        truncated_out = acc_reg[39:16];
+        truncated_out = acc_reg[FRAC_BITS + DATA_WIDTH - 1 : FRAC_BITS];
         
         // Overflow detection: 
-        // If the number is positive (acc_reg[47] == 0), all upper bits [46:39] must be 0.
-        // If the number is negative (acc_reg[47] == 1), all upper bits [46:39] must be 1.
-        if (!acc_reg[47] && (|acc_reg[46:39])) begin
+        // If the number is positive (acc_reg[(DATA_WIDTH*2)-1] == 0), all upper bits must be 0.
+        // If the number is negative (acc_reg[(DATA_WIDTH*2)-1] == 1), all upper bits must be 1.
+        if (!acc_reg[(DATA_WIDTH*2)-1] && (|acc_reg[(DATA_WIDTH*2)-2 : FRAC_BITS + DATA_WIDTH - 1])) begin
             overflow  = 1'b1;
             underflow = 1'b0;
-        end else if (acc_reg[47] && (!(&acc_reg[46:39]))) begin
+        end else if (acc_reg[(DATA_WIDTH*2)-1] && (!(&acc_reg[(DATA_WIDTH*2)-2 : FRAC_BITS + DATA_WIDTH - 1]))) begin
             overflow  = 1'b0;
             underflow = 1'b1;
         end else begin
@@ -70,9 +73,9 @@ module mac_q8_16 (
 
         // Apply saturation logic
         if (overflow) begin
-            out = 24'h7F_FFFF; // Maximum positive Q8.16
+            out = {1'b0, {(DATA_WIDTH-1){1'b1}}}; // Maximum positive
         end else if (underflow) begin
-            out = 24'h80_0000; // Maximum negative Q8.16
+            out = {1'b1, {(DATA_WIDTH-1){1'b0}}}; // Maximum negative
         end else begin
             out = truncated_out;
         end

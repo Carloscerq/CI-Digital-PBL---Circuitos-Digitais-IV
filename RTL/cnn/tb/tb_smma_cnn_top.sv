@@ -17,8 +17,16 @@ module tb_smma_cnn_top();
     logic signed [23:0] m_axis_data_bearing;
     logic m_axis_last;
 
-    // Instantiate Top Module
-    smma_cnn_top dut (.*);
+    // Instantiate the CNN Top Module
+    smma_cnn_top #(
+        .DATA_WIDTH(24),
+        .FRAC_BITS(16),
+        .IMG_WIDTH(32),
+        .IMG_HEIGHT(32),
+        .CHANNELS(8),
+        .OUT_CLASSES(4),
+        .IN_FEATURES(2048)
+    ) dut (.*);
 
     initial begin
         clk = 0;
