@@ -1,160 +1,136 @@
-`timescale 1ns / 1ps
+`timescale 1ns/1ps
 
-module smma_cnn_top #(
-    parameter int DATA_WIDTH = 24,
-    parameter int FRAC_BITS = 16,
-    parameter int IMG_WIDTH = 32,
-    parameter int IMG_HEIGHT = 32,
-    parameter int CHANNELS = 8,
-    parameter int OUT_CLASSES = 4,
-    parameter int IN_FEATURES = 2048
-)(
-    input  logic               clk,
-    input  logic               rst,
+module tb_smma_cnn_top();
+
+    logic clk;
+    logic rst;
+    logic s_axis_valid;
+    logic s_axis_ready;
+    logic signed [23:0] s_axis_data;
+    logic s_axis_last;
     
-    // AXI4-Stream Slave Interface (Input Spectrogram)
-    input  logic               s_axis_valid,
-    output logic               s_axis_ready,
-    input  logic signed [DATA_WIDTH-1:0] s_axis_data,
-    input  logic               s_axis_last,
-    
-    // AXI4-Stream Master Interface (Output Classification Logits)
-    output logic               m_axis_valid,
-    input  logic               m_axis_ready,
-    output logic signed [DATA_WIDTH-1:0] m_axis_data_normal,
-    output logic signed [DATA_WIDTH-1:0] m_axis_data_unbalance,
-    output logic signed [DATA_WIDTH-1:0] m_axis_data_misalign,
-    output logic signed [DATA_WIDTH-1:0] m_axis_data_bearing,
-    output logic               m_axis_last
-);
+    logic m_axis_valid;
+    logic m_axis_ready;
+    logic signed [23:0] m_axis_data_normal;
+    logic signed [23:0] m_axis_data_unbalance;
+    logic signed [23:0] m_axis_data_misalign;
+    logic signed [23:0] m_axis_data_bearing;
+    logic m_axis_last;
 
-    // =========================================================================
-    // Interconnect Signals
-    // =========================================================================
+    // ============================================================================
+    // Testbench Memory for Golden Model Input
+    // ============================================================================
+    // The spectrogram is 32x32 = 1024 pixels
+    logic [23:0] tb_image_data [0:1023];
 
-    // Line Buffer to Conv2D
-    logic               lb_valid;
-    logic               lb_ready;
-    logic signed [DATA_WIDTH-1:0] lb_window [0:2][0:2];
-    logic               lb_last;
+    initial begin
+        // Load the exported Python spectrogram before the simulation starts
+        $readmemh("cnn_tb_input.mem", tb_image_data);
+        $display("[INIT] Golden Model Spectrogram loaded into TB memory.");
+    end
 
-    // Conv2D to MaxPool
-    logic               conv_valid;
-    logic               conv_ready;
-    logic signed [DATA_WIDTH-1:0] conv_data [0:CHANNELS-1];
-    logic               conv_last;
+    // Instantiate the CNN Top Module
+    smma_cnn_top #(
+        .DATA_WIDTH(24),
+        .FRAC_BITS(16),
+        .IMG_WIDTH(32),
+        .IMG_HEIGHT(32),
+        .CHANNELS(8),
+        .OUT_CLASSES(4),
+        .IN_FEATURES(2048)
+    ) dut (.*);
 
-    // MaxPool to Dense
-    logic               pool_valid;
-    logic               pool_ready;
-    logic signed [DATA_WIDTH-1:0] pool_data [0:CHANNELS-1];
-    logic               pool_last;
+    initial begin
+        clk = 0;
+        forever #5 clk = ~clk;
+    end
 
-    // Dense Output
-    logic               dense_valid;
-    logic               dense_ready;
-    logic signed [DATA_WIDTH-1:0] dense_data [0:OUT_CLASSES-1];
-    logic               dense_last;
+    int err_count = 0;
 
-    // =========================================================================
-    // Module Instantiations
-    // =========================================================================
+    // Driver task
+    task automatic feed_top();
+        begin
+            s_axis_valid = 1'b0;
+            s_axis_last  = 1'b0;
+            s_axis_data  = '0;
+            @(negedge clk);
+            
+            // Stream the image pixel by pixel from the loaded memory
+            for (int i = 0; i < 1024; i++) begin
+                s_axis_valid = 1'b1;
+                s_axis_data  = tb_image_data[i];
+                
+                // Assert LAST signal on the very last pixel
+                s_axis_last  = (i == 1023);
+                
+                @(posedge clk);
+                // Wait if the CNN asserts backpressure (stalls)
+                while (!s_axis_ready) @(posedge clk);
+            end
+            
+            // End of transmission
+            s_axis_valid = 1'b0;
+            s_axis_last  = 1'b0;
+        end
+    endtask
 
-    // 1. Line Buffer (3x3 Window Generation with Padding)
-    // Absorbs the incoming 1D pixel stream and outputs a sliding 3x3 window in parallel.
-    // Handles zero-padding (Padding=1) mathematically without downstream overhead.
-    line_buffer_3x3 #(
-        .DATA_WIDTH(DATA_WIDTH),
-        .IMG_WIDTH(IMG_WIDTH),
-        .IMG_HEIGHT(IMG_HEIGHT)
-    ) inst_line_buffer (
-        .clk     (clk),
-        .rst     (rst),
-        .s_valid (s_axis_valid),
-        .s_ready (s_axis_ready),
-        .s_data  (s_axis_data),
-        .s_last  (s_axis_last),
-        .m_valid (lb_valid),
-        .m_ready (lb_ready),
-        .m_window(lb_window),
-        .m_last  (lb_last)
-    );
+    // Monitor task
+    task automatic monitor_top();
+        begin
+            // ============================================================================
+            // GOLDEN MODEL EXPECTED OUTPUTS
+            // ============================================================================
+            // IMPORTANT: Replace these hex values with the exact 'raw_q8_logits' 
+            // printed by your Python script in the terminal!
+            logic signed [23:0] exp_normal    = 24'h00_0000; // <-- INSERT HERE
+            logic signed [23:0] exp_unbalance = 24'h00_0000; // <-- INSERT HERE
+            logic signed [23:0] exp_misalign  = 24'h00_0000; // <-- INSERT HERE
+            logic signed [23:0] exp_bearing   = 24'h00_0000; // <-- INSERT HERE
 
-    // 2. Conv2D FSM (Parallel Filters, ReLU Activation)
-    // Instantiates DSP-based MACs. Time-multiplexes the 9 window pixels
-    // and bias over 10 clock cycles. Applies combinatorial ReLU at the output.
-    conv2d_fsm #(
-        .DATA_WIDTH(DATA_WIDTH),
-        .FRAC_BITS(FRAC_BITS),
-        .CHANNELS(CHANNELS)
-    ) inst_conv2d (
-        .clk     (clk),
-        .rst     (rst),
-        .s_valid (lb_valid),
-        .s_ready (lb_ready),
-        .s_window(lb_window),
-        .s_last  (lb_last),
-        .m_valid (conv_valid),
-        .m_ready (conv_ready),
-        .m_data  (conv_data),
-        .m_last  (conv_last)
-    );
+            forever begin
+                @(negedge clk);
+                m_axis_ready = ($urandom_range(0, 2) != 0); // ~66% ready to test heavy pipeline stalls
+                
+                if (m_axis_valid && m_axis_ready) begin
+                    
+                    if (m_axis_data_normal !== exp_normal) begin
+                        $error("[FAIL] Normal Mismatch: Exp %h, Got %h", exp_normal, m_axis_data_normal); err_count++;
+                    end
+                    if (m_axis_data_unbalance !== exp_unbalance) begin
+                        $error("[FAIL] Unbalance Mismatch: Exp %h, Got %h", exp_unbalance, m_axis_data_unbalance); err_count++;
+                    end
+                    if (m_axis_data_misalign !== exp_misalign) begin
+                        $error("[FAIL] Misalign Mismatch: Exp %h, Got %h", exp_misalign, m_axis_data_misalign); err_count++;
+                    end
+                    if (m_axis_data_bearing !== exp_bearing) begin
+                        $error("[FAIL] Bearing Mismatch: Exp %h, Got %h", exp_bearing, m_axis_data_bearing); err_count++;
+                    end
+                    
+                    if (!m_axis_last) begin
+                        $error("[FAIL] m_axis_last not asserted at end of frame!"); err_count++;
+                    end
+                    
+                    if (err_count == 0) $display("[PASS] FULL DATAPATH VERIFIED! Outputs match Golden Model precisely.");
+                    break;
+                end
+            end
+        end
+    endtask
 
-    // 3. MaxPool 2x2 (Stride 2 Downsampling)
-    // Utilizes optimized SRL delay lines to extract non-overlapping 2x2 grids 
-    // from the channel stream and calculates the cascaded maximum.
-    maxpool_2x2 #(
-        .DATA_WIDTH(DATA_WIDTH),
-        .IMG_WIDTH(IMG_WIDTH),
-        .CHANNELS(CHANNELS)
-    ) inst_maxpool (
-        .clk     (clk),
-        .rst     (rst),
-        .s_valid (conv_valid),
-        .s_ready (conv_ready),
-        .s_data  (conv_data),
-        .s_last  (conv_last),
-        .m_valid (pool_valid),
-        .m_ready (pool_ready),
-        .m_data  (pool_data),
-        .m_last  (pool_last)
-    );
-
-    // 4. Dense Layer FSM (On-the-fly Matrix Multiplication)
-    // Uses parallel DSPs and M10K BRAM ROMs to compute the final logits
-    // concurrently as elements arrive, avoiding heavy full-frame BRAM buffers.
-    dense_layer_fsm #(
-        .DATA_WIDTH(DATA_WIDTH),
-        .FRAC_BITS(FRAC_BITS),
-        .IN_CHANNELS(CHANNELS),
-        .OUT_CLASSES(OUT_CLASSES),
-        .IN_FEATURES(IN_FEATURES)
-    ) inst_dense (
-        .clk     (clk),
-        .rst     (rst),
-        .s_valid (pool_valid),
-        .s_ready (pool_ready),
-        .s_data  (pool_data),
-        .s_last  (pool_last),
-        .m_valid (dense_valid),
-        .m_ready (dense_ready),
-        .m_data  (dense_data),
-        .m_last  (dense_last)
-    );
-
-    // =========================================================================
-    // Output Assignments
-    // =========================================================================
-    
-    // Connect the dense layer output directly to the AXI4-Stream master ports
-    assign m_axis_valid          = dense_valid;
-    assign dense_ready           = m_axis_ready;
-    assign m_axis_last           = dense_last;
-
-    // Map the 4 internal array elements to the explicitly named flat top-level ports
-    assign m_axis_data_normal    = dense_data[0];
-    assign m_axis_data_unbalance = dense_data[1];
-    assign m_axis_data_misalign  = dense_data[2];
-    assign m_axis_data_bearing   = dense_data[3];
+    initial begin
+        rst = 1'b1;
+        s_axis_valid = 1'b0;
+        m_axis_ready = 1'b0;
+        
+        #22 rst = 1'b0;
+        
+        fork
+            feed_top();
+            monitor_top();
+        join
+        
+        if (err_count == 0) $display("=== ALL TOP LEVEL CNN TESTS PASSED ===");
+        $finish;
+    end
 
 endmodule

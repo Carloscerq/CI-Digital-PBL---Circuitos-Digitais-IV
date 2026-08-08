@@ -45,25 +45,32 @@ module tb_line_buffer_3x3();
         begin
             int r, c;
             s_valid = 1'b0;
-            s_last = 1'b0;
-            s_data = 24'd0;
+            s_last  = 1'b0;
+            s_data  = '0;
             
-            @(negedge clk);
-            
-            // Feed a 32x32 image with sequential integer values
+            // Loop over the image array
             for (r = 0; r < 32; r++) begin
                 for (c = 0; c < 32; c++) begin
+                    // 1. Wait for the FALLING edge to inject data using '='
+                    @(negedge clk);
                     s_valid = 1'b1;
-                    s_data = (r * 32 + c + 1);
-                    s_last = (r == 31 && c == 31);
+                    s_data  = (r * 32 + c + 1);
+                    s_last  = (r == 31 && c == 31);
                     
-                    // Wait until the line buffer actually consumes the data
+                    // 2. Wait for the RISING edge to check if DUT consumed it
                     @(posedge clk);
-                    while (!s_ready) @(posedge clk);
+                    while (!s_ready) begin
+                        // If stalled, we must wait full clock cycles 
+                        // and check again on the next rising edge
+                        @(posedge clk);
+                    end
                 end
             end
+            
+            // Clean up signals safely on the next falling edge
+            @(negedge clk);
             s_valid = 1'b0;
-            s_last = 1'b0;
+            s_last  = 1'b0;
         end
     endtask
 

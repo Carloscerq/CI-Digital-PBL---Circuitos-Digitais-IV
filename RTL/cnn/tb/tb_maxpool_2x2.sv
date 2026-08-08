@@ -44,27 +44,38 @@ module tb_maxpool_2x2();
         begin
             int r, c;
             s_valid = 1'b0;
-            s_last = 1'b0;
-            
-            @(negedge clk);
+            s_last  = 1'b0;
+            for (int ch = 0; ch < 8; ch++) s_data[ch] = '0;
             
             // Feed a 32x32 stream representing the feature map
             for (r = 0; r < 32; r++) begin
                 for (c = 0; c < 32; c++) begin
+                    
+                    // 1. Wait for the FALLING edge to inject data using '='
+                    // This gives the signals half a clock cycle to stabilize before the DUT reads them.
+                    @(negedge clk);
                     s_valid = 1'b1;
-                    s_last = (r == 31 && c == 31);
+                    s_last  = (r == 31 && c == 31);
                     
                     // Assign identical deterministic values to all 8 channels
                     for (int ch = 0; ch < 8; ch++) begin
                         s_data[ch] = (r * 32 + c + 1);
                     end
                     
+                    // 2. Wait for the RISING edge to check if DUT consumed the data
                     @(posedge clk);
-                    while (!s_ready) @(posedge clk);
+                    while (!s_ready) begin
+                        // If the DUT applies backpressure, wait for the next rising edge
+                        // The AXI signals remain perfectly stable during this stall.
+                        @(posedge clk);
+                    end
                 end
             end
+            
+            // Clean up signals safely on the next falling edge
+            @(negedge clk);
             s_valid = 1'b0;
-            s_last = 1'b0;
+            s_last  = 1'b0;
         end
     endtask
 
