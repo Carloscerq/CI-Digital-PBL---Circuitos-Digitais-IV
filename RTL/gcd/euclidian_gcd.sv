@@ -1,4 +1,4 @@
-module euclidian_gcd (
+module euclidian_gcd #(
   parameter SIZE = 8
 ) (
   input logic clk,
@@ -41,23 +41,24 @@ module euclidian_gcd (
     endcase
   end
 
-  always_ff @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge reset_n) begin
     if (!reset_n) begin
       a_reg <= 0;
       b_reg <= 0;
       out <= 0;
-      done <= 0;
+      ready <= 0;
     end else begin
-      done <= 0;
+      ready <= 0;
       out <= 0;
-      a_reg <= 0;
-      b_reg <= 0;
 
       case (current_state)
         STATE_IDLE: begin
           if (start) begin
             a_reg <= in_a;
             b_reg <= in_b;
+          end else begin
+            a_reg <= 0;
+            b_reg <= 0;
           end
         end
         STATE_CALC: begin
@@ -72,6 +73,10 @@ module euclidian_gcd (
         STATE_DONE: begin
           out <= (a_reg != 0) ? a_reg : b_reg;
           ready <= 1;
+        end
+        default: begin
+          a_reg <= 0;
+          b_reg <= 0;
         end
       endcase
     end
