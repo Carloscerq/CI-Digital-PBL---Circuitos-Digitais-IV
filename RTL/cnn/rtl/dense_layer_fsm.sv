@@ -73,17 +73,13 @@ module dense_layer_fsm #(
         end
     end
 
-    // ============================================================================
     // BRAM/ROM Arrays (Flattened 1D array for $readmemh compatibility)
-    // ============================================================================
     logic signed [DATA_WIDTH-1:0] rom_array [0:(OUT_CLASSES * IN_FEATURES) - 1];
     logic signed [DATA_WIDTH-1:0] biases [0:OUT_CLASSES-1];
     
     logic signed [DATA_WIDTH-1:0] rom_data [0:OUT_CLASSES-1];
 
-    // ============================================================================
     // ROM INITIALIZATION (Synthesizable M10K Inference)
-    // ============================================================================
     // Quartus will read the .mem files during Analysis & Synthesis and 
     // permanently burn these values into the FPGA block RAM.
     
@@ -97,9 +93,7 @@ module dense_layer_fsm #(
         $display("[INIT] Dense Layer ROM and Biases successfully loaded from files.");
     end
 
-    // ============================================================================
     // Synchronous read for BRAM inference with flat addressing
-    // ============================================================================
     always_ff @(posedge clk) begin
         for (int c = 0; c < OUT_CLASSES; c++) begin
             // Prevent out-of-bounds ghost reads when rom_addr hits exactly IN_FEATURES

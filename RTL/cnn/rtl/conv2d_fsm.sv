@@ -3,7 +3,8 @@
 module conv2d_fsm #(
     parameter int DATA_WIDTH = 24,
     parameter int FRAC_BITS = 16,
-    parameter int CHANNELS = 8
+    parameter int CHANNELS = 8,
+    parameter int IN_CHANNELS = 4
 )(
     input  logic               clk,
     input  logic               rst,
@@ -11,7 +12,7 @@ module conv2d_fsm #(
     // AXI4-Stream Slave Interface (from line_buffer)
     input  logic               s_valid,
     output logic               s_ready,
-    input  logic signed [DATA_WIDTH-1:0] s_window [0:2][0:2],
+    input  logic signed [DATA_WIDTH-1:0] s_window [0:IN_CHANNELS-1][0:2][0:2],
     input  logic               s_last,
     
     // AXI4-Stream Master Interface (to maxpool)
@@ -29,10 +30,10 @@ module conv2d_fsm #(
     } state_t;
     
     state_t state, next_state;
-    logic [3:0] cnt, next_cnt;
+    logic [5:0] cnt, next_cnt;
     
     // Captured 3x3 window flattened
-    logic signed [DATA_WIDTH-1:0] captured_window [0:8];
+    logic signed [DATA_WIDTH-1:0] captured_window [0:(IN_CHANNELS*9)-1];
     logic               captured_last;
     
     // We only capture when accepting a new transaction from the line buffer
@@ -51,28 +52,30 @@ module conv2d_fsm #(
     
     always_ff @(posedge clk) begin
         if (capture) begin
-            captured_window[0] <= s_window[0][0];
-            captured_window[1] <= s_window[0][1];
-            captured_window[2] <= s_window[0][2];
-            captured_window[3] <= s_window[1][0];
-            captured_window[4] <= s_window[1][1];
-            captured_window[5] <= s_window[1][2];
-            captured_window[6] <= s_window[2][0];
-            captured_window[7] <= s_window[2][1];
-            captured_window[8] <= s_window[2][2];
-            captured_last      <= s_last;
+            for (int c = 0; c < IN_CHANNELS; c++) begin
+                captured_window[(c*9) + 0] <= s_window[c][0][0];
+                captured_window[(c*9) + 1] <= s_window[c][0][1];
+                captured_window[(c*9) + 2] <= s_window[c][0][2];
+                captured_window[(c*9) + 3] <= s_window[c][1][0];
+                captured_window[(c*9) + 4] <= s_window[c][1][1];
+                captured_window[(c*9) + 5] <= s_window[c][1][2];
+                captured_window[(c*9) + 6] <= s_window[c][2][0];
+                captured_window[(c*9) + 7] <= s_window[c][2][1];
+                captured_window[(c*9) + 8] <= s_window[c][2][2];
+            end
+            captured_last <= s_last;
         end
     end
 
     // ============================================================================
     // Weights and Biases (Flattened for $readmemh)
     // ============================================================================
-    // 8 Channels * 9 pixels = 72 total kernel weights
-    logic signed [DATA_WIDTH-1:0] weights_flat [0:(CHANNELS * 9)-1];
+    // 8 Channels * IN_CHANNELS * 9 pixels = 288 total kernel weights
+    logic signed [DATA_WIDTH-1:0] weights_flat [0:(CHANNELS * IN_CHANNELS * 9)-1];
     logic signed [DATA_WIDTH-1:0] biases [0:CHANNELS-1];
 
     initial begin
-        // Load the 72 kernel weights
+        // Load the kernel weights
         $readmemh("mem/cnn/conv2d_weights.mem", weights_flat);
         
         // Load the 8 bias values
@@ -104,14 +107,12 @@ module conv2d_fsm #(
             
             ST_FEED: begin
                 mac_en = 1'b1;
-                if (cnt == 4'd0) begin
+                if (cnt == 6'd0) begin
                     mac_clr = 1'b1;
                 end
                 
-                // cnt goes from 0 to 9. 
-                // 0-8 feeds the 9 window pixels. 
-                // 9 feeds the bias.
-                if (cnt == 4'd9) begin
+                // cnt goes from 0 to IN_CHANNELS*9. 
+                if (cnt == (IN_CHANNELS * 9)) begin
                     next_state = ST_WAIT;
                     next_cnt   = '0;
                 end else begin
@@ -122,9 +123,7 @@ module conv2d_fsm #(
             ST_WAIT: begin
                 mac_en = 1'b1;
                 // Wait for the MAC 3-stage pipeline to drain
-                // mult_reg computes in ST_WAIT 0
-                // acc_reg computes in ST_WAIT 1
-                if (cnt == 4'd1) begin
+                if (cnt == 6'd1) begin
                     next_state = ST_OUTPUT;
                 end else begin
                     next_cnt = cnt + 1'b1;
@@ -159,16 +158,16 @@ module conv2d_fsm #(
     generate
         for (i = 0; i < CHANNELS; i++) begin : gen_mac
             // Multiplexer to feed either the window pixel or the bias
-            assign mac_a[i] = (cnt < 9) ? captured_window[cnt] : biases[i];
+            assign mac_a[i] = (cnt < (IN_CHANNELS * 9)) ? captured_window[cnt] : biases[i];
             
             // Safe Flat Addressing for Kernel Weights
-            logic [6:0] weight_idx;
+            logic [8:0] weight_idx;
 
-            // Calculate 1D index: (channel * 9) + valid_pixel_counter
-            assign weight_idx = (i * 9) + ((cnt < 9) ? cnt : 4'd0);
+            // Calculate 1D index
+            assign weight_idx = (i * IN_CHANNELS * 9) + ((cnt < (IN_CHANNELS * 9)) ? cnt : 6'd0);
             
             // To add bias, multiply it by 1.0 (Parameterized by FRAC_BITS)
-            assign mac_b[i] = (cnt < 9) ? weights_flat[weight_idx] : (DATA_WIDTH'(1) << FRAC_BITS);
+            assign mac_b[i] = (cnt < (IN_CHANNELS * 9)) ? weights_flat[weight_idx] : (DATA_WIDTH'(1) << FRAC_BITS);
 
             mac_q8_16 #(
                 .DATA_WIDTH(DATA_WIDTH),
