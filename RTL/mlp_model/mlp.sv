@@ -10,7 +10,10 @@ module mlp (
     logic signed [23:0] h0 [N_H0];
     logic signed [23:0] h1 [N_H1];
 
-    // ---------------- layer 0 : 40 -> 8, ReLU ----------------
+    // ---------------- layer 0 : 132 -> 8, ReLU ---------------
+    // features[0 .. N_BINS-1]  : |rFFT| da banda baixa depois do LMS (com sinal)
+    // features[N_BINS .. N_IN-1]: agregados do quadro, ja deslocados de
+    //                            EXTRA_SHIFT bits por quem monta o vetor
     genvar i;
     generate
         for (i = 0; i < N_H0; i++) begin : layer0

@@ -32,8 +32,9 @@ static void ref_init(void)
 {
     if (g_init_done) return;
 
-    // layer 0 consumes the raw |rFFT| integer, so its scale carries 2**30;
-    // layers 1 and 2 consume Q15 activations, so 2**15.
+    // layer 0 consumes the raw integers off the feature bus (|rFFT| bins after the
+    // LMS plus the aggregates already shifted by MLP_EXTRA_SHIFT), so its scale
+    // carries 2**30; layers 1 and 2 consume Q15 activations, so 2**15.
     SC[0] = q_round((double)MLP_SCALE_0 * ldexp(1.0, 2 * Q_FRAC));
     SC[1] = q_round((double)MLP_SCALE_1 * ldexp(1.0, Q_FRAC));
     SC[2] = q_round((double)MLP_SCALE_2 * ldexp(1.0, Q_FRAC));
@@ -161,9 +162,11 @@ int main(void)
     const int cases = 3;
     for (int c = 0; c < cases; c++) {
         for (int i = 0; i < N_IN; i++) {
+            int aggregate = i >= MLP_N_BINS;
             if      (c == 0) g_in[i] = 0;
-            else if (c == 1) g_in[i] = 50000;
-            else             g_in[i] = (int)((i * 7919) % 100000);
+            else if (c == 1) g_in[i] = aggregate ? 255 : 1000;
+            else             g_in[i] = aggregate ? 200 + (i % 4) * 20
+                                                 : (int)((i * 7919) % 2000) - 400;
         }
         ref_run();
         printf("case %d: logits", c);
