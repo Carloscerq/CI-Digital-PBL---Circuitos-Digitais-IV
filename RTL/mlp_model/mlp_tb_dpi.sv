@@ -15,16 +15,48 @@ module mlp_tb_dpi ();
   logic clk = 1'b0;
   always #1 clk = ~clk;
 
+  logic rst_n = 1'b0;
+  logic start = 1'b0;
+
   logic signed [23:0] features  [N_IN];
   logic signed [23:0] logits    [N_OUT];
   logic        [1:0]  class_idx;
+  logic               busy, done;
 
   mlp dut (
     .clk       (clk),
+    .rst_n     (rst_n),
+    .start     (start),
     .features  (features),
     .logits    (logits),
-    .class_idx (class_idx)
+    .class_idx (class_idx),
+    .busy      (busy),
+    .done      (done)
   );
+
+  // the engine streams `features` over ~132 cycles, so the vector has to stay
+  // put from `start` until `done`
+  int max_cycles = 4096;
+  int lat_min = 1 << 30, lat_max = 0;
+  longint lat_sum = 0;
+
+  task automatic run_dut();
+    int cyc;
+    @(negedge clk); start = 1'b1;
+    @(negedge clk); start = 1'b0;
+    cyc = 1;
+    while (done !== 1'b1) begin
+      @(negedge clk);
+      cyc++;
+      if (cyc > max_cycles) begin
+        $error("[HANG] dut never raised done (%0d cycles)", cyc);
+        $finish;
+      end
+    end
+    lat_sum += longint'(cyc);
+    if (cyc < lat_min) lat_min = cyc;
+    if (cyc > lat_max) lat_max = cyc;
+  endtask
 
   function automatic string cname(input int c);
     case (c)
@@ -37,7 +69,7 @@ module mlp_tb_dpi ();
   endfunction
 
   int n_vectors = 1000;
-  int err_logit, err_class, n_sat, n_quant;
+  int err_logit, err_class, n_sat, n_quant, n_ties;
   int hist [4];
 
   // push the current `features` into the reference and evaluate it
@@ -47,29 +79,43 @@ module mlp_tb_dpi ();
     ref_run();
   endtask
 
-  // |rFFT| bins: non-negative, up to 23 bits, with a peak or two on top
+  // features[0..N_BINS-1] are |rFFT| bins after the LMS, so they are signed and in
+  // practice stay inside ~12 bits; features[N_BINS..N_IN-1] are the frame aggregates
+  // already shifted by EXTRA_SHIFT (temperatures ~200..270, current power ~75..125,
+  // mdc_k0 0..64 -- the ranges the notebook printed for the hardware bus).
   task automatic randomise_features(input int vec_num);
     int mag, peaks;
     case (vec_num)
       0: foreach (features[i]) features[i] = 24'sd0;              // silence
       1: foreach (features[i]) features[i] = 24'sd1;              // tiny
       2: foreach (features[i]) features[i] = 24'sd8388607;        // saturating
-      3: begin                                                    // one hot bin
+      3: foreach (features[i]) features[i] = -24'sd8388608;       // saturating, negative
+      4: begin                                                    // one hot bin
            foreach (features[i]) features[i] = 24'sd0;
            features[7] = 24'sd50000;
          end
-      4: begin
+      5: begin                                                    // last bin, negative
            foreach (features[i]) features[i] = 24'sd0;
-           features[39] = 24'sd50000;
+           features[N_BINS-1] = -24'sd50000;
+         end
+      6: begin                                                    // aggregates only
+           foreach (features[i]) features[i] = 24'sd0;
+           for (int i = N_BINS; i < N_IN; i++) features[i] = 24'sd255;
          end
       default: begin
-        mag = 1 << $urandom_range(8, 22);
-        foreach (features[i])
-          features[i] = 24'($urandom_range(0, mag));
+        // most frames inside the measured range, one in eight pushed to the top of
+        // the bus so the saturation path keeps being exercised
+        mag = 1 << ((vec_num % 8 == 0) ? $urandom_range(12, 22) : $urandom_range(4, 11));
+        for (int i = 0; i < N_BINS; i++)
+          features[i] = 24'($urandom_range(0, mag)) - 24'(mag/4);
         peaks = $urandom_range(1, 3);
         for (int p = 0; p < peaks; p++)
-          features[$urandom_range(0, N_IN-1)] =
+          features[$urandom_range(0, N_BINS-1)] =
             24'($urandom_range(mag, (mag*8 > 8388607) ? 8388607 : mag*8));
+        features[N_BINS+0] = 24'($urandom_range(190, 275));   // Temperature_housing_A
+        features[N_BINS+1] = 24'($urandom_range(190, 275));   // Temperature_housing_B
+        features[N_BINS+2] = 24'($urandom_range( 70, 130));   // U-phase_pow
+        features[N_BINS+3] = 24'($urandom_range(  0,  64));   // mdc_k0
       end
     endcase
   endtask
@@ -77,12 +123,18 @@ module mlp_tb_dpi ();
   initial begin
     int ref_class, ref_float_class;
 
-    err_logit = 0; err_class = 0; n_sat = 0; n_quant = 0;
+    err_logit = 0; err_class = 0; n_sat = 0; n_quant = 0; n_ties = 0;
     foreach (hist[i]) hist[i] = 0;
 
     void'($value$plusargs("n_vectors=%d", n_vectors));
 
+    repeat (4) @(negedge clk);
+    rst_n = 1'b1;
+    repeat (2) @(negedge clk);
+
     $display("=== mlp_tb_dpi : %0d vectors against mlp_ref.cpp ===", n_vectors);
+    $display("MODEL  %0d inputs (%0d bins + %0d aggregates) -> %0d -> %0d -> %0d",
+             N_IN, N_BINS, N_EXTRA, N_H0, N_H1, N_OUT);
 
     // the reference derives these from mlp_weights.h; the package hard-codes
     // them. Disagreement here means the package was regenerated incorrectly.
@@ -90,22 +142,34 @@ module mlp_tb_dpi ();
              L0_SCALE[0], L1_SCALE[0], L2_SCALE[0]);
     $display("SCALE  C++ ref: L0=%0d L1=%0d L2=%0d",
              ref_get_scale(0), ref_get_scale(1), ref_get_scale(2));
-    assert (L0_SCALE[0] == ref_get_scale(0) &&
-            L1_SCALE[0] == ref_get_scale(1) &&
-            L2_SCALE[0] == ref_get_scale(2))
+    assert (int'(L0_SCALE[0]) == ref_get_scale(0) &&
+            int'(L1_SCALE[0]) == ref_get_scale(1) &&
+            int'(L2_SCALE[0]) == ref_get_scale(2))
       else $error("[SCALE] package and reference disagree -- regenerate the package");
 
     for (int v = 0; v < n_vectors; v++) begin
       randomise_features(v);
 
-      @(posedge clk);
-      #0;                                   // let the combinational cone settle
+      run_dut();
       run_reference();
 
       ref_class       = ref_get_class();
       ref_float_class = ref_get_float_class();
       hist[ref_class]++;
       if (ref_get_saturated() != 0) n_sat++;
+
+      // the argmax tie-break (strict >, lowest index wins) is only exercised
+      // when the *maximum* is shared by more than one logit -- equal logits
+      // below the maximum cannot change the decision
+      begin
+        logic signed [23:0] mx;
+        int n_at_max;
+        mx = logits[0];
+        for (int j = 1; j < N_OUT; j++) if (logits[j] > mx) mx = logits[j];
+        n_at_max = 0;
+        for (int j = 0; j < N_OUT; j++) if (logits[j] == mx) n_at_max++;
+        if (n_at_max > 1) n_ties++;
+      end
 
       for (int j = 0; j < N_OUT; j++)
         assert (int'(logits[j]) === ref_get_logit(j))
@@ -140,9 +204,16 @@ module mlp_tb_dpi ();
     $display("  class mismatches    : %0d", err_class);
     $display("  quantisation notes  : %0d", n_quant);
     $display("  saturating vectors  : %0d", n_sat);
+    $display("  latency (cycles)    : min=%0d max=%0d avg=%0d",
+             lat_min, lat_max, lat_sum / longint'(n_vectors));
     $display("  predicted classes   : %s=%0d %s=%0d %s=%0d %s=%0d",
              cname(0), hist[0], cname(1), hist[1],
              cname(2), hist[2], cname(3), hist[3]);
+    $display("  vectors tied at max : %0d", n_ties);
+    if (n_ties == 0) begin
+      $display("  NOTE: no vector tied for the maximum logit, so the argmax");
+      $display("        tie-break (strict >, lowest index wins) is untested.");
+    end
     if (hist[2] == 0) begin
       $display("  WARNING: the 'None' class was never predicted -- random spectra");
       $display("           cannot reach it. Feed real feature rows to cover it.");

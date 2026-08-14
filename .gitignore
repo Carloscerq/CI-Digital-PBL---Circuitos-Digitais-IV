@@ -19,4 +19,5 @@ Scripts/cnn/rtl/*.mem
 **/*/xrun.history
 Scripts/.env
 Scripts/dataset
+**/obj_dir
 **/*/obj_dir
