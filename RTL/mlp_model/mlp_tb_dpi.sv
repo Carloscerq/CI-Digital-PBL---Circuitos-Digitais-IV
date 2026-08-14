@@ -15,16 +15,48 @@ module mlp_tb_dpi ();
   logic clk = 1'b0;
   always #1 clk = ~clk;
 
+  logic rst_n = 1'b0;
+  logic start = 1'b0;
+
   logic signed [23:0] features  [N_IN];
   logic signed [23:0] logits    [N_OUT];
   logic        [1:0]  class_idx;
+  logic               busy, done;
 
   mlp dut (
     .clk       (clk),
+    .rst_n     (rst_n),
+    .start     (start),
     .features  (features),
     .logits    (logits),
-    .class_idx (class_idx)
+    .class_idx (class_idx),
+    .busy      (busy),
+    .done      (done)
   );
+
+  // the engine streams `features` over ~132 cycles, so the vector has to stay
+  // put from `start` until `done`
+  int max_cycles = 4096;
+  int lat_min = 1 << 30, lat_max = 0;
+  longint lat_sum = 0;
+
+  task automatic run_dut();
+    int cyc;
+    @(negedge clk); start = 1'b1;
+    @(negedge clk); start = 1'b0;
+    cyc = 1;
+    while (done !== 1'b1) begin
+      @(negedge clk);
+      cyc++;
+      if (cyc > max_cycles) begin
+        $error("[HANG] dut never raised done (%0d cycles)", cyc);
+        $finish;
+      end
+    end
+    lat_sum += longint'(cyc);
+    if (cyc < lat_min) lat_min = cyc;
+    if (cyc > lat_max) lat_max = cyc;
+  endtask
 
   function automatic string cname(input int c);
     case (c)
@@ -37,7 +69,7 @@ module mlp_tb_dpi ();
   endfunction
 
   int n_vectors = 1000;
-  int err_logit, err_class, n_sat, n_quant;
+  int err_logit, err_class, n_sat, n_quant, n_ties;
   int hist [4];
 
   // push the current `features` into the reference and evaluate it
@@ -91,10 +123,14 @@ module mlp_tb_dpi ();
   initial begin
     int ref_class, ref_float_class;
 
-    err_logit = 0; err_class = 0; n_sat = 0; n_quant = 0;
+    err_logit = 0; err_class = 0; n_sat = 0; n_quant = 0; n_ties = 0;
     foreach (hist[i]) hist[i] = 0;
 
     void'($value$plusargs("n_vectors=%d", n_vectors));
+
+    repeat (4) @(negedge clk);
+    rst_n = 1'b1;
+    repeat (2) @(negedge clk);
 
     $display("=== mlp_tb_dpi : %0d vectors against mlp_ref.cpp ===", n_vectors);
     $display("MODEL  %0d inputs (%0d bins + %0d aggregates) -> %0d -> %0d -> %0d",
@@ -106,22 +142,34 @@ module mlp_tb_dpi ();
              L0_SCALE[0], L1_SCALE[0], L2_SCALE[0]);
     $display("SCALE  C++ ref: L0=%0d L1=%0d L2=%0d",
              ref_get_scale(0), ref_get_scale(1), ref_get_scale(2));
-    assert (L0_SCALE[0] == ref_get_scale(0) &&
-            L1_SCALE[0] == ref_get_scale(1) &&
-            L2_SCALE[0] == ref_get_scale(2))
+    assert (int'(L0_SCALE[0]) == ref_get_scale(0) &&
+            int'(L1_SCALE[0]) == ref_get_scale(1) &&
+            int'(L2_SCALE[0]) == ref_get_scale(2))
       else $error("[SCALE] package and reference disagree -- regenerate the package");
 
     for (int v = 0; v < n_vectors; v++) begin
       randomise_features(v);
 
-      @(posedge clk);
-      #0;                                   // let the combinational cone settle
+      run_dut();
       run_reference();
 
       ref_class       = ref_get_class();
       ref_float_class = ref_get_float_class();
       hist[ref_class]++;
       if (ref_get_saturated() != 0) n_sat++;
+
+      // the argmax tie-break (strict >, lowest index wins) is only exercised
+      // when the *maximum* is shared by more than one logit -- equal logits
+      // below the maximum cannot change the decision
+      begin
+        logic signed [23:0] mx;
+        int n_at_max;
+        mx = logits[0];
+        for (int j = 1; j < N_OUT; j++) if (logits[j] > mx) mx = logits[j];
+        n_at_max = 0;
+        for (int j = 0; j < N_OUT; j++) if (logits[j] == mx) n_at_max++;
+        if (n_at_max > 1) n_ties++;
+      end
 
       for (int j = 0; j < N_OUT; j++)
         assert (int'(logits[j]) === ref_get_logit(j))
@@ -156,9 +204,16 @@ module mlp_tb_dpi ();
     $display("  class mismatches    : %0d", err_class);
     $display("  quantisation notes  : %0d", n_quant);
     $display("  saturating vectors  : %0d", n_sat);
+    $display("  latency (cycles)    : min=%0d max=%0d avg=%0d",
+             lat_min, lat_max, lat_sum / longint'(n_vectors));
     $display("  predicted classes   : %s=%0d %s=%0d %s=%0d %s=%0d",
              cname(0), hist[0], cname(1), hist[1],
              cname(2), hist[2], cname(3), hist[3]);
+    $display("  vectors tied at max : %0d", n_ties);
+    if (n_ties == 0) begin
+      $display("  NOTE: no vector tied for the maximum logit, so the argmax");
+      $display("        tie-break (strict >, lowest index wins) is untested.");
+    end
     if (hist[2] == 0) begin
       $display("  WARNING: the 'None' class was never predicted -- random spectra");
       $display("           cannot reach it. Feed real feature rows to cover it.");
