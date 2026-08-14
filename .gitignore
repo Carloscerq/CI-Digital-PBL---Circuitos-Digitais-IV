@@ -15,3 +15,7 @@
 *.ipynb_checkpoints
 **/*/dataset
 Scripts/cnn/rtl/*.mem
+**/*/xmsc.log
+**/*/xrun.history
+Scripts/.env
+Scripts/dataset
