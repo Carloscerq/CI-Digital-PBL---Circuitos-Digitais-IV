@@ -1,0 +1,23 @@
+case_name='4Nm_BPFI_03'
+
+for sensor in 1 2 3 4; do
+    reference=$((sensor % 4 + 1))
+
+    echo "===== XCELIUM Q9.15 SEM LMS: SENSOR ${sensor} ====="
+
+    MODE_PATTERN='q915_no_lms' \
+    HOP_SIZE=64 \
+    CASE_PATTERN="$case_name" \
+    MAX_CASES=1 \
+    MAX_FRAMES=0 \
+    DESIRED_SENSOR="$sensor" \
+    REFERENCE_SENSOR="$reference" \
+    PROGRESS_FRAMES=1000 \
+    OUTPUT_DIR="$PWD/results_q915_no_lms_xcelium" \
+    bash model_sim_four_modes/verification/run_four_modes_xcelium.sh
+
+    if [[ $? -ne 0 ]]; then
+        echo "ERRO no sensor ${sensor}"
+        exit 1
+    fi
+done

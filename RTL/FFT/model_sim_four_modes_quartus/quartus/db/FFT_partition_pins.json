@@ -1,0 +1,377 @@
+{
+	"partitions" : [
+		{
+			"name" : "Top",
+			"pins" : [
+				{
+					"name" : "sample_ready",
+					"strict" : false
+				},
+				{
+					"name" : "fft_valid",
+					"strict" : false
+				},
+				{
+					"name" : "fft_bin[0]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_bin[1]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_bin[2]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_bin[3]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_bin[4]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_bin[5]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_real[0]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_real[1]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_real[2]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_real[3]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_real[4]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_real[5]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_real[6]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_real[7]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_real[8]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_real[9]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_real[10]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_real[11]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_real[12]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_real[13]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_real[14]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_real[15]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_real[16]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_real[17]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_real[18]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_real[19]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_real[20]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_real[21]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_real[22]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_real[23]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_imag[0]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_imag[1]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_imag[2]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_imag[3]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_imag[4]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_imag[5]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_imag[6]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_imag[7]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_imag[8]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_imag[9]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_imag[10]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_imag[11]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_imag[12]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_imag[13]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_imag[14]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_imag[15]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_imag[16]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_imag[17]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_imag[18]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_imag[19]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_imag[20]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_imag[21]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_imag[22]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_imag[23]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_done",
+					"strict" : false
+				},
+				{
+					"name" : "pipeline_busy",
+					"strict" : false
+				},
+				{
+					"name" : "fft_overflow_event",
+					"strict" : false
+				},
+				{
+					"name" : "fft_overflow_stage[0]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_overflow_stage[1]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_overflow_stage[2]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_overflow_components[0]",
+					"strict" : false
+				},
+				{
+					"name" : "fft_overflow_components[1]",
+					"strict" : false
+				},
+				{
+					"name" : "reset",
+					"strict" : false
+				},
+				{
+					"name" : "sample_valid",
+					"strict" : false
+				},
+				{
+					"name" : "clk",
+					"strict" : false
+				},
+				{
+					"name" : "fft_ready",
+					"strict" : false
+				},
+				{
+					"name" : "sample_in[0]",
+					"strict" : false
+				},
+				{
+					"name" : "sample_in[1]",
+					"strict" : false
+				},
+				{
+					"name" : "sample_in[2]",
+					"strict" : false
+				},
+				{
+					"name" : "sample_in[3]",
+					"strict" : false
+				},
+				{
+					"name" : "sample_in[4]",
+					"strict" : false
+				},
+				{
+					"name" : "sample_in[5]",
+					"strict" : false
+				},
+				{
+					"name" : "sample_in[6]",
+					"strict" : false
+				},
+				{
+					"name" : "sample_in[7]",
+					"strict" : false
+				},
+				{
+					"name" : "sample_in[8]",
+					"strict" : false
+				},
+				{
+					"name" : "sample_in[9]",
+					"strict" : false
+				},
+				{
+					"name" : "sample_in[10]",
+					"strict" : false
+				},
+				{
+					"name" : "sample_in[11]",
+					"strict" : false
+				},
+				{
+					"name" : "sample_in[12]",
+					"strict" : false
+				},
+				{
+					"name" : "sample_in[13]",
+					"strict" : false
+				},
+				{
+					"name" : "sample_in[14]",
+					"strict" : false
+				},
+				{
+					"name" : "sample_in[15]",
+					"strict" : false
+				},
+				{
+					"name" : "sample_in[16]",
+					"strict" : false
+				},
+				{
+					"name" : "sample_in[17]",
+					"strict" : false
+				},
+				{
+					"name" : "sample_in[18]",
+					"strict" : false
+				},
+				{
+					"name" : "sample_in[19]",
+					"strict" : false
+				},
+				{
+					"name" : "sample_in[20]",
+					"strict" : false
+				},
+				{
+					"name" : "sample_in[21]",
+					"strict" : false
+				},
+				{
+					"name" : "sample_in[22]",
+					"strict" : false
+				},
+				{
+					"name" : "sample_in[23]",
+					"strict" : false
+				}
+			]
+		}
+	]
+}

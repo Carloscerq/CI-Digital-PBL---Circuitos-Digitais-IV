@@ -1,0 +1,38 @@
+
+State Machine - |quartus_pipeline_q915_no_lms_top|preprocess_lms_fft_four_modes:pipeline|loader_state
+Name loader_state.LOADER_LOAD loader_state.LOADER_WAIT loader_state.LOADER_START 
+loader_state.LOADER_LOAD 0 0 0 
+loader_state.LOADER_START 1 0 1 
+loader_state.LOADER_WAIT 1 1 0 
+
+State Machine - |quartus_pipeline_q915_no_lms_top|preprocess_lms_fft_four_modes:pipeline|fft_64_dualmode:fft_core|state
+Name state.S_DONE state.S_OUT_HOLD state.S_OUT_WAIT state.S_OUT_READ state.S_WRITE state.S_WAIT state.S_READ state.S_IDLE 
+state.S_IDLE 0 0 0 0 0 0 0 0 
+state.S_READ 0 0 0 0 0 0 1 1 
+state.S_WAIT 0 0 0 0 0 1 0 1 
+state.S_WRITE 0 0 0 0 1 0 0 1 
+state.S_OUT_READ 0 0 0 1 0 0 0 1 
+state.S_OUT_WAIT 0 0 1 0 0 0 0 1 
+state.S_OUT_HOLD 0 1 0 0 0 0 0 1 
+state.S_DONE 1 0 0 0 0 0 0 1 
+
+State Machine - |quartus_pipeline_q915_no_lms_top|preprocess_lms_fft_four_modes:pipeline|fir_decimator_32_dualmode:desired_decimator|fir_decimator_stage_dualmode:stage3|state
+Name state.STATE_OUTPUT state.STATE_COEFF_WAIT state.STATE_COEFF_REQ state.STATE_IDLE 
+state.STATE_IDLE 0 0 0 0 
+state.STATE_COEFF_REQ 0 0 1 1 
+state.STATE_COEFF_WAIT 0 1 0 1 
+state.STATE_OUTPUT 1 0 0 1 
+
+State Machine - |quartus_pipeline_q915_no_lms_top|preprocess_lms_fft_four_modes:pipeline|fir_decimator_32_dualmode:desired_decimator|fir_decimator_stage_dualmode:stage2|state
+Name state.STATE_OUTPUT state.STATE_COEFF_WAIT state.STATE_COEFF_REQ state.STATE_IDLE 
+state.STATE_IDLE 0 0 0 0 
+state.STATE_COEFF_REQ 0 0 1 1 
+state.STATE_COEFF_WAIT 0 1 0 1 
+state.STATE_OUTPUT 1 0 0 1 
+
+State Machine - |quartus_pipeline_q915_no_lms_top|preprocess_lms_fft_four_modes:pipeline|fir_decimator_32_dualmode:desired_decimator|fir_decimator_stage_dualmode:stage1|state
+Name state.STATE_OUTPUT state.STATE_COEFF_WAIT state.STATE_COEFF_REQ state.STATE_IDLE 
+state.STATE_IDLE 0 0 0 0 
+state.STATE_COEFF_REQ 0 0 1 1 
+state.STATE_COEFF_WAIT 0 1 0 1 
+state.STATE_OUTPUT 1 0 0 1 

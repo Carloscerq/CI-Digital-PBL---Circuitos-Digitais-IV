@@ -1,0 +1,24 @@
+$caseName = '4Nm_BPFI_03'
+$projectRoot = (Get-Location).Path
+
+foreach ($sensor in 1..4) {
+    $reference = ($sensor % 4) + 1
+
+    Write-Host "===== MODELSIM SEM LMS: SENSOR $sensor ====="
+
+    $env:MODE_PATTERN = 'q915_no_lms'
+    $env:HOP_SIZE = '64'
+    $env:CASE_PATTERN = $caseName
+    $env:MAX_CASES = '1'
+    $env:MAX_FRAMES = '0'
+    $env:DESIRED_SENSOR = "$sensor"
+    $env:REFERENCE_SENSOR = "$reference"
+    $env:PROGRESS_FRAMES = '1000'
+    $env:OUTPUT_DIR = (Join-Path $projectRoot 'results_q915_no_lms_modelsim').Replace('\','/')
+
+    vsim -c -do "do model_sim_four_modes/verification/run_four_modes_modelsim.do; quit -f"
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "ModelSim falhou no sensor $sensor"
+    }
+}
