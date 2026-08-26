@@ -85,10 +85,10 @@ module dense_layer_fsm #(
     
     initial begin
         // Load the 8192 weights (4 classes * 2048 features)
-        $readmemh("mem/cnn/dense_weights.mem", rom_array);
+        $readmemh("../mem/cnn/dense_weights.mem", rom_array);
         
         // Load the 4 bias values
-        $readmemh("mem/cnn/dense_biases.mem", biases);
+        $readmemh("../mem/cnn/dense_biases.mem", biases);
         
         $display("[INIT] Dense Layer ROM and Biases successfully loaded from files.");
     end

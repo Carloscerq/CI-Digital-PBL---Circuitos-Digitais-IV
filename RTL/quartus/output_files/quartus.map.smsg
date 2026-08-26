@@ -1,0 +1,1 @@
+Warning (10268): Verilog HDL information at maxpool_2x2.sv(71): always construct contains both blocking and non-blocking assignments File: /home/felipe/Documents/Projects/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/cnn/rtl/maxpool_2x2.sv Line: 71

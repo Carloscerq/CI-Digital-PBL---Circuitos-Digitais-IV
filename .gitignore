@@ -11,6 +11,8 @@
 **/transcript
 **/*.ini
 **/db/*
+**/incremental_db/*
+**/simulation/*
 *.bak
 *.env
 *.ipynb_checkpoints

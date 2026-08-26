@@ -82,8 +82,9 @@ module spi_controller_tb ();
   logic            slave_busy     [N_SLAVES];
   logic            slave_miso     [N_SLAVES];
 
+  genvar s;
   generate
-    for (genvar s = 0; s < N_SLAVES; s++) begin : slaves
+    for (s = 0; s < N_SLAVES; s++) begin : slaves
       spi_slave #(
         .SIZE(SIZE),
         .CPOL(CPOL[s]),
