@@ -87,6 +87,9 @@ set_global_assignment -name SOURCE_FILE ../mem/cnn/conv2d_biases.mem
 set_global_assignment -name SOURCE_FILE ../mem/cnn/conv2d_weights.mem
 set_global_assignment -name SOURCE_FILE ../mem/cnn/dense_biases.mem
 set_global_assignment -name SOURCE_FILE ../mem/cnn/dense_weights.mem
+set_global_assignment -name SOURCE_FILE ../mem/mlp/mlp_biases.mem
+set_global_assignment -name SOURCE_FILE ../mem/mlp/mlp_scales.mem
+set_global_assignment -name SOURCE_FILE ../mem/mlp/mlp_weights.mem
 set_global_assignment -name SYSTEMVERILOG_FILE ../mlp_model/mlp_weights.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../mlp_model/mlp.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../perceptron/perceptron.sv
