@@ -14,7 +14,13 @@ import mlp_weights_pkg::*;
 //   layer 0: 132 taps + 8 scale cycles
 //   layer 1:   8 taps + 4 scale cycles
 //   layer 2:   4 taps + 4 scale cycles      -> ~165 cycles per inference
-module mlp (
+module mlp #(
+    // Paths are resolved by Quartus relative to the project directory
+    // (RTL/quartus/), the same convention the CNN's ROMs already use.
+    parameter W_ROM_FILE = "../mem/mlp/mlp_weights.mem",
+    parameter B_ROM_FILE = "../mem/mlp/mlp_biases.mem",
+    parameter S_ROM_FILE = "../mem/mlp/mlp_scales.mem"
+)(
     input  logic clk,
     input  logic rst_n,
     input  logic start,
@@ -37,6 +43,11 @@ module mlp (
     localparam int N_MAC   = N_H0;              // widest layer sets the MAC count
     localparam int IDX_W   = $clog2(N_IN);
     localparam int NSEL_W  = $clog2(N_MAC);
+
+    // W_DEPTH / W_WORDS / NB_WORDS come from mlp_weights_pkg and describe the
+    // .mem images; see that package for the address map.
+    localparam int W_ADDR_W  = $clog2(W_WORDS);
+    localparam int NB_ADDR_W = $clog2(NB_WORDS);
 
     localparam logic signed [PROD_WIDTH-1:0] SAT_HI =  (1 <<< (ACT_WIDTH-1)) - 1;
     localparam logic signed [PROD_WIDTH-1:0] SAT_LO = -(1 <<< (ACT_WIDTH-1));
@@ -93,7 +104,6 @@ module mlp (
     // Weights and activations are read one cycle ahead of the multiply so the
     // weight arrays can be inferred as ROM instead of a combinational mux cone.
     logic signed [ACT_WIDTH-1:0] x;
-    logic signed [W_WIDTH-1:0]   w [N_MAC];
 
     always_comb begin
         unique case (layer)
@@ -103,14 +113,25 @@ module mlp (
         endcase
     end
 
+    // ---------------- weight ROM -------------------------------------------
+    // These used to be `parameter` arrays. A parameter array can only be read
+    // combinationally, so Quartus had to build all 1104 weights as a mux cone
+    // in ALMs. Loading the same values with $readmemh into an array that is
+    // read *synchronously* is what lets the fitter map them to M10K instead.
+    logic signed [W_WIDTH-1:0] w_rom [0:W_WORDS-1];
+
+    initial $readmemh(W_ROM_FILE, w_rom);
+
+    // Tap offset inside the current layer's block. Every MAC lane reads this
+    // same offset and adds only its own lane base, so one address feeds all of
+    // them -- that is the whole point of the lane-major layout in the .mem.
+    logic [W_ADDR_W-1:0] tap_addr;
     always_comb begin
-        for (int n = 0; n < N_MAC; n++) begin
-            unique case (layer)
-                2'd0:    w[n] = L0_W[n][idx];
-                2'd1:    w[n] = (n < N_H1)  ? L1_W[n][idx[NSEL_W-1:0]] : '0;
-                default: w[n] = (n < N_OUT) ? L2_W[n][idx[1:0]]        : '0;
-            endcase
-        end
+        unique case (layer)
+            2'd0:    tap_addr = W_ADDR_W'(idx);
+            2'd1:    tap_addr = W_ADDR_W'(N_IN)        + W_ADDR_W'(idx[NSEL_W-1:0]);
+            default: tap_addr = W_ADDR_W'(N_IN + N_H0) + W_ADDR_W'(idx[1:0]);
+        endcase
     end
 
     // fetch/multiply pipeline registers
@@ -118,6 +139,16 @@ module mlp (
     logic signed [W_WIDTH-1:0]   w_q  [N_MAC];
     logic                        en_q;
     logic                        load_q;
+
+    // The ROM output register IS w_q: it has exactly the same one-cycle latency
+    // as the old `w_q <= w[n]` in the sequencer, so MAC timing is unchanged.
+    // It deliberately sits outside the async-reset block -- an asynchronously
+    // reset output register blocks M10K inference. Nothing needs w_q reset:
+    // the MACs only sample it when en_q is high, and en_q is reset to 0.
+    always_ff @(posedge clk) begin
+        for (int n = 0; n < N_MAC; n++)
+            w_q[n] <= w_rom[W_ADDR_W'(n * W_DEPTH) + tap_addr];
+    end
 
     // ---------------- MAC array --------------------------------------------
     logic signed [SUM_WIDTH-1:0] mac_acc [N_MAC];
@@ -142,13 +173,46 @@ module mlp (
     // ---------------- shared scaler ----------------------------------------
     // One scale multiplier for the whole network: the MACs of a layer finish
     // together and are then drained one neuron per cycle.
-    logic signed [ACT_WIDTH-1:0] sc, bi;
-    logic                        relu;
+    logic signed [ACT_WIDTH-1:0] b_rom [0:NB_WORDS-1];
+    logic signed [ACT_WIDTH-1:0] s_rom [0:NB_WORDS-1];
+
+    initial begin
+        $readmemh(B_ROM_FILE, b_rom);
+        $readmemh(S_ROM_FILE, s_rom);
+    end
+
+    logic [NB_ADDR_W-1:0] neuron_base;
     always_comb begin
         unique case (layer)
-            2'd0:    begin sc = L0_SCALE[nsel];      bi = L0_B[nsel];      relu = 1'b1; end
-            2'd1:    begin sc = L1_SCALE[nsel[1:0]]; bi = L1_B[nsel[1:0]]; relu = 1'b1; end
-            default: begin sc = L2_SCALE[nsel[1:0]]; bi = L2_B[nsel[1:0]]; relu = 1'b0; end
+            2'd0:    neuron_base = NB_ADDR_W'(0);
+            2'd1:    neuron_base = NB_ADDR_W'(N_H0);
+            default: neuron_base = NB_ADDR_W'(N_H0 + N_H1);
+        endcase
+    end
+
+    // A registered ROM read has to lead its consumer by one cycle. S_FLUSH
+    // pre-loads neuron 0 and every S_SCALE cycle pre-loads the neuron the
+    // sequencer will drain next. `nsel_next` reuses the sequencer's own wrap
+    // condition, so the address can never walk past the current layer's block
+    // (which would otherwise read address NB_WORDS and go out of bounds).
+    logic [NSEL_W-1:0] nsel_next;
+    always_comb nsel_next = (state == S_SCALE && nsel != n_neurons - 1'b1)
+                          ? nsel + 1'b1 : '0;
+
+    logic signed [ACT_WIDTH-1:0] sc, bi;
+    always_ff @(posedge clk) begin
+        bi <= b_rom[neuron_base + NB_ADDR_W'(nsel_next)];
+        sc <= s_rom[neuron_base + NB_ADDR_W'(nsel_next)];
+    end
+
+    // ReLU on the two hidden layers, linear on the output layer. One bit
+    // derived from `layer` -- no point putting it in a ROM.
+    logic relu;
+    always_comb begin
+        unique case (layer)
+            2'd0:    relu = 1'b1;
+            2'd1:    relu = 1'b1;
+            default: relu = 1'b0;
         endcase
     end
 
@@ -183,7 +247,6 @@ module mlp (
             busy      <= 1'b0;
             done      <= 1'b0;
             class_idx <= 2'd0;
-            for (int n = 0; n < N_MAC; n++) w_q[n]    <= '0;
             for (int n = 0; n < N_H0;  n++) h0[n]     <= '0;
             for (int n = 0; n < N_H1;  n++) h1[n]     <= '0;
             for (int n = 0; n < N_OUT; n++) logits[n] <= '0;
@@ -207,7 +270,6 @@ module mlp (
                     // register the pair addressed by `idx` for the MACs to
                     // consume on the next edge
                     x_q    <= x;
-                    for (int n = 0; n < N_MAC; n++) w_q[n] <= w[n];
                     en_q   <= 1'b1;
                     load_q <= (idx == '0);
 
