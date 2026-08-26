@@ -10,6 +10,7 @@
 **/*/work
 **/transcript
 **/*.ini
+**/db/*
 *.bak
 *.env
 *.ipynb_checkpoints
