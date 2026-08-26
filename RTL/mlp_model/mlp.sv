@@ -183,10 +183,10 @@ module mlp (
             busy      <= 1'b0;
             done      <= 1'b0;
             class_idx <= 2'd0;
-            foreach (w_q[n])    w_q[n]    <= '0;
-            foreach (h0[n])     h0[n]     <= '0;
-            foreach (h1[n])     h1[n]     <= '0;
-            foreach (logits[n]) logits[n] <= '0;
+            for (int n = 0; n < N_MAC; n++) w_q[n]    <= '0;
+            for (int n = 0; n < N_H0;  n++) h0[n]     <= '0;
+            for (int n = 0; n < N_H1;  n++) h1[n]     <= '0;
+            for (int n = 0; n < N_OUT; n++) logits[n] <= '0;
         end else begin
             // fetch stage defaults: nothing enters the MACs unless S_ACC says so
             en_q   <= 1'b0;
@@ -207,7 +207,7 @@ module mlp (
                     // register the pair addressed by `idx` for the MACs to
                     // consume on the next edge
                     x_q    <= x;
-                    foreach (w_q[n]) w_q[n] <= w[n];
+                    for (int n = 0; n < N_MAC; n++) w_q[n] <= w[n];
                     en_q   <= 1'b1;
                     load_q <= (idx == '0);
 
