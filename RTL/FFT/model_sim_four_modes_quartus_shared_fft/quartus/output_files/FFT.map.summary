@@ -1,14 +1,14 @@
-Analysis & Synthesis Status : Successful - Fri Aug 28 10:14:56 2026
+Analysis & Synthesis Status : Successful - Fri Aug 28 08:56:05 2026
 Quartus Prime Version : 25.1std.0 Build 1129 10/21/2025 SC Lite Edition
-Revision Name : quartus
-Top-level Entity Name : top_system
+Revision Name : FFT
+Top-level Entity Name : quartus_pipeline_q915_no_lms_4sensor_shared_top
 Family : Cyclone V
 Logic utilization (in ALMs) : N/A
-Total registers : 11459
-Total pins : 15
+Total registers : 2405
+Total pins : 169
 Total virtual pins : 0
-Total block memory bits : 580,552
-Total DSP Blocks : 42
+Total block memory bits : 46,080
+Total DSP Blocks : 20
 Total HSSI RX PCSs : 0
 Total HSSI PMA RX Deserializers : 0
 Total HSSI TX PCSs : 0

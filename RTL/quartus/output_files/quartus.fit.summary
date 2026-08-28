@@ -1,17 +1,17 @@
-Fitter Status : Successful - Wed Aug 26 19:21:13 2026
+Fitter Status : Successful - Fri Aug 28 10:16:09 2026
 Quartus Prime Version : 25.1std.0 Build 1129 10/21/2025 SC Lite Edition
 Revision Name : quartus
 Top-level Entity Name : top_system
 Family : Cyclone V
 Device : 5CEBA4F23C7
 Timing Models : Final
-Logic utilization (in ALMs) : 15,374 / 18,480 ( 83 % )
-Total registers : 22694
-Total pins : 106 / 224 ( 47 % )
+Logic utilization (in ALMs) : 8,230 / 18,480 ( 45 % )
+Total registers : 10812
+Total pins : 15 / 224 ( 7 % )
 Total virtual pins : 0
-Total block memory bits : 382,120 / 3,153,920 ( 12 % )
-Total RAM Blocks : 55 / 308 ( 18 % )
-Total DSP Blocks : 34 / 66 ( 52 % )
+Total block memory bits : 580,552 / 3,153,920 ( 18 % )
+Total RAM Blocks : 119 / 308 ( 39 % )
+Total DSP Blocks : 42 / 66 ( 64 % )
 Total HSSI RX PCSs : 0
 Total HSSI PMA RX Deserializers : 0
 Total HSSI TX PCSs : 0

@@ -3,32 +3,60 @@
 // ============================================================================
 // Top Level System
 // ============================================================================
+// Nine sensors arrive over one SPI slave port, framed one chip-select
+// assertion per acquisition epoch:
+//
+//   4 x vibration  -> shared 64-point FFT -> { MLP , spectrogram + CNN }
+//   3 x current    \
+//   2 x temperature -> MLP extra features (4 of the 5 are used, see EXTRA_SEL)
+//
+// Only the vibration channels need the FFT, and they share ONE fft_64 core:
+// preprocess_fft_shared_4sensor_q915_no_lms keeps four independent
+// FIR/frame/mean/Hann front-ends but round-robins a single FFT between them,
+// tagging every output bin with `fft_sensor_id`.
+//
+// That single tagged stream fans out to both inference paths:
+//
+//   Path A (MLP)  one 132-feature buffer, time-multiplexed over the four
+//                 sensors -- one inference per completed FFT frame.
+//   Path B (CNN)  four private spectrograms, one per sensor, joined into the
+//                 CNN's four input channels so a whole beat is one pixel of
+//                 all four sensors.
+// ============================================================================
 module top_system #(
     parameter int DATA_WIDTH = 24
 )(
     input  logic clk,
-    input  logic reset_n, // Asynchronous active-low reset
-    
-    // SPI Pins
+    input  logic reset_n,               // Asynchronous active-low reset
+
+    // SPI slave pins -- every sensor value arrives here
     input  logic spi_serial_clock,
     input  logic spi_slave_select_n,
     input  logic spi_mosi,
     output logic spi_miso,
-    
-    // External Sensor Data (GCD, Temp, Voltage, etc.)
-    input  logic signed [DATA_WIDTH-1:0] ext_gcd,
-    input  logic signed [DATA_WIDTH-1:0] ext_temperature,
-    input  logic signed [DATA_WIDTH-1:0] ext_voltage,
-    input  logic signed [DATA_WIDTH-1:0] ext_other,
-    
-    // Arbiter Outputs
-    output logic [2:0] status_leds,
-    output logic alert_flag
+
+    // Decision outputs
+    output logic [2:0] status_leds,     // [2]=Critical, [1]=Warning, [0]=Normal
+    output logic [3:0] sensor_fault_mask,
+    output logic       alert_flag,
+    output logic       sys_error        // sticky: framing / overrun / desync
 );
+
+    // ------------------------------------------------------------------------
+    // Sensor map. Word order inside one SPI frame.
+    // ------------------------------------------------------------------------
+    localparam int N_VIB     = 4;   // vibration    -> FFT
+    localparam int N_CUR     = 3;   // current      -> MLP extras
+    localparam int N_TMP     = 2;   // temperature  -> MLP extras
+    localparam int N_SENSORS = N_VIB + N_CUR + N_TMP;   // 9
+    localparam int N_AUX     = N_CUR + N_TMP;           // 5
+
+    localparam int SPEC_BINS   = 32;  // bins per spectrogram row  (CNN width)
+    localparam int SPEC_FRAMES = 32;  // rows per spectrogram      (CNN height)
 
     // Reset Distribution
     logic reset;
-    assign reset = ~reset_n; // Synchronous active-high reset derived from reset_n
+    assign reset = ~reset_n; // Active-high reset derived from reset_n
 
     // ------------------------------------------------------------------------
     // SPI Data Ingestion
@@ -36,7 +64,7 @@ module top_system #(
     logic [7:0] spi_data_out;
     logic       spi_data_valid;
     logic       spi_busy;
-    
+
     spi_slave #(
         .SIZE(8),
         .CPOL(1'b0),
@@ -54,100 +82,148 @@ module top_system #(
         .slave_select_n(spi_slave_select_n)
     );
 
-    logic [DATA_WIDTH-1:0] deserialized_data;
-    logic deserialized_valid;
-    logic fft_desired_ready;
+    logic signed [DATA_WIDTH-1:0] sensor_data [0:N_SENSORS-1];
+    logic sensor_frame_valid;
+    logic sensor_frame_error;
 
-    spi_rx_deserializer u_deserializer (
+    spi_sensor_frame_rx #(
+        .DATA_WIDTH(DATA_WIDTH),
+        .N_SENSORS(N_SENSORS),
+        .BYTES_PER_WORD(DATA_WIDTH/8)
+    ) u_frame_rx (
         .clk(clk),
         .reset_n(reset_n),
         .spi_data(spi_data_out),
         .spi_valid(spi_data_valid),
-        .out_data(deserialized_data),
-        .out_valid(deserialized_valid),
-        .out_ready(fft_desired_ready)
+        .spi_selected(spi_busy),
+        .sensor_data(sensor_data),
+        .frame_valid(sensor_frame_valid),
+        .frame_error(sensor_frame_error)
     );
 
+    // Non-vibration sensors go straight to the MLP feature collector, which
+    // samples them once per FFT frame. aux index 0..2 = current, 3..4 = temp.
+    logic signed [DATA_WIDTH-1:0] aux_features [0:N_AUX-1];
+    genvar a;
+    generate
+        for (a = 0; a < N_AUX; a++) begin : g_aux
+            assign aux_features[a] = sensor_data[N_VIB + a];
+        end
+    endgenerate
+
     // ------------------------------------------------------------------------
-    // Signal Processing (FFT + LMS)
+    // Vibration quad -> shared FFT handshake
+    // ------------------------------------------------------------------------
+    // SPI cannot be back-pressured, so the four vibration samples are held in
+    // a one-deep register until the pipeline accepts them atomically. The FIR
+    // front-end is decimate-by-32, so it drains far faster than SPI fills;
+    // `vib_overrun` latches if that ever stops holding.
+    logic signed [DATA_WIDTH-1:0] vib_hold [0:N_VIB-1];
+    logic vib_valid;
+    logic vib_ready;
+    logic vib_overrun;
+
+    always_ff @(posedge clk or negedge reset_n) begin
+        if (!reset_n) begin
+            vib_valid   <= 1'b0;
+            vib_overrun <= 1'b0;
+            for (int i = 0; i < N_VIB; i++) vib_hold[i] <= '0;
+        end else begin
+            if (vib_valid && vib_ready)
+                vib_valid <= 1'b0;
+
+            if (sensor_frame_valid) begin
+                if (vib_valid && !vib_ready)
+                    vib_overrun <= 1'b1;         // previous sample not taken yet
+                for (int i = 0; i < N_VIB; i++) vib_hold[i] <= sensor_data[i];
+                vib_valid <= 1'b1;
+            end
+        end
+    end
+
+    // ------------------------------------------------------------------------
+    // Signal Processing: four channels, one shared 64-point FFT
     // ------------------------------------------------------------------------
     logic fft_valid;
+    logic fft_ready;
     logic [5:0] fft_bin;
     logic signed [DATA_WIDTH-1:0] fft_real;
     logic signed [DATA_WIDTH-1:0] fft_imag;
+    logic [1:0] fft_sensor_id;
     logic fft_done;
-    
-    preprocess_lms_fft_four_modes #(
+
+    // The coefficient paths are resolved by Quartus relative to the project
+    // directory (RTL/quartus/); the module defaults assume the FFT's own
+    // project, so they are overridden here.
+    preprocess_fft_shared_4sensor_q915_no_lms #(
         .DATA_WIDTH(DATA_WIDTH),
-        .USE_LMS(1) // Assuming LMS is enabled by default
+        .NORMALIZE(1),
+        .HOP_SIZE(64),
+        .FIR_STAGE1_FILE("../FFT/model_sim_four_modes_quartus_shared_fft/coefficients/fir/stage1_decim4_q117.bin"),
+        .FIR_STAGE2_FILE("../FFT/model_sim_four_modes_quartus_shared_fft/coefficients/fir/stage2_decim4_q117.bin"),
+        .FIR_STAGE3_FILE("../FFT/model_sim_four_modes_quartus_shared_fft/coefficients/fir/stage3_decim2_q117.bin"),
+        .HANN_FILE      ("../FFT/model_sim_four_modes_quartus_shared_fft/coefficients/windowing/hann_64_q117.bin")
     ) u_fft_pipeline (
         .clk(clk),
         .reset(reset),
-        
-        .desired_sample(deserialized_data),
-        .desired_valid(deserialized_valid),
-        .desired_ready(fft_desired_ready),
-        
-        .reference_sample({DATA_WIDTH{1'b0}}), // No reference signal provided currently
-        .reference_valid(deserialized_valid),
-        .reference_ready(),
-        
-        .adapt_enable(1'b1),
-        .clear_coefficients(1'b0),
-        
+
+        .sensor1_sample(vib_hold[0]),
+        .sensor2_sample(vib_hold[1]),
+        .sensor3_sample(vib_hold[2]),
+        .sensor4_sample(vib_hold[3]),
+        .sample_valid(vib_valid),
+        .sample_ready(vib_ready),
+
         .fft_valid(fft_valid),
-        .fft_ready(1'b1), // Always ready to receive FFT output internally
+        .fft_ready(fft_ready),
         .fft_bin(fft_bin),
         .fft_real(fft_real),
         .fft_imag(fft_imag),
+        .fft_sensor_id(fft_sensor_id),
         .fft_done(fft_done),
         .pipeline_busy(),
-        
+
         // Debug and event flags left unconnected for brevity
-        .desired_decimated_event(),
-        .reference_decimated_event(),
-        .lms_input_event(),
-        .lms_output_event(),
-        .desired_fir_stage1_saturation_event(),
-        .desired_fir_stage2_saturation_event(),
-        .desired_fir_stage3_saturation_event(),
-        .reference_fir_stage1_saturation_event(),
-        .reference_fir_stage2_saturation_event(),
-        .reference_fir_stage3_saturation_event(),
-        .lms_error_saturated(),
-        .lms_estimate_saturated(),
-        .lms_coefficient_saturated(),
+        .decimated_events(),
+        .fir_stage1_saturation_events(),
+        .fir_stage2_saturation_events(),
+        .fir_stage3_saturation_events(),
         .hann_saturation_event(),
+        .hann_saturation_sensor_id(),
         .fft_overflow_event(),
         .fft_overflow_stage(),
-        .fft_overflow_components()
+        .fft_overflow_components(),
+        .fft_overflow_sensor_id()
     );
 
     // ------------------------------------------------------------------------
-    // Path A: MLP Data Fork
+    // Path A: MLP, time-multiplexed over the four sensors
     // ------------------------------------------------------------------------
     logic signed [DATA_WIDTH-1:0] mlp_features [132];
     logic mlp_start;
+    logic [1:0] mlp_sensor_id;
     logic mlp_busy_internal;
+    logic mlp_frame_dropped;
 
     fft_to_mlp_collector #(
         .DATA_WIDTH(DATA_WIDTH),
-        .N_IN(132)
+        .N_AUX(N_AUX)
     ) u_feature_collector (
         .clk(clk),
         .reset_n(reset_n),
         .fft_valid(fft_valid),
+        .fft_ready(fft_ready),
         .fft_bin(fft_bin),
         .fft_real(fft_real),
         .fft_imag(fft_imag),
         .fft_done(fft_done),
-        .ext_gcd(ext_gcd),
-        .ext_temperature(ext_temperature),
-        .ext_voltage(ext_voltage),
-        .ext_other(ext_other),
+        .fft_sensor_id(fft_sensor_id),
+        .aux_features(aux_features),
         .mlp_features(mlp_features),
         .mlp_start(mlp_start),
-        .mlp_busy(mlp_busy_internal)
+        .mlp_sensor_id(mlp_sensor_id),
+        .mlp_busy(mlp_busy_internal),
+        .frame_dropped(mlp_frame_dropped)
     );
 
     logic signed [DATA_WIDTH-1:0] mlp_logits [4];
@@ -165,66 +241,96 @@ module top_system #(
         .done(mlp_done)
     );
 
+    // The MLP result belongs to the frame that was being collected, so tag it
+    // with the sensor id captured at that frame's first bin.
+    logic [1:0] mlp_result_sensor_id;
+    always_ff @(posedge clk or negedge reset_n) begin
+        if (!reset_n)          mlp_result_sensor_id <= 2'd0;
+        else if (mlp_start)    mlp_result_sensor_id <= mlp_sensor_id;
+    end
+
     // ------------------------------------------------------------------------
-    // Path B: Spectrogram & CNN Fork
+    // Path B: four spectrograms -> the CNN's four input channels
     // ------------------------------------------------------------------------
-    logic spec_axis_valid;
-    logic spec_axis_ready;
-    logic signed [DATA_WIDTH-1:0] spec_axis_data;
-    logic spec_axis_last;
+    logic [N_VIB-1:0] spec_s_valid;
+    logic [N_VIB-1:0] spec_s_ready;
+    logic signed [DATA_WIDTH-1:0] spec_s_data [0:N_VIB-1];
+    logic [N_VIB-1:0] spec_s_last;
 
-    fft_to_axi_adapter #(
-        .DATA_WIDTH(DATA_WIDTH)
-    ) u_fft_to_spec_adapter (
-        .clk(clk),
-        .rst(reset),
-        .fft_valid(fft_valid),
-        .fft_bin(fft_bin),
-        .fft_real(fft_real),
-        .s_axis_valid(spec_axis_valid),
-        .s_axis_ready(spec_axis_ready),
-        .s_axis_data(spec_axis_data),
-        .s_axis_last(spec_axis_last)
-    );
+    logic [N_VIB-1:0] spec_m_valid;
+    logic [N_VIB-1:0] spec_m_ready;
+    logic signed [DATA_WIDTH-1:0] spec_m_data [0:N_VIB-1];
+    logic [N_VIB-1:0] spec_m_last;
 
-    logic spec_m_valid;
-    logic spec_m_ready;
-    logic signed [DATA_WIDTH-1:0] spec_m_data;
-    logic spec_m_last;
+    genvar s;
+    generate
+        for (s = 0; s < N_VIB; s++) begin : g_spec
+            fft_to_stream_adapter #(
+                .DATA_WIDTH(DATA_WIDTH),
+                .BINS_PER_FRAME(SPEC_BINS),
+                .FRAMES_PER_SPECTROGRAM(SPEC_FRAMES),
+                .SENSOR_ID(s)
+            ) u_fft_to_spec_adapter (
+                .clk(clk),
+                .rst(reset),
+                .fft_valid(fft_valid),
+                .fft_bin(fft_bin),
+                .fft_sensor_id(fft_sensor_id),
+                .fft_real(fft_real),
+                .s_valid(spec_s_valid[s]),
+                .s_ready(spec_s_ready[s]),
+                .s_data(spec_s_data[s]),
+                .s_last(spec_s_last[s])
+            );
 
-    spectrogram_generator #(
-        .DATA_WIDTH(DATA_WIDTH),
-        .BINS_PER_FRAME(32),
-        .FRAMES_PER_SPECTROGRAM(32)
-    ) u_spectrogram (
-        .clk(clk),
-        .rst(reset),
-        .s_axis_valid(spec_axis_valid),
-        .s_axis_ready(spec_axis_ready),
-        .s_axis_data(spec_axis_data),
-        .s_axis_last(spec_axis_last),
-        .m_axis_valid(spec_m_valid),
-        .m_axis_ready(spec_m_ready),
-        .m_axis_data(spec_m_data),
-        .m_axis_last(spec_m_last)
-    );
+            spectrogram_generator #(
+                .DATA_WIDTH(DATA_WIDTH),
+                .BINS_PER_FRAME(SPEC_BINS),
+                .FRAMES_PER_SPECTROGRAM(SPEC_FRAMES)
+            ) u_spectrogram (
+                .clk(clk),
+                .rst(reset),
+                .s_valid(spec_s_valid[s]),
+                .s_ready(spec_s_ready[s]),
+                .s_data(spec_s_data[s]),
+                .s_last(spec_s_last[s]),
+                .m_valid(spec_m_valid[s]),
+                .m_ready(spec_m_ready[s]),
+                .m_data(spec_m_data[s]),
+                .m_last(spec_m_last[s])
+            );
+        end
+    endgenerate
+
+    // Backpressure the shared FFT with the spectrogram that owns the bin
+    // currently on the bus. Bins at or above SPEC_BINS feed only the MLP
+    // collector, which never stalls.
+    always_comb begin
+        if (fft_bin < 6'(SPEC_BINS)) fft_ready = spec_s_ready[fft_sensor_id];
+        else                         fft_ready = 1'b1;
+    end
 
     logic cnn_s_valid;
     logic cnn_s_ready;
-    logic signed [DATA_WIDTH-1:0] cnn_s_data [0:3];
+    logic signed [DATA_WIDTH-1:0] cnn_s_data [0:N_VIB-1];
     logic cnn_s_last;
+    logic spec_desync_error;
 
-    spectrogram_to_cnn_adapter #(
-        .DATA_WIDTH(DATA_WIDTH)
-    ) u_spec_to_cnn_adapter (
-        .m_axis_valid(spec_m_valid),
-        .m_axis_ready(spec_m_ready),
-        .m_axis_data(spec_m_data),
-        .m_axis_last(spec_m_last),
-        .s_axis_valid(cnn_s_valid),
-        .s_axis_ready(cnn_s_ready),
-        .s_axis_data(cnn_s_data),
-        .s_axis_last(cnn_s_last)
+    spectrogram_4ch_join #(
+        .DATA_WIDTH(DATA_WIDTH),
+        .CHANNELS(N_VIB)
+    ) u_spec_join (
+        .clk(clk),
+        .reset_n(reset_n),
+        .m_valid(spec_m_valid),
+        .m_ready(spec_m_ready),
+        .m_data(spec_m_data),
+        .m_last(spec_m_last),
+        .s_valid(cnn_s_valid),
+        .s_ready(cnn_s_ready),
+        .s_data(cnn_s_data),
+        .s_last(cnn_s_last),
+        .desync_error(spec_desync_error)
     );
 
     logic signed [DATA_WIDTH-1:0] cnn_normal;
@@ -234,32 +340,37 @@ module top_system #(
     logic cnn_valid;
 
     smma_cnn_top #(
-        .DATA_WIDTH(DATA_WIDTH)
+        .DATA_WIDTH(DATA_WIDTH),
+        .IMG_WIDTH(SPEC_BINS),
+        .IMG_HEIGHT(SPEC_FRAMES),
+        .IN_CHANNELS(N_VIB)
     ) u_cnn (
         .clk(clk),
         .rst(reset),
-        .s_axis_valid(cnn_s_valid),
-        .s_axis_ready(cnn_s_ready),
-        .s_axis_data(cnn_s_data),
-        .s_axis_last(cnn_s_last),
-        .m_axis_valid(cnn_valid),
-        .m_axis_ready(1'b1), // Always ready to receive CNN inference
-        .m_axis_data_normal(cnn_normal),
-        .m_axis_data_unbalance(cnn_unbalance),
-        .m_axis_data_misalign(cnn_misalign),
-        .m_axis_data_bearing(cnn_bearing),
-        .m_axis_last()
+        .s_valid(cnn_s_valid),
+        .s_ready(cnn_s_ready),
+        .s_data(cnn_s_data),
+        .s_last(cnn_s_last),
+        .m_valid(cnn_valid),
+        .m_ready(1'b1), // Always ready to receive CNN inference
+        .m_data_normal(cnn_normal),
+        .m_data_unbalance(cnn_unbalance),
+        .m_data_misalign(cnn_misalign),
+        .m_data_bearing(cnn_bearing),
+        .m_last()
     );
 
     // ------------------------------------------------------------------------
     // Decision Logic: Inference Arbiter
     // ------------------------------------------------------------------------
     inference_arbiter #(
-        .DATA_WIDTH(DATA_WIDTH)
+        .DATA_WIDTH(DATA_WIDTH),
+        .N_SENSORS(N_VIB)
     ) u_inference_arbiter (
         .clk(clk),
         .reset_n(reset_n),
         .mlp_class_idx(mlp_class_idx),
+        .mlp_sensor_id(mlp_result_sensor_id),
         .mlp_done(mlp_done),
         .cnn_normal(cnn_normal),
         .cnn_unbalance(cnn_unbalance),
@@ -267,7 +378,14 @@ module top_system #(
         .cnn_bearing(cnn_bearing),
         .cnn_valid(cnn_valid),
         .status_leds(status_leds),
+        .sensor_fault_mask(sensor_fault_mask),
         .alert_flag(alert_flag)
     );
+
+    // Sticky health flag: SPI framing fault, dropped vibration sample, MLP
+    // frame skipped because an inference was still running, or the four
+    // spectrograms losing lockstep.
+    assign sys_error = sensor_frame_error | vib_overrun |
+                       mlp_frame_dropped  | spec_desync_error;
 
 endmodule

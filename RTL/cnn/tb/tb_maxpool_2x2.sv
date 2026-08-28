@@ -66,7 +66,7 @@ module tb_maxpool_2x2();
                     @(posedge clk);
                     while (!s_ready) begin
                         // If the DUT applies backpressure, wait for the next rising edge
-                        // The AXI signals remain perfectly stable during this stall.
+                        // The stream signals remain perfectly stable during this stall.
                         @(posedge clk);
                     end
                 end

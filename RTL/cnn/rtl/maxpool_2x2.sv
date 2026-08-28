@@ -8,13 +8,13 @@ module maxpool_2x2 #(
     input  logic               clk,
     input  logic               rst,
     
-    // AXI4-Stream Slave (from Conv2D)
+    // Stream Slave (from Conv2D)
     input  logic               s_valid,
     output logic               s_ready,
     input  logic signed [DATA_WIDTH-1:0] s_data [0:CHANNELS-1],
     input  logic               s_last,
     
-    // AXI4-Stream Master (to Flatten/Dense)
+    // Stream Master (to Flatten/Dense)
     output logic               m_valid,
     input  logic               m_ready,
     output logic signed [DATA_WIDTH-1:0] m_data [0:CHANNELS-1],

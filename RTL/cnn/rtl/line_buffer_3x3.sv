@@ -9,13 +9,13 @@ module line_buffer_3x3 #(
     input  logic               clk,
     input  logic               rst,
     
-    // AXI4-Stream slave interface (Input Pixels)
+    // Stream slave interface (Input Pixels)
     input  logic               s_valid,
     output logic               s_ready,
     input  logic signed [DATA_WIDTH-1:0] s_data [0:IN_CHANNELS-1],
     input  logic               s_last,
     
-    // AXI4-Stream master interface (Output 3x3 Window)
+    // Stream master interface (Output 3x3 Window)
     output logic               m_valid,
     input  logic               m_ready,
     output logic signed [DATA_WIDTH-1:0] m_window [0:IN_CHANNELS-1][0:2][0:2],

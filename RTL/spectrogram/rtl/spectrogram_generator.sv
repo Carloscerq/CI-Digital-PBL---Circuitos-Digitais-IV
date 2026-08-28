@@ -1,5 +1,13 @@
 `timescale 1ns / 1ps
 
+// ============================================================================
+// Spectrogram generator
+// ============================================================================
+// Ping-pong M10K buffer between the FFT and the CNN. Both ports use the same
+// plain handshake: a beat transfers when valid and ready are both high on a
+// rising clock edge; `last` closes the current buffer on the write side and
+// marks the final word of a spectrogram on the read side.
+// ============================================================================
 module spectrogram_generator #(
     parameter int DATA_WIDTH = 24,
     parameter int BINS_PER_FRAME = 32,
@@ -8,17 +16,17 @@ module spectrogram_generator #(
     input  logic                      clk,
     input  logic                      rst,
     
-    // AXI4-Stream from FFT
-    input  logic                      s_axis_valid,
-    output logic                      s_axis_ready,
-    input  logic signed [DATA_WIDTH-1:0] s_axis_data,
-    input  logic                      s_axis_last,
+    // Stream slave: bins from the FFT
+    input  logic                      s_valid,
+    output logic                      s_ready,
+    input  logic signed [DATA_WIDTH-1:0] s_data,
+    input  logic                      s_last,
     
-    // AXI4-Stream to CNN
-    output logic                      m_axis_valid,
-    input  logic                      m_axis_ready,
-    output logic signed [DATA_WIDTH-1:0] m_axis_data,
-    output logic                      m_axis_last
+    // Stream master: whole spectrogram to the CNN
+    output logic                      m_valid,
+    input  logic                      m_ready,
+    output logic signed [DATA_WIDTH-1:0] m_data,
+    output logic                      m_last
 );
 
     localparam int MEM_DEPTH = BINS_PER_FRAME * FRAMES_PER_SPECTROGRAM;
@@ -48,22 +56,22 @@ module spectrogram_generator #(
     
     // We are ready to accept data if the current write-side buffer is not full 
     // and waiting to be read.
-    assign s_axis_ready = (wr_side == 1'b0) ? !buf_0_ready_to_read : !buf_1_ready_to_read;
+    assign s_ready = (wr_side == 1'b0) ? !buf_0_ready_to_read : !buf_1_ready_to_read;
     
     logic ram_0_wr_en;
     logic ram_1_wr_en;
     logic ram_rd_en;
     
-    assign ram_0_wr_en = (s_axis_valid && s_axis_ready) && (wr_side == 1'b0);
-    assign ram_1_wr_en = (s_axis_valid && s_axis_ready) && (wr_side == 1'b1);
+    assign ram_0_wr_en = (s_valid && s_ready) && (wr_side == 1'b0);
+    assign ram_1_wr_en = (s_valid && s_ready) && (wr_side == 1'b1);
     
-    // The BRAM output should only update if the output is empty (!m_axis_valid)
-    // or if the downstream consumer successfully consumes the current data (m_axis_ready).
-    assign ram_rd_en = (!m_axis_valid || m_axis_ready);
+    // The BRAM output should only update if the output is empty (!m_valid)
+    // or if the downstream consumer successfully consumes the current data (m_ready).
+    assign ram_rd_en = (!m_valid || m_ready);
 
     always_ff @(posedge clk) begin
-        if (ram_0_wr_en) ram_0[wr_addr] <= s_axis_data;
-        if (ram_1_wr_en) ram_1[wr_addr] <= s_axis_data;
+        if (ram_0_wr_en) ram_0[wr_addr] <= s_data;
+        if (ram_1_wr_en) ram_1[wr_addr] <= s_data;
         
         // Read address feeds both RAMs, gated by read enable to handle backpressure flawlessly
         if (ram_rd_en) begin
@@ -80,8 +88,8 @@ module spectrogram_generator #(
             wr_addr <= '0;
         end else begin
             // 1. Write Side Management
-            if (s_axis_valid && s_axis_ready) begin
-                if ((wr_addr == MEM_DEPTH - 1) || s_axis_last) begin
+            if (s_valid && s_ready) begin
+                if ((wr_addr == MEM_DEPTH - 1) || s_last) begin
                     // Buffer is full (or forcefully finished by last signal)
                     wr_addr <= '0;
                     if (wr_side == 1'b0) begin
@@ -97,7 +105,7 @@ module spectrogram_generator #(
             end
             
             // 2. Read Side clears the ready flags when finishing a buffer read
-            if (m_axis_valid && m_axis_ready && m_axis_last) begin
+            if (m_valid && m_ready && m_last) begin
                 if (rd_side == 1'b0) begin
                     buf_0_ready_to_read <= 1'b0;
                 end else begin
@@ -118,33 +126,33 @@ module spectrogram_generator #(
         if (rst) begin
             rd_side <= 1'b0;
             rd_active <= 1'b0;
-            m_axis_valid <= 1'b0;
-            m_axis_last <= 1'b0;
+            m_valid <= 1'b0;
+            m_last <= 1'b0;
             rd_addr <= '0;
             rd_count <= '0;
         end else begin
             // Toggle read side when a full spectrogram is consumed
-            if (m_axis_valid && m_axis_ready && m_axis_last) begin
+            if (m_valid && m_ready && m_last) begin
                 rd_side <= ~rd_side;
             end
             
             if (rd_active) begin
                 // Proceed if output is idle or consumer is ready for the current word
-                if (!m_axis_valid || m_axis_ready) begin
-                    m_axis_valid <= 1'b1;
+                if (!m_valid || m_ready) begin
+                    m_valid <= 1'b1;
                     
                     if (rd_count == MEM_DEPTH - 1) begin
-                        m_axis_last <= 1'b1;
+                        m_last <= 1'b1;
                         rd_active <= 1'b0; // End of read sequence
                     end else begin
-                        m_axis_last <= 1'b0;
+                        m_last <= 1'b0;
                         rd_count <= rd_count + 1'b1;
                         rd_addr <= rd_addr + 1'b1; // Pre-fetch next address
                     end
                 end
             end else begin
                 // When completely idle (valid cleared), check if the active read buffer is ready
-                if (!m_axis_valid) begin
+                if (!m_valid) begin
                     if (active_rd_ready) begin
                         rd_active <= 1'b1;
                         rd_addr <= '0;
@@ -154,14 +162,14 @@ module spectrogram_generator #(
             end
             
             // Handshake clears the valid/last signal if the sequence has finished (rd_active == 0)
-            if (m_axis_valid && m_axis_ready && !rd_active) begin
-                m_axis_valid <= 1'b0;
-                m_axis_last <= 1'b0;
+            if (m_valid && m_ready && !rd_active) begin
+                m_valid <= 1'b0;
+                m_last <= 1'b0;
             end
         end
     end
     
     // Select the output data based on the current active read side
-    assign m_axis_data = (rd_side == 1'b0) ? ram_0_out : ram_1_out;
+    assign m_data = (rd_side == 1'b0) ? ram_0_out : ram_1_out;
 
 endmodule

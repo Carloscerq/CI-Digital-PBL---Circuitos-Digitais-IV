@@ -6,18 +6,18 @@ module tb_smma_cnn_top();
     logic rst;
     
     // Interface signals matching smma_cnn_top
-    logic s_axis_valid;
-    logic s_axis_ready;
-    logic signed [23:0] s_axis_data [0:3];
-    logic s_axis_last;
+    logic s_valid;
+    logic s_ready;
+    logic signed [23:0] s_data [0:3];
+    logic s_last;
     
-    logic m_axis_valid;
-    logic m_axis_ready;
-    logic signed [23:0] m_axis_data_normal;
-    logic signed [23:0] m_axis_data_unbalance;
-    logic signed [23:0] m_axis_data_misalign;
-    logic signed [23:0] m_axis_data_bearing;
-    logic m_axis_last;
+    logic m_valid;
+    logic m_ready;
+    logic signed [23:0] m_data_normal;
+    logic signed [23:0] m_data_unbalance;
+    logic signed [23:0] m_data_misalign;
+    logic signed [23:0] m_data_bearing;
+    logic m_last;
 
     // Testbench Memory for Golden Model Input
     // 32x32 = 1024 pixels. 4 channels per pixel = 4096 values.
@@ -50,31 +50,31 @@ module tb_smma_cnn_top();
     // Driver task
     task automatic feed_top();
         begin
-            s_axis_valid = 1'b0;
-            s_axis_last  = 1'b0;
-            for(int ch=0;ch<4;ch++) s_axis_data[ch] = '0;
+            s_valid = 1'b0;
+            s_last  = 1'b0;
+            for(int ch=0;ch<4;ch++) s_data[ch] = '0;
             @(negedge clk);
             
             // Stream the image pixel by pixel (all 4 channels concurrently)
             for (int i = 0; i < 1024; i++) begin
-                s_axis_valid = 1'b1;
+                s_valid = 1'b1;
                 
                 // Read the interleaved channel data directly from memory
-                s_axis_data[0] = tb_image_data[(i * 4) + 0];
-                s_axis_data[1] = tb_image_data[(i * 4) + 1];
-                s_axis_data[2] = tb_image_data[(i * 4) + 2];
-                s_axis_data[3] = tb_image_data[(i * 4) + 3];
+                s_data[0] = tb_image_data[(i * 4) + 0];
+                s_data[1] = tb_image_data[(i * 4) + 1];
+                s_data[2] = tb_image_data[(i * 4) + 2];
+                s_data[3] = tb_image_data[(i * 4) + 3];
                 
                 // Assert LAST signal on the very last pixel
-                s_axis_last  = (i == 1023);
+                s_last  = (i == 1023);
                 
                 @(posedge clk);
                 // Wait if the CNN asserts backpressure
-                while (!s_axis_ready) @(posedge clk);
+                while (!s_ready) @(posedge clk);
             end
             
-            s_axis_valid = 1'b0;
-            s_axis_last  = 1'b0;
+            s_valid = 1'b0;
+            s_last  = 1'b0;
         end
     endtask
 
@@ -83,19 +83,19 @@ module tb_smma_cnn_top();
         begin
             forever begin
                 @(negedge clk);
-                m_axis_ready = ($urandom_range(0, 2) != 0); // test pipeline stalls
+                m_ready = ($urandom_range(0, 2) != 0); // test pipeline stalls
                 
-                if (m_axis_valid && m_axis_ready) begin
+                if (m_valid && m_ready) begin
                     $display("---------------------------------------------------------");
                     $display("[OUTPUT CAPTURED] Neural Network Final Logits:");
-                    $display("  Normal    : %h | %d", m_axis_data_normal, m_axis_data_normal);
-                    $display("  Unbalance : %h | %d", m_axis_data_unbalance, m_axis_data_unbalance);
-                    $display("  Misalign  : %h | %d", m_axis_data_misalign, m_axis_data_misalign);
-                    $display("  Bearing   : %h | %d", m_axis_data_bearing, m_axis_data_bearing);
+                    $display("  Normal    : %h | %d", m_data_normal, m_data_normal);
+                    $display("  Unbalance : %h | %d", m_data_unbalance, m_data_unbalance);
+                    $display("  Misalign  : %h | %d", m_data_misalign, m_data_misalign);
+                    $display("  Bearing   : %h | %d", m_data_bearing, m_data_bearing);
                     $display("---------------------------------------------------------");
                     
-                    if (!m_axis_last) begin
-                        $error("[FAIL] m_axis_last not asserted at end of frame!");
+                    if (!m_last) begin
+                        $error("[FAIL] m_last not asserted at end of frame!");
                         err_count++;
                     end
                     
@@ -107,8 +107,8 @@ module tb_smma_cnn_top();
 
     initial begin
         rst = 1'b1;
-        s_axis_valid = 1'b0;
-        m_axis_ready = 1'b0;
+        s_valid = 1'b0;
+        m_ready = 1'b0;
         
         #22 rst = 1'b0;
         

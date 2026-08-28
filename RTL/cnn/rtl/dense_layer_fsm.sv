@@ -10,13 +10,13 @@ module dense_layer_fsm #(
     input  logic               clk,
     input  logic               rst,
     
-    // AXI4-Stream Slave Interface (from maxpool)
+    // Stream Slave Interface (from maxpool)
     input  logic               s_valid,
     output logic               s_ready,
     input  logic signed [DATA_WIDTH-1:0] s_data [0:IN_CHANNELS-1],
     input  logic               s_last,
     
-    // AXI4-Stream Master Interface (to ArgMax / Output)
+    // Stream Master Interface (to ArgMax / Output)
     output logic               m_valid,
     input  logic               m_ready,
     output logic signed [DATA_WIDTH-1:0] m_data [0:OUT_CLASSES-1],

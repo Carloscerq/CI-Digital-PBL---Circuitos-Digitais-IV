@@ -1,5 +1,14 @@
 `timescale 1ns / 1ps
 
+// ============================================================================
+// SMMA CNN top
+// ============================================================================
+// Stream handshake used on every port here and throughout the CNN: a beat
+// transfers when valid and ready are both high on a rising clock edge, and
+// `last` marks the final beat of an image. Data, valid, ready and last are the
+// only signals -- there is no sideband (keep/strobe/id/user), no address phase
+// and no bursts.
+// ============================================================================
 module smma_cnn_top #(
     parameter int DATA_WIDTH = 24,
     parameter int FRAC_BITS = 16,
@@ -13,20 +22,20 @@ module smma_cnn_top #(
     input  logic clk,
     input  logic rst,
     
-    // AXI4-Stream Slave (Input from sensors/DMA)
-    input  logic s_axis_valid,
-    output logic s_axis_ready,
-    input  logic signed [DATA_WIDTH-1:0] s_axis_data [0:IN_CHANNELS-1],
-    input  logic s_axis_last,
+    // Stream slave: one pixel per channel per beat
+    input  logic s_valid,
+    output logic s_ready,
+    input  logic signed [DATA_WIDTH-1:0] s_data [0:IN_CHANNELS-1],
+    input  logic s_last,
     
-    // AXI4-Stream Master (Output to PS / Decision logic)
-    output logic m_axis_valid,
-    input  logic m_axis_ready,
-    output logic signed [DATA_WIDTH-1:0] m_axis_data_normal,
-    output logic signed [DATA_WIDTH-1:0] m_axis_data_unbalance,
-    output logic signed [DATA_WIDTH-1:0] m_axis_data_misalign,
-    output logic signed [DATA_WIDTH-1:0] m_axis_data_bearing,
-    output logic m_axis_last
+    // Stream master: one logit set per image, to the decision logic
+    output logic m_valid,
+    input  logic m_ready,
+    output logic signed [DATA_WIDTH-1:0] m_data_normal,
+    output logic signed [DATA_WIDTH-1:0] m_data_unbalance,
+    output logic signed [DATA_WIDTH-1:0] m_data_misalign,
+    output logic signed [DATA_WIDTH-1:0] m_data_bearing,
+    output logic m_last
 );
 
     // ==========================================
@@ -45,10 +54,10 @@ module smma_cnn_top #(
     ) u_line_buffer (
         .clk(clk),
         .rst(rst),
-        .s_valid(s_axis_valid),
-        .s_ready(s_axis_ready),
-        .s_data(s_axis_data),
-        .s_last(s_axis_last),
+        .s_valid(s_valid),
+        .s_ready(s_ready),
+        .s_data(s_data),
+        .s_last(s_last),
         .m_valid(lb_valid),
         .m_ready(lb_ready),
         .m_window(lb_window),
@@ -124,16 +133,16 @@ module smma_cnn_top #(
         .s_ready(pool_ready),
         .s_data(pool_data),
         .s_last(pool_last),
-        .m_valid(m_axis_valid),
-        .m_ready(m_axis_ready),
+        .m_valid(m_valid),
+        .m_ready(m_ready),
         .m_data(dense_data),
-        .m_last(m_axis_last)
+        .m_last(m_last)
     );
 
     // Breakout the dense logits to the output ports
-    assign m_axis_data_normal    = dense_data[0];
-    assign m_axis_data_unbalance = dense_data[1];
-    assign m_axis_data_misalign  = dense_data[2];
-    assign m_axis_data_bearing   = dense_data[3];
+    assign m_data_normal    = dense_data[0];
+    assign m_data_unbalance = dense_data[1];
+    assign m_data_misalign  = dense_data[2];
+    assign m_data_bearing   = dense_data[3];
 
 endmodule

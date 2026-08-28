@@ -59,30 +59,7 @@ set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
-set_global_assignment -name HEX_FILE ../FFT/model_sim_four_modes/coefficients/windowing/hann_64_q117.hex
-set_global_assignment -name HEX_FILE ../FFT/model_sim_four_modes/coefficients/fir/stage1_decim4_q117.hex
-set_global_assignment -name HEX_FILE ../FFT/model_sim_four_modes/coefficients/fir/stage2_decim4_q117.hex
-set_global_assignment -name HEX_FILE ../FFT/model_sim_four_modes/coefficients/fir/stage3_decim2_q117.hex
-set_global_assignment -name SYSTEMVERILOG_FILE ../cnn/rtl/mac_q8_16.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../cnn/rtl/line_buffer_3x3.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../cnn/rtl/conv2d_fsm.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../cnn/rtl/maxpool_2x2.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../cnn/rtl/dense_layer_fsm.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../cnn/rtl/smma_cnn_top.sv
-set_global_assignment -name VERILOG_FILE ../FFT/model_sim_four_modes_quartus/rtl/fft/dual_port_ram.v
-set_global_assignment -name VERILOG_FILE ../FFT/model_sim_four_modes_quartus/rtl/fft/fft_64_dualmode.v
-set_global_assignment -name VERILOG_FILE ../FFT/model_sim_four_modes_quartus/rtl/fft/fft_coeff_rom_64.v
-set_global_assignment -name VERILOG_FILE ../FFT/model_sim_four_modes_quartus/rtl/framing/sample_buffer_64_hop8_dualmode.v
-set_global_assignment -name VERILOG_FILE ../FFT/model_sim_four_modes_quartus/rtl/lms/lms_filter_8tap_dualmode.v
-set_global_assignment -name SYSTEMVERILOG_FILE ../FFT/model_sim_four_modes_quartus/rtl/pipeline/preprocess_lms_fft_four_modes.sv
-set_global_assignment -name VERILOG_FILE ../FFT/model_sim_four_modes_quartus/rtl/preprocessing/fir_coeff_rom_dualmode.v
-set_global_assignment -name VERILOG_FILE ../FFT/model_sim_four_modes_quartus/rtl/preprocessing/fir_decimator_32_dualmode.v
-set_global_assignment -name VERILOG_FILE ../FFT/model_sim_four_modes_quartus/rtl/preprocessing/fir_decimator_stage_dualmode.v
-set_global_assignment -name VERILOG_FILE ../FFT/model_sim_four_modes_quartus/rtl/windowing/hann_window_64_dualmode.v
-set_global_assignment -name VERILOG_FILE ../FFT/model_sim_four_modes_quartus/rtl/windowing/mean_remover_64_dualmode.v
-set_global_assignment -name SYSTEMVERILOG_FILE ../gcd/euclidian_gcd.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../gcd/gcd.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../mac/mac.sv
+# ---------------- memory initialisation images ----------------
 set_global_assignment -name SOURCE_FILE ../mem/cnn/conv2d_biases.mem
 set_global_assignment -name SOURCE_FILE ../mem/cnn/conv2d_weights.mem
 set_global_assignment -name SOURCE_FILE ../mem/cnn/dense_biases.mem
@@ -90,16 +67,54 @@ set_global_assignment -name SOURCE_FILE ../mem/cnn/dense_weights.mem
 set_global_assignment -name SOURCE_FILE ../mem/mlp/mlp_biases.mem
 set_global_assignment -name SOURCE_FILE ../mem/mlp/mlp_scales.mem
 set_global_assignment -name SOURCE_FILE ../mem/mlp/mlp_weights.mem
+set_global_assignment -name SOURCE_FILE ../FFT/model_sim_four_modes_quartus_shared_fft/coefficients/fir/stage1_decim4_q117.bin
+set_global_assignment -name SOURCE_FILE ../FFT/model_sim_four_modes_quartus_shared_fft/coefficients/fir/stage2_decim4_q117.bin
+set_global_assignment -name SOURCE_FILE ../FFT/model_sim_four_modes_quartus_shared_fft/coefficients/fir/stage3_decim2_q117.bin
+set_global_assignment -name SOURCE_FILE ../FFT/model_sim_four_modes_quartus_shared_fft/coefficients/windowing/hann_64_q117.bin
+
+# ---------------- shared 4-sensor FFT pipeline ----------------
+set_global_assignment -name VERILOG_FILE ../FFT/model_sim_four_modes_quartus_shared_fft/rtl/fft/dual_port_ram.v
+set_global_assignment -name VERILOG_FILE ../FFT/model_sim_four_modes_quartus_shared_fft/rtl/fft/fft_coeff_rom_64.v
+set_global_assignment -name VERILOG_FILE ../FFT/model_sim_four_modes_quartus_shared_fft/rtl/fft/fft_64_dualmode.v
+set_global_assignment -name SYSTEMVERILOG_FILE ../FFT/model_sim_four_modes_quartus_shared_fft/rtl/fft/fft_shared_4sensor.sv
+set_global_assignment -name VERILOG_FILE ../FFT/model_sim_four_modes_quartus_shared_fft/rtl/framing/sample_buffer_64_hop8_dualmode.v
+set_global_assignment -name VERILOG_FILE ../FFT/model_sim_four_modes_quartus_shared_fft/rtl/preprocessing/fir_coeff_rom_dualmode.v
+set_global_assignment -name VERILOG_FILE ../FFT/model_sim_four_modes_quartus_shared_fft/rtl/preprocessing/fir_decimator_stage_dualmode.v
+set_global_assignment -name VERILOG_FILE ../FFT/model_sim_four_modes_quartus_shared_fft/rtl/preprocessing/fir_decimator_32_dualmode.v
+set_global_assignment -name VERILOG_FILE ../FFT/model_sim_four_modes_quartus_shared_fft/rtl/windowing/hann_window_64_dualmode.v
+set_global_assignment -name VERILOG_FILE ../FFT/model_sim_four_modes_quartus_shared_fft/rtl/windowing/mean_remover_64_dualmode.v
+set_global_assignment -name SYSTEMVERILOG_FILE ../FFT/model_sim_four_modes_quartus_shared_fft/rtl/pipeline/preprocess_window_channel_no_lms.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../FFT/model_sim_four_modes_quartus_shared_fft/rtl/pipeline/preprocess_fft_shared_4sensor_q915_no_lms.sv
+
+# ---------------- CNN ----------------
+set_global_assignment -name SYSTEMVERILOG_FILE ../cnn/rtl/mac_q8_16.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../cnn/rtl/line_buffer_3x3.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../cnn/rtl/conv2d_fsm.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../cnn/rtl/maxpool_2x2.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../cnn/rtl/dense_layer_fsm.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../cnn/rtl/smma_cnn_top.sv
+
+# ---------------- MLP (package first) ----------------
 set_global_assignment -name SYSTEMVERILOG_FILE ../mlp_model/mlp_weights.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../mlp_model/mlp.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../perceptron/perceptron.sv
+
+# ---------------- spectrogram / SPI / misc ----------------
 set_global_assignment -name SYSTEMVERILOG_FILE ../spectrogram/rtl/spectrogram_generator.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../spi/spi_controller.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../spi/spi_slave.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/fft_to_axi_adapter.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../spi/spi_controller.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../gcd/euclidian_gcd.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../gcd/gcd.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../mac/mac.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../perceptron/perceptron.sv
+
+# ---------------- top level ----------------
+set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/spi_sensor_frame_rx.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/fft_to_stream_adapter.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/fft_to_mlp_collector.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/spectrogram_4ch_join.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/inference_arbiter.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/spectrogram_to_cnn_adapter.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/spi_rx_deserializer.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/top_system.sv
+
+set_global_assignment -name SDC_FILE top_system.sdc
+
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
