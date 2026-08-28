@@ -1,0 +1,5 @@
+../spi_controller.sv
+../spi_slave.sv
+spi_if.sv
+spi_pkg.sv
+tb/spi_uvm_top.sv
