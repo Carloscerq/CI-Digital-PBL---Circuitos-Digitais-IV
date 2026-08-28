@@ -1,0 +1,4 @@
+../filtro_lms.v
+filtro_lms_if.sv
+filtro_lms_pkg.sv
+tb/filtro_lms_uvm_top.sv
