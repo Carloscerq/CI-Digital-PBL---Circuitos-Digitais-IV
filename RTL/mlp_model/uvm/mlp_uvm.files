@@ -1,0 +1,6 @@
+../mlp_weights.sv
+../../mac/mac.sv
+../mlp.sv
+mlp_if.sv
+mlp_pkg.sv
+tb/mlp_uvm_top.sv
