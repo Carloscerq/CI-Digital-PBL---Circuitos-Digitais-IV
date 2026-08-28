@@ -1,0 +1,4 @@
+../rtl/spectrogram_generator.sv
+spectrogram_generator_if.sv
+spectrogram_generator_pkg.sv
+tb/spectrogram_generator_uvm_top.sv

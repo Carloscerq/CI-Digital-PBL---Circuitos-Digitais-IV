@@ -1,0 +1,5 @@
+../../euclidian_gcd.sv
+../../gcd.sv
+gcd_if.sv
+gcd_pkg.sv
+tb/gcd_uvm_top.sv

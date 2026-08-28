@@ -1,0 +1,5 @@
+cnn/rtl/mac_q8_16.sv
+cnn/rtl/dense_layer_fsm.sv
+cnn/uvm/dense_layer_fsm/dense_layer_fsm_if.sv
+cnn/uvm/dense_layer_fsm/dense_layer_fsm_pkg.sv
+cnn/uvm/dense_layer_fsm/tb/dense_layer_fsm_uvm_top.sv

@@ -1,0 +1,14 @@
+model_sim_four_modes/rtl/preprocessing/fir_coeff_rom_dualmode.v
+model_sim_four_modes/rtl/preprocessing/fir_decimator_stage_dualmode.v
+model_sim_four_modes/rtl/preprocessing/fir_decimator_32_dualmode.v
+model_sim_four_modes/rtl/framing/sample_buffer_64_hop8_dualmode.v
+model_sim_four_modes/rtl/windowing/mean_remover_64_dualmode.v
+model_sim_four_modes/rtl/windowing/hann_window_64_dualmode.v
+model_sim_four_modes/rtl/lms/lms_filter_8tap_dualmode.v
+model_sim_four_modes/rtl/fft/dual_port_ram.v
+model_sim_four_modes/rtl/fft/fft_coeff_rom_64.v
+model_sim_four_modes/rtl/fft/fft_64_dualmode.v
+model_sim_four_modes/rtl/pipeline/preprocess_lms_fft_four_modes.sv
+model_sim_four_modes/uvm/preprocess_lms_fft_if.sv
+model_sim_four_modes/uvm/preprocess_lms_fft_pkg.sv
+model_sim_four_modes/uvm/tb/preprocess_lms_fft_uvm_top.sv

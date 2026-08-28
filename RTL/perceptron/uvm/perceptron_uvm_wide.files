@@ -1,0 +1,4 @@
+../perceptron.sv
+perceptron_if.sv
+perceptron_pkg.sv
+tb/perceptron_uvm_top.sv

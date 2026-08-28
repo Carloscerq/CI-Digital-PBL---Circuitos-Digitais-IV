@@ -1,0 +1,4 @@
+../../rtl/mac_q8_16.sv
+mac_q8_16_if.sv
+mac_q8_16_pkg.sv
+tb/mac_q8_16_uvm_top.sv

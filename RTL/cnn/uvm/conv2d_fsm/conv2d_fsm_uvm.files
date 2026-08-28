@@ -1,0 +1,5 @@
+cnn/rtl/mac_q8_16.sv
+cnn/rtl/conv2d_fsm.sv
+cnn/uvm/conv2d_fsm/conv2d_fsm_if.sv
+cnn/uvm/conv2d_fsm/conv2d_fsm_pkg.sv
+cnn/uvm/conv2d_fsm/tb/conv2d_fsm_uvm_top.sv
