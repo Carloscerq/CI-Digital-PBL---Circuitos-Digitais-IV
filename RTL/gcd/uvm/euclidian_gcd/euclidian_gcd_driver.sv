@@ -7,9 +7,9 @@
 //                             (plus the same trailing #1 validate() uses
 //                             before moving on).
 //
-//  reset_n is deliberately NOT touched here: reset sequencing is a
+//  reset is deliberately NOT touched here: reset sequencing is a
 //  top-level concern (see tb/euclidian_gcd_uvm_top.sv), and by the time
-//  items start flowing through this driver reset_n is assumed already
+//  items start flowing through this driver reset is assumed already
 //  deasserted.
 // ---------------------------------------------------------------------
 class euclidian_gcd_driver #(

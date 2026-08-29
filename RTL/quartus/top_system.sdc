@@ -20,9 +20,17 @@ set_false_path -from [get_ports {spi_serial_clock}]
 set_false_path -from [get_ports {spi_slave_select_n}]
 set_false_path -from [get_ports {spi_mosi}]
 
-# reset_n is an asynchronous, active-low reset applied directly to the
-# registers' aclr; release is not timed.
-set_false_path -from [get_ports {reset_n}]
+# ----------------------------------------------------------------------------
+# Synchronous reset
+# ----------------------------------------------------------------------------
+# reset is a SYNCHRONOUS, active-high reset: every register samples it on
+# posedge clk, so unlike the SPI pins it is a real timed path and must NOT be
+# false-pathed. The numbers below assume the pin is driven from a source
+# already in the clk domain with a small board-level delay -- adjust to match
+# whatever actually drives it (a free-running button needs a synchroniser in
+# top_system instead).
+set_input_delay -clock clk -max 2.000 [get_ports {reset}]
+set_input_delay -clock clk -min 0.000 [get_ports {reset}]
 
 # ----------------------------------------------------------------------------
 # Asynchronous outputs

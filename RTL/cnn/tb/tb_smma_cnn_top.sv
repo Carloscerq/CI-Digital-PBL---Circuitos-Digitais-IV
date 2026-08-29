@@ -3,7 +3,7 @@
 module tb_smma_cnn_top();
 
     logic clk;
-    logic rst;
+    logic reset;
     
     // Interface signals matching smma_cnn_top
     logic s_valid;
@@ -106,11 +106,11 @@ module tb_smma_cnn_top();
     endtask
 
     initial begin
-        rst = 1'b1;
+        reset = 1'b1;
         s_valid = 1'b0;
         m_ready = 1'b0;
         
-        #22 rst = 1'b0;
+        #22 reset = 1'b0;
         
         fork
             feed_top();

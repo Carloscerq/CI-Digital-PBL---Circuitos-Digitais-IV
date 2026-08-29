@@ -3,7 +3,7 @@
 module tb_mac_q8_16();
 
     logic clk;
-    logic rst;
+    logic reset;
     logic en;
     logic clr;
     logic signed [23:0] a;
@@ -16,7 +16,7 @@ module tb_mac_q8_16();
         .FRAC_BITS(16)
     ) dut (
         .clk(clk),
-        .rst(rst),
+        .reset(reset),
         .en(en),
         .clr(clr),
         .a(a),
@@ -114,12 +114,12 @@ module tb_mac_q8_16();
     endtask
 
     initial begin
-        rst = 1'b1;
+        reset = 1'b1;
         en = 1'b0;
         clr = 1'b0;
         a = '0; b = '0;
         
-        #20 rst = 1'b0;
+        #20 reset = 1'b0;
         
         run_mac_test();
         

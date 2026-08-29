@@ -3,12 +3,11 @@
 //                    default configuration every CNN block instantiates
 //                    mac_q8_16 with: DATA_WIDTH=24, FRAC_BITS=16. Clock
 //                    period and reset sequencing mirror tb_mac_q8_16.sv
-//                    exactly (100MHz / 10ns period, `rst=1; #20 rst=0;`).
+//                    exactly (100MHz / 10ns period, `reset=1; #20 reset=0;`).
 //
-//  mac_q8_16's reset is SYNCHRONOUS (`if (rst)` sampled on posedge clk
-//  inside the DUT's always_ff, unlike RTL/mac/mac.sv's async rst_n), so
-//  `rst` is simply held high across a couple of posedges and dropped --
-//  no negedge-of-rst_n care is required here.
+//  mac_q8_16's reset is SYNCHRONOUS (`if (reset)` sampled on posedge clk
+//  inside the DUT's always_ff), so `reset` is simply held high across a
+//  couple of posedges and dropped.
 //
 //  No cfg object is needed: like RTL/mac/uvm, mac_q8_16 has no
 //  elaboration-time parameters for the scoreboard to mirror.
@@ -35,7 +34,7 @@ module mac_q8_16_uvm_top;
         .FRAC_BITS (FRAC_BITS)
     ) dut (
         .clk(vif.clk),
-        .rst(vif.rst),
+        .reset(vif.reset),
         .en (vif.en),
         .clr(vif.clr),
         .a  (vif.a),
@@ -44,13 +43,13 @@ module mac_q8_16_uvm_top;
     );
 
     initial begin
-        vif.rst = 1'b1;
+        vif.reset = 1'b1;
         vif.en  = 1'b0;
         vif.clr = 1'b0;
         vif.a   = '0;
         vif.b   = '0;
 
-        #20 vif.rst = 1'b0;
+        #20 vif.reset = 1'b0;
         @(negedge clk);
 
         uvm_config_db #(virtual mac_q8_16_if #(DATA_WIDTH, FRAC_BITS))::set(

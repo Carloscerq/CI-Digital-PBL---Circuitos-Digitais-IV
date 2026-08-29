@@ -24,7 +24,7 @@ module spi_uvm_top;
     localparam bit CPHA    [N_SLAVES] = '{1'b0, 1'b1};
 
     logic clk = 1'b0;
-    logic reset_n;
+    logic reset;
 
     always #5 clk = ~clk;
 
@@ -36,7 +36,7 @@ module spi_uvm_top;
                 $fatal(1, "spi_slave needs CLK_DIV >= 4, slave %0d has %0d",
                        s, CLK_DIV[s]);
 
-    spi_if #(SIZE, N_SLAVES) vif (.clk(clk), .reset_n(reset_n));
+    spi_if #(SIZE, N_SLAVES) vif (.clk(clk), .reset(reset));
 
     spi_controller #(
         .SIZE(SIZE),
@@ -46,7 +46,7 @@ module spi_uvm_top;
         .CPHA(CPHA)
     ) controller (
         .clk(clk),
-        .reset_n(reset_n),
+        .reset(reset),
         .data_in(vif.data_in),
         .address(vif.address),
         .start(vif.start),
@@ -70,7 +70,7 @@ module spi_uvm_top;
                 .CPHA(CPHA[s])
             ) u_slave (
                 .clk(clk),
-                .reset_n(reset_n),
+                .reset(reset),
                 .data_in(vif.slave_data_in[s]),
                 .data_out(vif.slave_data_out[s]),
                 .data_valid(vif.slave_data_valid[s]),
@@ -91,9 +91,9 @@ module spi_uvm_top;
     end
 
     initial begin
-        reset_n = 1'b0;
+        reset = 1'b1;
         repeat (4) @(negedge clk);
-        reset_n = 1'b1;
+        reset = 1'b0;
     end
 
     initial begin

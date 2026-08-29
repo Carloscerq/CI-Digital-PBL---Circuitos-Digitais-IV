@@ -23,7 +23,7 @@ interface line_buffer_3x3_if (
     localparam int DATA_WIDTH  = 24;
     localparam int IN_CHANNELS = 4;
 
-    logic rst;
+    logic reset;
 
     // AXI4-Stream slave side: input pixels, one per cycle, raster order
     logic                          s_valid;

@@ -80,7 +80,7 @@ class smma_cnn_top_monitor extends uvm_monitor;
         accepted = 0;
         forever begin
             @(posedge vif.clk);
-            if (vif.rst) begin
+            if (vif.reset) begin
                 accepted = 0;
             end else if (vif.s_axis_valid && vif.s_axis_ready) begin
                 accepted++;

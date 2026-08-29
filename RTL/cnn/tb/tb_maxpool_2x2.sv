@@ -3,7 +3,7 @@
 module tb_maxpool_2x2();
 
     logic clk;
-    logic rst;
+    logic reset;
     logic s_valid;
     logic s_ready;
     logic signed [23:0] s_data [0:7];
@@ -21,7 +21,7 @@ module tb_maxpool_2x2();
         .CHANNELS(8)
     ) dut (
         .clk(clk),
-        .rst(rst),
+        .reset(reset),
         .s_valid(s_valid),
         .s_ready(s_ready),
         .s_data(s_data),
@@ -130,11 +130,11 @@ module tb_maxpool_2x2();
     endtask
 
     initial begin
-        rst = 1'b1;
+        reset = 1'b1;
         s_valid = 1'b0;
         m_ready = 1'b0;
         
-        #22 rst = 1'b0;
+        #22 reset = 1'b0;
         
         fork
             feed_pool();

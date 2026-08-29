@@ -3,7 +3,7 @@ module euclidian_gcd_tb ();
   localparam SIZE = 64;
 
   logic clk;
-  logic reset_n;
+  logic reset;
   logic start;
   logic [SIZE-1: 0] in_a;
   logic [SIZE-1: 0] in_b;
@@ -12,7 +12,7 @@ module euclidian_gcd_tb ();
 
   euclidian_gcd #(.SIZE(SIZE)) dut (
     .clk(clk),
-    .reset_n(reset_n),
+    .reset(reset),
     .start(start),
     .in_a(in_a),
     .in_b(in_b),
@@ -50,12 +50,12 @@ module euclidian_gcd_tb ();
     start = 0;
     in_a = 0;
     in_b = 0;
-    reset_n = 1;
+    reset = 1'b0;
 
     $monitor("[%t] - in_a: %d in_b: %d - start: %d - ready: %d", $time, in_a, in_b, start, ready);
 
-    @(negedge clk) reset_n = 0;
-    @(negedge clk) reset_n = 1;
+    @(negedge clk) reset = 1'b1;
+    @(negedge clk) reset = 1'b0;
 
     validate(5, 10, 5);
     validate(21, 1071, 462);

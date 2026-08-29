@@ -18,11 +18,10 @@
 //  dropping en during the drain would stall the very propagation this
 //  driver is waiting for.
 //
-//  rst is deliberately NOT touched here: reset sequencing is a
+//  reset is deliberately NOT touched here: reset sequencing is a
 //  top/test-level concern (see tb/mac_q8_16_uvm_top.sv), and by the time
-//  items start flowing through this driver rst is assumed already
-//  deasserted. Note mac_q8_16's rst is SYNCHRONOUS (unlike RTL/mac's
-//  async rst_n), which only matters for how the top sequences it.
+//  items start flowing through this driver reset is assumed already
+//  deasserted.
 // ---------------------------------------------------------------------
 class mac_q8_16_driver #(
     int DATA_WIDTH = 24,

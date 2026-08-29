@@ -7,7 +7,7 @@ module conv2d_fsm #(
     parameter int IN_CHANNELS = 4
 )(
     input  logic               clk,
-    input  logic               rst,
+    input  logic               reset,
     
     // Stream Slave Interface (from line_buffer)
     input  logic               s_valid,
@@ -41,7 +41,7 @@ module conv2d_fsm #(
     assign capture = s_valid && s_ready;
     
     always_ff @(posedge clk) begin
-        if (rst) begin
+        if (reset) begin
             state <= ST_IDLE;
             cnt   <= '0;
         end else begin
@@ -174,7 +174,7 @@ module conv2d_fsm #(
                 .FRAC_BITS(FRAC_BITS)
             ) mac_inst (
                 .clk(clk),
-                .rst(rst),
+                .reset(reset),
                 .en(mac_en),
                 .clr(mac_clr),
                 .a(mac_a[i]),

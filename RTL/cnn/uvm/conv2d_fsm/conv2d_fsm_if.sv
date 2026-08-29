@@ -5,8 +5,8 @@
 //  FRAC_BITS=16, CHANNELS=8, IN_CHANNELS=4), matching the values
 //  conv2d_fsm.sv is instantiated with everywhere else in this repo
 //  (see cnn/tb/tb_conv2d_fsm.sv and sim_cnn.do). `clk` is the DUT's
-//  real clock; `rst` is the DUT's synchronous reset (see
-//  conv2d_fsm.sv's `always_ff @(posedge clk) if (rst) ...`).
+//  real clock; `reset` is the DUT's synchronous reset (see
+//  conv2d_fsm.sv's `always_ff @(posedge clk) if (reset) ...`).
 // ---------------------------------------------------------------------
 interface conv2d_fsm_if (
     input logic clk
@@ -17,7 +17,7 @@ interface conv2d_fsm_if (
     localparam int CHANNELS    = 8;
     localparam int IN_CHANNELS = 4;
 
-    logic rst;
+    logic reset;
 
     // AXI4-Stream Slave Interface (from line_buffer)
     logic                         s_valid;

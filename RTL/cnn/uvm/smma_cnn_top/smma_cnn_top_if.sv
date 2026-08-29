@@ -26,7 +26,7 @@ interface smma_cnn_top_if (
     localparam int IN_CHANNELS = 4;
     localparam int OUT_CLASSES = 4;
 
-    logic rst;
+    logic reset;
 
     // AXI4-Stream slave side: input pixels, one per cycle, raster order,
     // IMG_WIDTH*IMG_HEIGHT (1024) beats per frame, s_axis_last on the

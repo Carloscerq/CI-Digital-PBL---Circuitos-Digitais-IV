@@ -19,7 +19,7 @@ module spectrogram_4ch_join #(
     parameter int CHANNELS   = 4
 )(
     input  logic clk,
-    input  logic reset_n,
+    input  logic reset,
 
     // Spectrogram masters (one per sensor)
     input  logic [CHANNELS-1:0]          m_valid,
@@ -51,8 +51,8 @@ module spectrogram_4ch_join #(
     endgenerate
 
     // All four channels must reach the end of a spectrogram on the same beat.
-    always_ff @(posedge clk or negedge reset_n) begin
-        if (!reset_n)
+    always_ff @(posedge clk) begin
+        if (reset)
             desync_error <= 1'b0;
         else if (all_valid && s_ready &&
                  (m_last != {CHANNELS{m_last[0]}}))

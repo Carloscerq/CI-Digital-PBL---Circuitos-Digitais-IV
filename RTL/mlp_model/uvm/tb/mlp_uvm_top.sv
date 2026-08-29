@@ -7,7 +7,7 @@
 //                    about the DUT instance varies from run to run.
 //
 //  Reset sequence mirrors mlp_tb_dpi.sv exactly: 4 negedges with
-//  rst_n low, then rst_n high, then 2 more negedges before anything
+//  reset high, then reset low, then 2 more negedges before anything
 //  else happens.
 // ---------------------------------------------------------------------
 `timescale 1ns/1ps
@@ -25,7 +25,7 @@ module mlp_uvm_top;
 
     mlp dut (
         .clk       (vif.clk),
-        .rst_n     (vif.rst_n),
+        .reset     (vif.reset),
         .start     (vif.start),
         .features  (vif.features),
         .logits    (vif.logits),
@@ -35,11 +35,11 @@ module mlp_uvm_top;
     );
 
     initial begin
-        vif.rst_n = 1'b0;
+        vif.reset = 1'b1;
         vif.start = 1'b0;
 
         repeat (4) @(negedge clk);
-        vif.rst_n = 1'b1;
+        vif.reset = 1'b0;
         repeat (2) @(negedge clk);
 
         uvm_config_db #(virtual mlp_if)::set(null, "uvm_test_top.env.agent.*", "vif", vif);

@@ -4,7 +4,7 @@
 //  -> maxpool_2x2 -> dense_layer_fsm).
 //
 //  Clock and reset sequencing mirror tb_smma_cnn_top.sv exactly: a
-//  free-running clk toggling every #5 (10ns period), rst held high then
+//  free-running clk toggling every #5 (10ns period), reset held high then
 //  dropped after #22 (so it deasserts mid-cycle, same as the original
 //  tb), s_axis_valid/s_axis_last/s_axis_data and m_axis_ready held at
 //  their idle values until the UVM run phase's own driver/monitor take
@@ -63,7 +63,7 @@ module smma_cnn_top_uvm_top;
         .IN_FEATURES (2048)
     ) dut (
         .clk                   (vif.clk),
-        .rst                   (vif.rst),
+        .reset                   (vif.reset),
         .s_axis_valid          (vif.s_axis_valid),
         .s_axis_ready          (vif.s_axis_ready),
         .s_axis_data           (vif.s_axis_data),
@@ -82,13 +82,13 @@ module smma_cnn_top_uvm_top;
     always_comb vif.dense_data_probe = dut.dense_data;
 
     initial begin
-        vif.rst          = 1'b1;
+        vif.reset          = 1'b1;
         vif.s_axis_valid = 1'b0;
         vif.s_axis_last  = 1'b0;
         vif.m_axis_ready = 1'b0;
         for (int ch = 0; ch < 4; ch++) vif.s_axis_data[ch] = '0;
 
-        #22 vif.rst = 1'b0;
+        #22 vif.reset = 1'b0;
 
         uvm_config_db #(virtual smma_cnn_top_if)::set(null, "uvm_test_top.env.agent.*", "vif", vif);
 

@@ -20,7 +20,7 @@ module smma_cnn_top #(
     parameter int IN_FEATURES = 2048
 )(
     input  logic clk,
-    input  logic rst,
+    input  logic reset,
     
     // Stream slave: one pixel per channel per beat
     input  logic s_valid,
@@ -53,7 +53,7 @@ module smma_cnn_top #(
         .IN_CHANNELS(IN_CHANNELS)
     ) u_line_buffer (
         .clk(clk),
-        .rst(rst),
+        .reset(reset),
         .s_valid(s_valid),
         .s_ready(s_ready),
         .s_data(s_data),
@@ -79,7 +79,7 @@ module smma_cnn_top #(
         .IN_CHANNELS(IN_CHANNELS)
     ) u_conv2d (
         .clk(clk),
-        .rst(rst),
+        .reset(reset),
         .s_valid(lb_valid),
         .s_ready(lb_ready),
         .s_window(lb_window),
@@ -104,7 +104,7 @@ module smma_cnn_top #(
         .CHANNELS(CHANNELS)
     ) u_maxpool (
         .clk(clk),
-        .rst(rst),
+        .reset(reset),
         .s_valid(conv_valid),
         .s_ready(conv_ready),
         .s_data(conv_data),
@@ -128,7 +128,7 @@ module smma_cnn_top #(
         .IN_FEATURES(IN_FEATURES)
     ) u_dense_layer (
         .clk(clk),
-        .rst(rst),
+        .reset(reset),
         .s_valid(pool_valid),
         .s_ready(pool_ready),
         .s_data(pool_data),

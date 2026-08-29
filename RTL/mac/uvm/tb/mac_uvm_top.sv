@@ -35,7 +35,7 @@ module mac_uvm_top;
         .SUM_WIDTH   (SUM_WIDTH)
     ) dut (
         .clk    (vif.clk),
-        .rst_n  (vif.rst_n),
+        .reset  (vif.reset),
         .load   (vif.load),
         .en     (vif.en),
         .data   (vif.data),
@@ -44,14 +44,14 @@ module mac_uvm_top;
     );
 
     initial begin
-        vif.rst_n  = 1'b0;
+        vif.reset  = 1'b1;
         vif.load   = 1'b0;
         vif.en     = 1'b0;
         vif.data   = '0;
         vif.weight = '0;
 
         repeat (2) @(negedge clk);
-        vif.rst_n = 1'b1;
+        vif.reset = 1'b0;
         @(negedge clk);
 
         uvm_config_db #(virtual mac_if #(DATA_WIDTH, WEIGHT_WIDTH, SUM_WIDTH))::set(

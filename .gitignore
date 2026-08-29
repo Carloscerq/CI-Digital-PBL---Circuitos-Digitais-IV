@@ -24,3 +24,6 @@ Scripts/.env
 Scripts/dataset
 **/obj_dir
 **/*/obj_dir
+
+# Questa/ModelSim UVM build area (RTL/scripts/uvm_vsim.sh)
+RTL/sim_vsim/
