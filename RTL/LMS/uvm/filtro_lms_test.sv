@@ -48,9 +48,13 @@ class filtro_lms_regression_test extends filtro_lms_base_test;
         dseq = filtro_lms_directed_seq::type_id::create("dseq");
         dseq.start(env.agent.sequencer);
 
+        phase.phase_done.set_drain_time(this, 100ns);
+
         rseq = filtro_lms_random_seq::type_id::create("rseq");
         rseq.num_samples = 30;
         rseq.start(env.agent.sequencer);
+
+        phase.phase_done.set_drain_time(this, 100ns);
 
         wseq = filtro_lms_wide_random_seq::type_id::create("wseq");
         wseq.num_samples = 20;
