@@ -1,4 +1,4 @@
-../filtro_lms.v
-filtro_lms_if.sv
-filtro_lms_pkg.sv
-tb/filtro_lms_uvm_top.sv
+RTL/LMS/filtro_lms.v
+RTL/LMS/uvm/filtro_lms_if.sv
+RTL/LMS/uvm/filtro_lms_pkg.sv
+RTL/LMS/uvm/tb/filtro_lms_uvm_top.sv
