@@ -27,3 +27,9 @@ Scripts/dataset
 
 # Questa/ModelSim UVM build area (RTL/scripts/uvm_vsim.sh)
 RTL/sim_vsim/
+
+
+waves.shm/
+xcelium.d/
+xrun.history
+xrun.log
