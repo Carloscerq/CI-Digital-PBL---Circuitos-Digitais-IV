@@ -2,12 +2,16 @@
 //  line_buffer_3x3_uvm_top  --  DUT + interface + UVM entry point for
 //  the CNN's line-buffer / sliding-window generator.
 //
-//  Clock and reset sequencing mirror tb_line_buffer_3x3.sv exactly:
-//  a free-running clk toggling every #5 (10ns period), reset held high
-//  then dropped after #22 (so it deasserts mid-cycle, same as the
-//  original directed tb), s_valid/s_last/s_data held at their idle
-//  values and m_ready held low until the UVM run phase's own
-//  driver/monitor take over.
+//  This module owns only the free-running clk (toggling every #5, a
+//  10ns period, as in tb_line_buffer_3x3.sv), the DUT/interface
+//  instances and the config_db handoff. Reset and the DUT's idle input
+//  values are driven by line_buffer_3x3_driver's UVM reset_phase
+//  rather than from an `initial` block here, so all interface timing
+//  lives inside the phase schedule and the test's stimulus can sit in
+//  main_phase, which cannot start before reset_phase has finished. The
+//  DUT still sees tb_line_buffer_3x3.sv's sequencing -- reset high
+//  across the first two posedges, deasserted mid-cycle -- and m_ready
+//  stays with the monitor, which drives it from time 0.
 //
 //  There's exactly one valid geometry here (DATA_WIDTH=24/IMG_WIDTH=32/
 //  IMG_HEIGHT=32/IN_CHANNELS=4, see line_buffer_3x3_pkg.sv), so no
@@ -46,14 +50,6 @@ module line_buffer_3x3_uvm_top;
     );
 
     initial begin
-        vif.reset     = 1'b1;
-        vif.s_valid = 1'b0;
-        vif.s_last  = 1'b0;
-        vif.m_ready = 1'b0;
-        for (int ch = 0; ch < 4; ch++) vif.s_data[ch] = '0;
-
-        #22 vif.reset = 1'b0;
-
         uvm_config_db #(virtual line_buffer_3x3_if)::set(null, "uvm_test_top.env.agent.*", "vif", vif);
 
         run_test();

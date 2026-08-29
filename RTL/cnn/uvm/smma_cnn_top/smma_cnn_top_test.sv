@@ -8,7 +8,13 @@
 //  smma_cnn_top_directed_random_test  --  runs the directed real-
 //  spectrogram frame first (smma_cnn_top_directed_seq), then one
 //  randomized-content frame (smma_cnn_top_random_seq), same shape as
-//  line_buffer_3x3_directed_random_test. Both start_item()/finish_item()
+//  line_buffer_3x3_directed_random_test. The stimulus lives in
+//  main_phase, not run_phase, because reset is applied in the driver's
+//  reset_phase (see smma_cnn_top_driver.sv): main_phase is the first
+//  run-time phase that is guaranteed to start only after reset_phase
+//  has dropped its objection, so no pixel is ever driven while reset is
+//  still asserted. run_phase, which spans the whole run-time schedule,
+//  would have overlapped reset instead. Both start_item()/finish_item()
 //  calls returning only means the driver finished STREAMING the
 //  frames' pixels in -- the pipeline's own latency means the second
 //  frame's single output beat can still be in flight after that, so
@@ -42,7 +48,7 @@ class smma_cnn_top_directed_random_test extends smma_cnn_top_base_test;
         super.new(name, parent);
     endfunction
 
-    task run_phase(uvm_phase phase);
+    task main_phase(uvm_phase phase);
         smma_cnn_top_directed_seq dseq;
         smma_cnn_top_random_seq   rseq;
         int unsigned total_frames;

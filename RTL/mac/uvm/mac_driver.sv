@@ -35,6 +35,39 @@ class mac_driver #(
             `uvm_fatal("NOVIF", "virtual interface not set for driver")
     endfunction
 
+    // ------------------------------------------------------------------
+    //  reset_phase -- the UVM run-time phase that owns reset. This used
+    //  to be sequenced from an `initial` block in
+    //  mac_uvm_top.sv; it belongs here because the driver is
+    //  the component that holds the vif and drives the DUT's inputs.
+    //  Raising an objection across the whole phase is what makes the
+    //  schedule really wait for reset to finish, which in turn is what
+    //  lets the test
+    //  (mac_wide_random_test / mac_protocol_test)
+    //  start its sequences from main_phase with no chance of stimulus
+    //  overlapping reset -- run_phase spans the entire run-time
+    //  schedule, so it would have overlapped it.
+    // ------------------------------------------------------------------
+    // Reset across two negedges then one settled idle cycle, exactly the
+    // sequence the top module's `initial` block used to apply.
+    localparam int RESET_CYCLES = 2;
+
+    task reset_phase(uvm_phase phase);
+        phase.raise_objection(this, "mac: applying reset");
+
+        vif.reset  = 1'b1;
+        vif.load   = 1'b0;
+        vif.en     = 1'b0;
+        vif.data   = '0;
+        vif.weight = '0;
+
+        repeat (RESET_CYCLES) @(negedge vif.clk);
+        vif.reset = 1'b0;
+        @(negedge vif.clk);
+
+        phase.drop_objection(this, "mac: reset released");
+    endtask
+
     task run_phase(uvm_phase phase);
         forever begin
             seq_item_port.get_next_item(req);

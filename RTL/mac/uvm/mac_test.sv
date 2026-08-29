@@ -19,6 +19,12 @@
 //  way mac_tb.sv drives it -- and checks both behaviors with plain
 //  procedural code instead of forcing them through the sequence/driver/
 //  monitor/scoreboard item pipeline.
+//
+//  Stimulus runs in main_phase, not run_phase: reset is applied in
+//  mac_driver's UVM reset_phase, and main_phase is the first
+//  run-time phase guaranteed to start only after reset_phase has
+//  dropped its objection -- run_phase spans the whole run-time
+//  schedule, so it would have overlapped reset.
 // ---------------------------------------------------------------------
 class mac_base_test #(
     int DATA_WIDTH   = 24,
@@ -50,7 +56,7 @@ class mac_wide_random_test extends mac_base_test #(24, 8, 40, 132);
         super.new(name, parent);
     endfunction
 
-    task run_phase(uvm_phase phase);
+    task main_phase(uvm_phase phase);
         mac_directed_seq #(24, 8, 40, 132) dseq;
         mac_sat_seq #(24, 8, 40, 132)      sseq;
         mac_random_seq #(24, 8, 40, 132)   rseq;
@@ -104,7 +110,7 @@ class mac_protocol_test extends uvm_test;
         end
     endtask
 
-    task run_phase(uvm_phase phase);
+    task main_phase(uvm_phase phase);
         phase.raise_objection(this);
 
         // ---- prime the accumulator with a known value ------------------

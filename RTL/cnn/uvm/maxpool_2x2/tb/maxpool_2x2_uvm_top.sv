@@ -2,12 +2,16 @@
 //  maxpool_2x2_uvm_top  --  DUT + interface + UVM entry point for the
 //  CNN's 2x2 max-pooling unit.
 //
-//  Clock and reset sequencing mirror tb_maxpool_2x2.sv exactly: a
-//  free-running clk toggling every #5 (10ns period), reset held high then
-//  dropped after #22 (so it deasserts mid-cycle, same as the original
-//  directed tb), s_valid/s_last/s_data held at their idle values and
-//  m_ready held low until the UVM run phase's own driver/monitor take
-//  over.
+//  This module owns only the free-running clk (toggling every #5, a
+//  10ns period, as in tb_maxpool_2x2.sv), the DUT/interface instances
+//  and the config_db handoff. Reset and the DUT's idle input values are
+//  driven by maxpool_2x2_driver's UVM reset_phase rather than from an
+//  `initial` block here, so all interface timing lives inside the phase
+//  schedule and the test's stimulus can sit in main_phase, which cannot
+//  start before reset_phase has finished. The DUT still sees
+//  tb_maxpool_2x2.sv's sequencing -- reset high across the first two
+//  posedges, deasserted mid-cycle -- and m_ready stays with the
+//  monitor, which drives it from time 0.
 //
 //  There's exactly one valid geometry here (DATA_WIDTH=24/IMG_WIDTH=32/
 //  CHANNELS=8, see maxpool_2x2_pkg.sv), so no elaboration-time cfg
@@ -45,14 +49,6 @@ module maxpool_2x2_uvm_top;
     );
 
     initial begin
-        vif.reset     = 1'b1;
-        vif.s_valid = 1'b0;
-        vif.s_last  = 1'b0;
-        vif.m_ready = 1'b0;
-        for (int ch = 0; ch < 8; ch++) vif.s_data[ch] = '0;
-
-        #22 vif.reset = 1'b0;
-
         uvm_config_db #(virtual maxpool_2x2_if)::set(null, "uvm_test_top.env.agent.*", "vif", vif);
 
         run_test();

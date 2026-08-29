@@ -11,6 +11,12 @@
 //  feed_dense() exactly), then a couple of randomized-content frames
 //  (see dense_layer_fsm_random_seq), same shape as
 //  conv2d_fsm_directed_random_test/mlp_directed_random_test.
+//
+//  Stimulus runs in main_phase, not run_phase: reset is applied in
+//  dense_layer_fsm_driver's UVM reset_phase, and main_phase is the first
+//  run-time phase guaranteed to start only after reset_phase has
+//  dropped its objection -- run_phase spans the whole run-time
+//  schedule, so it would have overlapped reset.
 // ---------------------------------------------------------------------
 class dense_layer_fsm_base_test extends uvm_test;
 
@@ -37,7 +43,7 @@ class dense_layer_fsm_directed_random_test extends dense_layer_fsm_base_test;
         super.new(name, parent);
     endfunction
 
-    task run_phase(uvm_phase phase);
+    task main_phase(uvm_phase phase);
         dense_layer_fsm_directed_seq dseq;
         dense_layer_fsm_random_seq   rseq;
 
