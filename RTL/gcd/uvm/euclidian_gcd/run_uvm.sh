@@ -6,8 +6,11 @@
 #   ./run_uvm.sh +UVM_VERBOSITY=UVM_HIGH             # per-item logging
 #   ./run_uvm.sh +UVM_TESTNAME=euclidian_gcd_random_test
 
+cd "$(dirname "$0")/../../.." || exit 1
+
 xrun -64bit -sv -uvmhome CDNS-1.2 -timescale 1ns/1ps -access +rwc \
      -top euclidian_gcd_uvm_top \
-     -f euclidian_gcd_uvm.files \
+     -incdir gcd/uvm/euclidian_gcd \
+     -f gcd/uvm/euclidian_gcd/euclidian_gcd_uvm.files \
      +UVM_TESTNAME=euclidian_gcd_random_test \
      "$@"
