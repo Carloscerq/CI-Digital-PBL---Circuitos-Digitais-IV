@@ -14,7 +14,7 @@ module spectrogram_generator #(
     parameter int FRAMES_PER_SPECTROGRAM = 32
 )(
     input  logic                      clk,
-    input  logic                      rst,
+    input  logic                      reset,
     
     // Stream slave: bins from the FFT
     input  logic                      s_valid,
@@ -81,7 +81,7 @@ module spectrogram_generator #(
     end
 
     always_ff @(posedge clk) begin
-        if (rst) begin
+        if (reset) begin
             wr_side <= 1'b0;
             buf_0_ready_to_read <= 1'b0;
             buf_1_ready_to_read <= 1'b0;
@@ -123,7 +123,7 @@ module spectrogram_generator #(
     assign active_rd_ready = (rd_side == 1'b0) ? buf_0_ready_to_read : buf_1_ready_to_read;
 
     always_ff @(posedge clk) begin
-        if (rst) begin
+        if (reset) begin
             rd_side <= 1'b0;
             rd_active <= 1'b0;
             m_valid <= 1'b0;

@@ -9,9 +9,9 @@
 //                   period of margin and avoids any race with the DUT's
 //                   own posedge sampling.
 //
-//  rst_n is deliberately NOT touched here: reset sequencing is a
+//  reset is deliberately NOT touched here: reset sequencing is a
 //  top/test-level concern (see tb/mac_uvm_top.sv and mac_protocol_test),
-//  and by the time items start flowing through this driver rst_n is
+//  and by the time items start flowing through this driver reset is
 //  assumed already deasserted.
 // ---------------------------------------------------------------------
 class mac_driver #(

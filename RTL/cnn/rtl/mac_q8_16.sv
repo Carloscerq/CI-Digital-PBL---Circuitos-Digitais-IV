@@ -5,7 +5,7 @@ module mac_q8_16 #(
     parameter int FRAC_BITS = 16
 )(
     input  logic               clk,
-    input  logic               rst,
+    input  logic               reset,
     input  logic               en,
     input  logic               clr, // Clears the accumulator
     input  logic signed [DATA_WIDTH-1:0] a,
@@ -22,7 +22,7 @@ module mac_q8_16 #(
     logic signed [(DATA_WIDTH*2)-1:0] acc_reg;
 
     always_ff @(posedge clk) begin
-        if (rst) begin
+        if (reset) begin
             a_reg    <= '0;
             b_reg    <= '0;
             clr_reg1 <= '0;

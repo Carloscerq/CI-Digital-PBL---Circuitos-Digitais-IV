@@ -15,7 +15,7 @@
 //  is needed on the driver side; see preprocess_lms_fft_monitor.sv for
 //  the (randomized-backpressure) checks on the OUTPUT side instead.
 //
-//  rst is deliberately NOT touched here: reset sequencing is a
+//  reset is deliberately NOT touched here: reset sequencing is a
 //  top-level concern (see tb/preprocess_lms_fft_uvm_top.sv), and by the
 //  time items start flowing through this driver reset is assumed
 //  already deasserted, mirroring every other driver in this repo.

@@ -7,7 +7,7 @@ module line_buffer_3x3 #(
     parameter int IN_CHANNELS = 4
 )(
     input  logic               clk,
-    input  logic               rst,
+    input  logic               reset,
     
     // Stream slave interface (Input Pixels)
     input  logic               s_valid,
@@ -36,7 +36,7 @@ module line_buffer_3x3 #(
     assign s_ready = advance && is_active_pixel;
 
     always_ff @(posedge clk) begin
-        if (rst) begin
+        if (reset) begin
             px <= '0;
             py <= '0;
         end else if (advance) begin
@@ -74,7 +74,7 @@ module line_buffer_3x3 #(
             end
 
             always_ff @(posedge clk) begin
-                if (rst) begin
+                if (reset) begin
                     for (int r = 0; r < 3; r++) begin
                         for (int c = 0; c < 3; c++) begin
                             m_window[ch][r][c] <= '0;
@@ -104,7 +104,7 @@ module line_buffer_3x3 #(
     logic m_last_reg;
 
     always_ff @(posedge clk) begin
-        if (rst) begin
+        if (reset) begin
             m_valid_reg <= 1'b0;
             m_last_reg  <= 1'b0;
         end else if (advance) begin

@@ -3,7 +3,7 @@
 module tb_conv2d_fsm();
 
     logic clk;
-    logic rst;
+    logic reset;
     logic s_valid;
     logic s_ready;
     logic signed [23:0] s_window [0:3][0:2][0:2];
@@ -22,7 +22,7 @@ module tb_conv2d_fsm();
         .IN_CHANNELS(4)
     ) dut (
         .clk(clk),
-        .rst(rst),
+        .reset(reset),
         .s_valid(s_valid),
         .s_ready(s_ready),
         .s_window(s_window),
@@ -101,12 +101,12 @@ module tb_conv2d_fsm();
     endtask
 
     initial begin
-        rst = 1'b1;
+        reset = 1'b1;
         s_valid = 1'b0;
         m_ready = 1'b0;
         s_last = 1'b0;
         
-        #22 rst = 1'b0;
+        #22 reset = 1'b0;
         
         $display("--- Starting Liveness Test ---");
         fork

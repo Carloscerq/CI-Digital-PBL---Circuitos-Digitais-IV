@@ -25,7 +25,7 @@ module spi_sensor_frame_rx #(
     parameter int BYTES_PER_WORD = 3
 )(
     input  logic clk,
-    input  logic reset_n,
+    input  logic reset,
 
     // spi_slave fabric side
     input  logic [7:0] spi_data,
@@ -65,8 +65,8 @@ module spi_sensor_frame_rx #(
     logic frame_end;
     assign frame_end = selected_q && !spi_selected;
 
-    always_ff @(posedge clk or negedge reset_n) begin
-        if (!reset_n) begin
+    always_ff @(posedge clk) begin
+        if (reset) begin
             word_idx    <= '0;
             byte_idx    <= '0;
             shift_reg   <= '0;

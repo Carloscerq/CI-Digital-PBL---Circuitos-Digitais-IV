@@ -5,8 +5,8 @@
 //  `start` for one cycle while `in` is held stable, then waits for the
 //  `ready` pulse (gcd folds the array by repeatedly calling an internal
 //  euclidian_gcd, one pairwise call per LOAD/CALC round trip). `clk`
-//  here is the DUT's real clock, and `reset_n` is its async active-low
-//  reset -- same names/polarity as gcd.sv's ports.
+//  here is the DUT's real clock, and `reset` is its synchronous
+//  active-high reset -- same names/polarity as gcd.sv's ports.
 // ---------------------------------------------------------------------
 interface gcd_if #(
     int AMOUNT_OF_NUMBERS = 33,
@@ -15,7 +15,7 @@ interface gcd_if #(
     input logic clk
 );
 
-    logic reset_n;
+    logic reset;
     logic start;
 
     logic [SIZE-1:0] in [AMOUNT_OF_NUMBERS];

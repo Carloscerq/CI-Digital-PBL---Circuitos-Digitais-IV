@@ -11,10 +11,10 @@
 //                             saturation-magnitude sweep, then the
 //                             tap-count-bucketed random sweep.
 //
-//  mac_protocol_test  --  HOLD and ASYNC_RESET aren't self-contained
+//  mac_protocol_test  --  HOLD and SYNC_RESET aren't self-contained
 //  "items" the way one dot-product job is (HOLD needs load=en=0 held
 //  over several idle cycles while data/weight wiggle and acc must not
-//  move; ASYNC_RESET needs rst_n pulsed asynchronously mid dot-product),
+//  move; SYNC_RESET needs reset held across a posedge mid dot-product),
 //  so this test grabs the raw virtual interface directly -- the same
 //  way mac_tb.sv drives it -- and checks both behaviors with plain
 //  procedural code instead of forcing them through the sequence/driver/
@@ -133,10 +133,9 @@ class mac_protocol_test extends uvm_test;
         vif.load = 1'b0; vif.en = 1'b0;
         do_check("LOAD_RESTART", longint'(vif.acc), 121);
 
-        // ---- ASYNC_RESET: rst_n pulsed strictly between two posedges, --
-        // mid dot-product; only a truly asynchronous reset clears acc
-        // immediately rather than on the following edge (mac_tb.sv's
-        // ASYNC_RESET check)
+        // ---- SYNC_RESET: reset held across one posedge mid dot-product, -
+        // which is what a synchronous reset needs to clear acc; it outranks
+        // the load/en still being driven (mac_tb.sv's SYNC_RESET check)
         fork
             begin
                 for (int i = 0; i < MAX_TAPS; i++) begin
@@ -152,11 +151,10 @@ class mac_protocol_test extends uvm_test;
             end
             begin
                 repeat (20) @(negedge vif.clk);
-                #0.5;                 // partway to the next posedge
-                vif.rst_n = 1'b0;
-                #0.1;
-                do_check("ASYNC_RESET", longint'(vif.acc), 0);
-                vif.rst_n = 1'b1;     // released before that posedge ever arrives
+                vif.reset = 1'b1;
+                @(negedge vif.clk);   // the posedge in between clears acc
+                do_check("SYNC_RESET", longint'(vif.acc), 0);
+                vif.reset = 1'b0;
             end
         join
 

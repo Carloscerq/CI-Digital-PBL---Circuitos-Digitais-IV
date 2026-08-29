@@ -8,7 +8,7 @@ module dense_layer_fsm #(
     parameter int IN_FEATURES = 2048 // Total flattened features
 )(
     input  logic               clk,
-    input  logic               rst,
+    input  logic               reset,
     
     // Stream Slave Interface (from maxpool)
     input  logic               s_valid,
@@ -46,7 +46,7 @@ module dense_layer_fsm #(
 
     // State, channel, wait counter, and ROM address registers
     always_ff @(posedge clk) begin
-        if (rst) begin
+        if (reset) begin
             state    <= ST_IDLE;
             ch       <= '0;
             wait_cnt <= '0;
@@ -202,7 +202,7 @@ module dense_layer_fsm #(
                 .FRAC_BITS(FRAC_BITS)
             ) mac_inst (
                 .clk(clk),
-                .rst(rst),
+                .reset(reset),
                 .en(mac_en),
                 .clr(mac_clr),
                 .a(mac_a[i]),

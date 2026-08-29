@@ -34,7 +34,7 @@ module fft_to_mlp_collector #(
     parameter int N_AUX = 5
 )(
     input  logic clk,
-    input  logic reset_n,
+    input  logic reset,
 
     // Shared-FFT output stream
     input  logic                          fft_valid,
@@ -95,8 +95,8 @@ module fft_to_mlp_collector #(
     assign bin_re = IDX_W'(fft_bin);
     assign bin_im = IDX_W'(fft_bin) + IDX_W'(HALF);
 
-    always_ff @(posedge clk or negedge reset_n) begin
-        if (!reset_n) begin
+    always_ff @(posedge clk) begin
+        if (reset) begin
             mlp_start     <= 1'b0;
             mlp_sensor_id <= 2'd0;
             capturing     <= 1'b0;

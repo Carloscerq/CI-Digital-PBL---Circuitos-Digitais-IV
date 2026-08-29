@@ -22,7 +22,7 @@ module mlp #(
     parameter S_ROM_FILE = "../mem/mlp/mlp_scales.mem"
 )(
     input  logic clk,
-    input  logic rst_n,
+    input  logic reset,
     input  logic start,
 
     input  logic signed [ACC_WIDTH-1:0] features [N_IN],
@@ -142,9 +142,9 @@ module mlp #(
 
     // The ROM output register IS w_q: it has exactly the same one-cycle latency
     // as the old `w_q <= w[n]` in the sequencer, so MAC timing is unchanged.
-    // It deliberately sits outside the async-reset block -- an asynchronously
-    // reset output register blocks M10K inference. Nothing needs w_q reset:
-    // the MACs only sample it when en_q is high, and en_q is reset to 0.
+    // It deliberately sits outside the reset block -- a reset on the ROM
+    // output register blocks M10K inference. Nothing needs w_q reset: the
+    // MACs only sample it when en_q is high, and en_q is reset to 0.
     always_ff @(posedge clk) begin
         for (int n = 0; n < N_MAC; n++)
             w_q[n] <= w_rom[W_ADDR_W'(n * W_DEPTH) + tap_addr];
@@ -160,7 +160,7 @@ module mlp #(
                 .DATA_WIDTH(ACT_WIDTH), .WEIGHT_WIDTH(W_WIDTH), .SUM_WIDTH(SUM_WIDTH)
             ) u_mac (
                 .clk    (clk),
-                .rst_n  (rst_n),
+                .reset  (reset),
                 .load   (load_q),
                 .en     (en_q),
                 .data   (x_q),
@@ -235,8 +235,8 @@ module mlp #(
     end
 
     // ---------------- sequencer --------------------------------------------
-    always_ff @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
+    always_ff @(posedge clk) begin
+        if (reset) begin
             state     <= S_IDLE;
             layer     <= 2'd0;
             idx       <= '0;

@@ -27,7 +27,7 @@ module top_system #(
     parameter int DATA_WIDTH = 24
 )(
     input  logic clk,
-    input  logic reset_n,               // Asynchronous active-low reset
+    input  logic reset,                 // Synchronous active-high reset
 
     // SPI slave pins -- every sensor value arrives here
     input  logic spi_serial_clock,
@@ -54,10 +54,6 @@ module top_system #(
     localparam int SPEC_BINS   = 32;  // bins per spectrogram row  (CNN width)
     localparam int SPEC_FRAMES = 32;  // rows per spectrogram      (CNN height)
 
-    // Reset Distribution
-    logic reset;
-    assign reset = ~reset_n; // Active-high reset derived from reset_n
-
     // ------------------------------------------------------------------------
     // SPI Data Ingestion
     // ------------------------------------------------------------------------
@@ -71,7 +67,7 @@ module top_system #(
         .CPHA(1'b0)
     ) u_spi_slave (
         .clk(clk),
-        .reset_n(reset_n),
+        .reset(reset),
         .data_in(8'd0), // Not transmitting data back for now
         .data_out(spi_data_out),
         .data_valid(spi_data_valid),
@@ -92,7 +88,7 @@ module top_system #(
         .BYTES_PER_WORD(DATA_WIDTH/8)
     ) u_frame_rx (
         .clk(clk),
-        .reset_n(reset_n),
+        .reset(reset),
         .spi_data(spi_data_out),
         .spi_valid(spi_data_valid),
         .spi_selected(spi_busy),
@@ -123,8 +119,8 @@ module top_system #(
     logic vib_ready;
     logic vib_overrun;
 
-    always_ff @(posedge clk or negedge reset_n) begin
-        if (!reset_n) begin
+    always_ff @(posedge clk) begin
+        if (reset) begin
             vib_valid   <= 1'b0;
             vib_overrun <= 1'b0;
             for (int i = 0; i < N_VIB; i++) vib_hold[i] <= '0;
@@ -210,7 +206,7 @@ module top_system #(
         .N_AUX(N_AUX)
     ) u_feature_collector (
         .clk(clk),
-        .reset_n(reset_n),
+        .reset(reset),
         .fft_valid(fft_valid),
         .fft_ready(fft_ready),
         .fft_bin(fft_bin),
@@ -232,7 +228,7 @@ module top_system #(
 
     mlp u_mlp (
         .clk(clk),
-        .rst_n(reset_n),
+        .reset(reset),
         .start(mlp_start),
         .features(mlp_features),
         .logits(mlp_logits),
@@ -244,8 +240,8 @@ module top_system #(
     // The MLP result belongs to the frame that was being collected, so tag it
     // with the sensor id captured at that frame's first bin.
     logic [1:0] mlp_result_sensor_id;
-    always_ff @(posedge clk or negedge reset_n) begin
-        if (!reset_n)          mlp_result_sensor_id <= 2'd0;
+    always_ff @(posedge clk) begin
+        if (reset)             mlp_result_sensor_id <= 2'd0;
         else if (mlp_start)    mlp_result_sensor_id <= mlp_sensor_id;
     end
 
@@ -272,7 +268,7 @@ module top_system #(
                 .SENSOR_ID(s)
             ) u_fft_to_spec_adapter (
                 .clk(clk),
-                .rst(reset),
+                .reset(reset),
                 .fft_valid(fft_valid),
                 .fft_bin(fft_bin),
                 .fft_sensor_id(fft_sensor_id),
@@ -289,7 +285,7 @@ module top_system #(
                 .FRAMES_PER_SPECTROGRAM(SPEC_FRAMES)
             ) u_spectrogram (
                 .clk(clk),
-                .rst(reset),
+                .reset(reset),
                 .s_valid(spec_s_valid[s]),
                 .s_ready(spec_s_ready[s]),
                 .s_data(spec_s_data[s]),
@@ -321,7 +317,7 @@ module top_system #(
         .CHANNELS(N_VIB)
     ) u_spec_join (
         .clk(clk),
-        .reset_n(reset_n),
+        .reset(reset),
         .m_valid(spec_m_valid),
         .m_ready(spec_m_ready),
         .m_data(spec_m_data),
@@ -346,7 +342,7 @@ module top_system #(
         .IN_CHANNELS(N_VIB)
     ) u_cnn (
         .clk(clk),
-        .rst(reset),
+        .reset(reset),
         .s_valid(cnn_s_valid),
         .s_ready(cnn_s_ready),
         .s_data(cnn_s_data),
@@ -368,7 +364,7 @@ module top_system #(
         .N_SENSORS(N_VIB)
     ) u_inference_arbiter (
         .clk(clk),
-        .reset_n(reset_n),
+        .reset(reset),
         .mlp_class_idx(mlp_class_idx),
         .mlp_sensor_id(mlp_result_sensor_id),
         .mlp_done(mlp_done),

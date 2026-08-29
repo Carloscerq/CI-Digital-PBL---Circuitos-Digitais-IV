@@ -27,7 +27,7 @@ interface dense_layer_fsm_if (
     localparam int IN_CHANNELS = 8;
     localparam int OUT_CLASSES = 4;
 
-    logic rst;
+    logic reset;
 
     // AXI4-Stream slave side: input pixels, one IN_CHANNELS-wide beat
     // per cycle, pixel-major/channel-minor stream order

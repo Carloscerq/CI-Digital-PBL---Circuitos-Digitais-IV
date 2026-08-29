@@ -24,7 +24,7 @@ interface spectrogram_generator_if (
 
     localparam int DATA_WIDTH = 24;
 
-    logic rst;
+    logic reset;
 
     // AXI4-Stream slave side: one FFT bin per cycle, s_axis_last on the
     // MEM_DEPTH-th (1024th) word of each frame.

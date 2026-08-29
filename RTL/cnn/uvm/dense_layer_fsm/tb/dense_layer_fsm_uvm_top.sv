@@ -6,7 +6,7 @@
 //  the trained weight ROM.
 //
 //  Clock and reset sequencing mirror tb_dense_layer_fsm.sv exactly: a
-//  free-running clk toggling every #5 (10ns period), rst held high then
+//  free-running clk toggling every #5 (10ns period), reset held high then
 //  dropped after #22 (so it deasserts mid-cycle, same as the original
 //  directed tb), s_valid/s_last held low and m_ready held low until the
 //  UVM run phase's own driver/monitor take over.
@@ -43,7 +43,7 @@ module dense_layer_fsm_uvm_top;
         .IN_FEATURES(2048)
     ) dut (
         .clk    (vif.clk),
-        .rst    (vif.rst),
+        .reset    (vif.reset),
         .s_valid(vif.s_valid),
         .s_ready(vif.s_ready),
         .s_data (vif.s_data),
@@ -55,14 +55,14 @@ module dense_layer_fsm_uvm_top;
     );
 
     initial begin
-        vif.rst     = 1'b1;
+        vif.reset     = 1'b1;
         vif.s_valid = 1'b0;
         vif.s_last  = 1'b0;
         vif.m_ready = 1'b0;
         for (int ch = 0; ch < 8; ch++)
             vif.s_data[ch] = '0;
 
-        #22 vif.rst = 1'b0;
+        #22 vif.reset = 1'b0;
 
         uvm_config_db #(virtual dense_layer_fsm_if)::set(null, "uvm_test_top.env.agent.*", "vif", vif);
 

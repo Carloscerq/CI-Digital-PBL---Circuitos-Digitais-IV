@@ -46,7 +46,7 @@ class spi_driver #(
         vif.hold_select = 1'b0;
         for (int s = 0; s < N_SLAVES; s++) vif.slave_data_in[s] = '0;
 
-        wait (vif.reset_n === 1'b1);
+        wait (vif.reset === 1'b0);
 
         forever begin
             seq_item_port.get_next_item(req);

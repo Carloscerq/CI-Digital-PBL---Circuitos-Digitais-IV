@@ -2,7 +2,7 @@
 //  spi_if  --  connects the UVM agent to the spi_controller +
 //              spi_slave DUT pair.
 //
-//  `clk`/`reset_n` are the shared system clock/reset the whole bus runs
+//  `clk`/`reset` are the shared system clock/reset the whole bus runs
 //  on (both DUTs are synchronous to `clk`; spi_slave additionally
 //  double/triple-flop-synchronises the serial pins onto it).
 //
@@ -19,7 +19,7 @@ interface spi_if #(
     int N_SLAVES = 2
 ) (
     input logic clk,
-    input logic reset_n
+    input logic reset
 );
 
     localparam int ADDR_W = (N_SLAVES > 1) ? $clog2(N_SLAVES) : 1;

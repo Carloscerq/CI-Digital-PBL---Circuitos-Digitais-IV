@@ -24,7 +24,7 @@ module fft_to_stream_adapter #(
     parameter int SENSOR_ID              = 0
 )(
     input  logic clk,
-    input  logic rst,
+    input  logic reset,
 
     // FFT side
     input  logic                         fft_valid,
@@ -56,7 +56,7 @@ module fft_to_stream_adapter #(
     assign s_last  = row_end && (row == ROW_W'(LAST_ROW));
 
     always_ff @(posedge clk) begin
-        if (rst)
+        if (reset)
             row <= '0;
         else if (row_end && s_ready)
             row <= (row == ROW_W'(LAST_ROW)) ? '0 : (row + 1'b1);
