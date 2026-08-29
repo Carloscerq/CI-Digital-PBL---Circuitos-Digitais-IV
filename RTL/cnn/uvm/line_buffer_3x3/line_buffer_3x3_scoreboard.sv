@@ -44,13 +44,13 @@ class line_buffer_3x3_scoreboard extends uvm_component;
     uvm_analysis_imp_frame #(line_buffer_3x3_seq_item, line_buffer_3x3_scoreboard) frame_export;
     uvm_analysis_imp_win   #(line_buffer_3x3_window_item, line_buffer_3x3_scoreboard) win_export;
 
-    // Zero-padded golden frame: padded[py][px][ch], py in 0..PAD_HEIGHT-1,
-    // px in 0..PAD_WIDTH-1. padded[1+r][1+c][ch] == pixels[r][c][ch];
-    // every border row/col is zero.
+    // Zero-padded golden frame buffer: padded[py][px][ch]
     logic signed [DATA_WIDTH-1:0] padded [PAD_HEIGHT][PAD_WIDTH][IN_CHANNELS];
-    bit have_frame = 0;
+    
+    // Queue to hold ground-truth frames pushed by driver before DUT processes them
+    line_buffer_3x3_seq_item frame_q[$];
 
-    int unsigned window_idx;       // 0..NUM_PIXELS-1 within the current frame
+    int unsigned window_idx;       // 0..NUM_PIXELS-1 within current frame
     int unsigned frame_count;
     int unsigned total_windows;
     int unsigned mismatch_windows;
@@ -72,6 +72,7 @@ class line_buffer_3x3_scoreboard extends uvm_component;
     function new(string name, uvm_component parent);
         super.new(name, parent);
         win_cg = new();
+        win_cg.start();
     endfunction
 
     function void build_phase(uvm_phase phase);
@@ -80,8 +81,14 @@ class line_buffer_3x3_scoreboard extends uvm_component;
         win_export   = new("win_export", this);
     endfunction
 
-    // --- driver's ground-truth frame -----------------------------------
+    // --- Driver analysis port callback -----------------------------------
+    // Queues incoming frame ground-truth without immediately mutating active reference
     function void write_frame(line_buffer_3x3_seq_item t);
+        frame_q.push_back(t);
+    endfunction
+
+    // Reconstructs zero-padded golden frame for active window checks
+    function void build_padded_frame(line_buffer_3x3_seq_item t);
         for (int py = 0; py < PAD_HEIGHT; py++) begin
             for (int px = 0; px < PAD_WIDTH; px++) begin
                 for (int ch = 0; ch < IN_CHANNELS; ch++) begin
@@ -92,19 +99,21 @@ class line_buffer_3x3_scoreboard extends uvm_component;
                 end
             end
         end
-        have_frame  = 1;
-        window_idx  = 0;
-        frame_count++;
     endfunction
 
-    // --- monitor's observed output window --------------------------------
+    // --- Monitor analysis port callback ----------------------------------
     function void write_win(line_buffer_3x3_window_item t);
         logic signed [DATA_WIDTH-1:0] expected [IN_CHANNELS][3][3];
         int r, c;
         bit win_ok;
 
-        if (!have_frame)
-            `uvm_fatal("NOFRAME", "received an output window before any frame was published by the driver")
+        // Synchronously load next frame frame reference when starting a new frame
+        if (window_idx == 0) begin
+            if (frame_q.size() == 0)
+                `uvm_fatal("NOFRAME", "Received an output window before frame data arrived in frame_q")
+            build_padded_frame(frame_q.pop_front());
+            frame_count++;
+        end
 
         r = window_idx / IMG_WIDTH;
         c = window_idx % IMG_WIDTH;
@@ -147,6 +156,11 @@ class line_buffer_3x3_scoreboard extends uvm_component;
                                               window_idx, frame_count))
                 last_errors++;
             end
+        end
+
+        // Reset window counter after reaching boundary of current frame
+        if (window_idx == NUM_PIXELS) begin
+            window_idx = 0;
         end
     endfunction
 

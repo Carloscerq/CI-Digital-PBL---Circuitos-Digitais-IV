@@ -30,15 +30,16 @@ class smma_cnn_top_directed_seq extends uvm_sequence #(smma_cnn_top_seq_item);
         smma_cnn_top_seq_item item;
         logic [DATA_WIDTH-1:0] tb_image_data [0:(NUM_PIXELS*IN_CHANNELS)-1];
 
-        item = smma_cnn_top_seq_item::type_id::create("item");
-
         $readmemh("../Scripts/cnn/cnn_tb_input.mem", tb_image_data);
+
+        item = smma_cnn_top_seq_item::type_id::create("item");
 
         for (int r = 0; r < IMG_HEIGHT; r++) begin
             for (int c = 0; c < IMG_WIDTH; c++) begin
                 automatic int idx = (r * IMG_WIDTH) + c;
-                for (int ch = 0; ch < IN_CHANNELS; ch++)
+                for (int ch = 0; ch < IN_CHANNELS; ch++) begin
                     item.pixels[r][c][ch] = tb_image_data[(idx * IN_CHANNELS) + ch];
+                end
             end
         end
 

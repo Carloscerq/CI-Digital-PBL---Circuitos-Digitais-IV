@@ -50,6 +50,8 @@ class line_buffer_3x3_directed_random_test extends line_buffer_3x3_base_test;
         dseq = line_buffer_3x3_directed_seq::type_id::create("dseq");
         dseq.start(env.agent.sequencer);
 
+        phase.get_objection().set_drain_time(this, 100_000);
+
         rseq = line_buffer_3x3_random_seq::type_id::create("rseq");
         rseq.num_frames = 2;
         rseq.start(env.agent.sequencer);

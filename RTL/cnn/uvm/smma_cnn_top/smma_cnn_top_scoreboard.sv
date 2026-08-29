@@ -77,6 +77,7 @@ class smma_cnn_top_scoreboard extends uvm_subscriber #(smma_cnn_top_seq_item);
     function new(string name, uvm_component parent);
         super.new(name, parent);
         result_cg = new();
+        result_cg.start();
     endfunction
 
     function void write(smma_cnn_top_seq_item t);

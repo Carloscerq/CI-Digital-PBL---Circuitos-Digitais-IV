@@ -71,17 +71,17 @@ module smma_cnn_top_uvm_top;
     ) dut (
         .clk                   (vif.clk),
         .reset                 (vif.reset),
-        .s_axis_valid          (vif.s_axis_valid),
-        .s_axis_ready          (vif.s_axis_ready),
-        .s_axis_data           (vif.s_axis_data),
-        .s_axis_last           (vif.s_axis_last),
-        .m_axis_valid          (vif.m_axis_valid),
-        .m_axis_ready          (vif.m_axis_ready),
-        .m_axis_data_normal    (vif.m_axis_data_normal),
-        .m_axis_data_unbalance (vif.m_axis_data_unbalance),
-        .m_axis_data_misalign  (vif.m_axis_data_misalign),
-        .m_axis_data_bearing   (vif.m_axis_data_bearing),
-        .m_axis_last           (vif.m_axis_last)
+        .s_valid               (vif.s_axis_valid),
+        .s_ready               (vif.s_axis_ready),
+        .s_data                (vif.s_axis_data),
+        .s_last                (vif.s_axis_last),
+        .m_valid               (vif.m_axis_valid),
+        .m_ready               (vif.m_axis_ready),
+        .m_data_normal         (vif.m_axis_data_normal),
+        .m_data_unbalance      (vif.m_axis_data_unbalance),
+        .m_data_misalign       (vif.m_axis_data_misalign),
+        .m_data_bearing        (vif.m_axis_data_bearing),
+        .m_last                (vif.m_axis_last)
     );
 
     // See the file header above: a read-only hierarchical probe into the

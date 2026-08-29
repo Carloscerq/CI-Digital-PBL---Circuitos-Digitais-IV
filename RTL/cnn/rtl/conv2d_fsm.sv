@@ -76,11 +76,11 @@ module conv2d_fsm #(
 
     initial begin
         // Load the kernel weights
-        $readmemh("../mem/cnn/conv2d_weights.mem", weights_flat);
-        
+        $readmemh("./mem/cnn/conv2d_weights.mem", weights_flat);
+
         // Load the 8 bias values
-        $readmemh("../mem/cnn/conv2d_biases.mem", biases);
-        
+        $readmemh("./mem/cnn/conv2d_biases.mem", biases);
+
         $display("[INIT] Conv2D ROM and Biases successfully loaded from files.");
     end
 
