@@ -22,7 +22,7 @@ module mlp #(
     parameter S_ROM_FILE = "../mem/mlp/mlp_scales.mem"
 )(
     input  logic clk,
-    input  logic rst_n,
+    input  logic rst,
     input  logic start,
 
     input  logic signed [ACC_WIDTH-1:0] features [N_IN],
@@ -160,7 +160,7 @@ module mlp #(
                 .DATA_WIDTH(ACT_WIDTH), .WEIGHT_WIDTH(W_WIDTH), .SUM_WIDTH(SUM_WIDTH)
             ) u_mac (
                 .clk    (clk),
-                .rst_n  (rst_n),
+                .rst    (rst),
                 .load   (load_q),
                 .en     (en_q),
                 .data   (x_q),
@@ -235,8 +235,8 @@ module mlp #(
     end
 
     // ---------------- sequencer --------------------------------------------
-    always_ff @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
+    always_ff @(posedge clk) begin
+        if (rst) begin
             state     <= S_IDLE;
             layer     <= 2'd0;
             idx       <= '0;

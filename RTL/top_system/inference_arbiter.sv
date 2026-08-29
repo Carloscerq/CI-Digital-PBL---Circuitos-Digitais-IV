@@ -13,7 +13,7 @@ module inference_arbiter #(
     parameter int N_SENSORS  = 4
 )(
     input  logic clk,
-    input  logic reset_n,
+    input  logic reset,
 
     // MLP: one result per sensor frame
     input  logic [1:0] mlp_class_idx,
@@ -76,8 +76,8 @@ module inference_arbiter #(
     logic [N_SENSORS-1:0] mlp_fault_reg;
     logic                 cnn_fault_reg;
 
-    always_ff @(posedge clk or negedge reset_n) begin
-        if (!reset_n) begin
+    always_ff @(posedge clk) begin
+        if (reset) begin
             mlp_fault_reg <= '0;   // Default normal
             cnn_fault_reg <= 1'b0; // Default normal
         end else begin

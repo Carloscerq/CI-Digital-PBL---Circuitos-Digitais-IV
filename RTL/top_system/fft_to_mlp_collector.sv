@@ -3,38 +3,57 @@
 import mlp_weights_pkg::*;
 
 // ============================================================================
-// FFT to MLP Feature Collector
+// FFT to MLP Feature Collector  (reescrito)
 // ============================================================================
-// The shared FFT serialises the four vibration sensors: it emits all 64 bins
-// of one sensor, raises `fft_done`, then moves on to the next. This collector
-// therefore runs the single MLP time-multiplexed over the four sensors -- one
-// inference per completed frame -- and reports which sensor each result came
-// from on `mlp_sensor_id`.
+// O MAPA DE FEATURES VEIO DO mlp_tb_dpi.sv
+// ----------------------------------------
+// O testbench do MLP define o contrato de forma inequivoca:
 //
-// Feature map (N_IN = 132):
-//   [0   .. 63 ] fft_real[bin]
-//   [64  .. 127] fft_imag[bin]
-//   [128 .. 131] aux sensors, selected by EXTRA_SEL and pre-shifted by
-//                mlp_weights_pkg::EXTRA_SHIFT (the model expects the extras
-//                already scaled down; the previous revision fed them raw).
+//   $display("MODEL %0d inputs (%0d bins + %0d aggregates) ...",
+//            N_IN, N_BINS, N_EXTRA);
 //
-// Frame admission: a frame is accepted or refused at its first bin, never
-// half-way. Refusing up front is what keeps `features_reg` from being
-// rewritten underneath an inference that is still reading it -- `mlp` samples
-// `features` combinationally for its whole ~165-cycle run.
+//   features[0 .. N_BINS-1]      -> "|rFFT| bins"
+//   features[N_BINS+0]           -> Temperature_housing_A
+//   features[N_BINS+1]           -> Temperature_housing_B
+//   features[N_BINS+2]           -> U-phase_pow
+//   features[N_BINS+3]           -> mdc_k0
+//
+// Com N_IN = 132 e N_EXTRA = 4, sai N_BINS = 128. Uma FFT de 64 pontos com
+// entrada real da 64 saidas, das quais so 32 sao independentes (os bins 32..63
+// sao o espelho conjugado dos bins 0..31). Entao:
+//
+//     4 sensores de vibracao x 32 bins uteis = 128 = N_BINS
+//
+// A revisao anterior gravava fft_real em [0..63] e fft_imag em [64..127] de UM
+// sensor por inferencia. Estava errado em tres frentes ao mesmo tempo: metade
+// dos bins era redundante, a parte imaginaria nao e feature nenhuma, e o
+// modelo espera os QUATRO sensores no mesmo vetor.
+//
+// CONSEQUENCIA ARQUITETURAL
+// -------------------------
+// O collector deixa de ser time-multiplexado (uma inferencia por sensor) e
+// passa a juntar uma RODADA COMPLETA dos quatro sensores num unico vetor ->
+// uma inferencia a cada quatro frames de FFT. Isso muda o significado de
+// `mlp_sensor_id` -- ver MLP_SENSOR_ID_NOTE no fim do arquivo.
 // ============================================================================
 module fft_to_mlp_collector #(
     parameter int DATA_WIDTH = 24,
-    // Which aux sensor feeds each extra slot. Index into `aux_features`,
-    // whose default wiring in top_system is
-    //   0,1,2 = current 0..2      3,4 = temperature 0..1
-    // so '{0,1,2,3} keeps the full three-phase current set plus one
-    // temperature. Retarget here if the trained model expects otherwise.
-    parameter int EXTRA_SEL [4] = '{0, 1, 2, 3},
-    parameter int N_AUX = 5
+    parameter int N_VIB      = 4,    // sensores de vibracao no vetor
+    parameter int BINS_USED  = 32,   // bins uteis por sensor (metade de 64)
+    parameter int N_AUX      = 3,    // 1 corrente + 2 temperatura
+
+    // Indice em aux_features de cada um dos tres primeiros extras, na ordem
+    // que o modelo espera. Com o mapa atual do top_system
+    //     aux 0 = current 0     aux 1 = temperature 0     aux 2 = temperature 1
+    // e a ordem do TB (TempA, TempB, U-phase_pow):
+    parameter int EXTRA_SEL [3] = '{1, 2, 0},
+
+    // 1 = |FFT| aproximado (alpha-max-beta-min); 0 = so a parte real.
+    // Ver MAGNITUDE_NOTE no fim do arquivo antes de mudar.
+    parameter bit USE_MAGNITUDE = 1
 )(
     input  logic clk,
-    input  logic reset_n,
+    input  logic reset,                   // SINCRONO, ATIVO EM ALTO
 
     // Shared-FFT output stream
     input  logic                          fft_valid,
@@ -45,8 +64,11 @@ module fft_to_mlp_collector #(
     input  logic                          fft_done,
     input  logic [1:0]                    fft_sensor_id,
 
-    // Non-vibration sensors, latest value
+    // Non-vibration sensors, latest value (raw, ainda sem EXTRA_SHIFT)
     input  logic signed [DATA_WIDTH-1:0]  aux_features [0:N_AUX-1],
+
+    // Quarto agregado do modelo. NAO vem de aux_features -- ver MDC_K0_NOTE.
+    input  logic signed [DATA_WIDTH-1:0]  mdc_k0,
 
     // MLP interface
     output logic signed [ACC_WIDTH-1:0]   mlp_features [N_IN],
@@ -57,49 +79,92 @@ module fft_to_mlp_collector #(
     output logic                          frame_dropped
 );
 
-    localparam int HALF  = N_BINS / 2;          // 64 real bins, then 64 imag
-    localparam int IDX_W = $clog2(N_IN);        // 8 bits covers 0..131
+    localparam int IDX_W = $clog2(N_IN);
 
     logic signed [ACC_WIDTH-1:0] features_reg [N_IN];
     assign mlp_features = features_reg;
 
     // ------------------------------------------------------------------
-    // Extras: constant-folded shift, one assign per slot. Kept out of the
-    // always_ff so no parameter array is ever indexed by a procedural
-    // variable -- Quartus Lite turns that into a mux cone.
+    // Magnitude do bin
     // ------------------------------------------------------------------
-    logic signed [ACC_WIDTH-1:0] extra_scaled [N_EXTRA];
-    genvar ge;
-    generate
-        for (ge = 0; ge < N_EXTRA; ge++) begin : g_extra
-            // EXTRA_SHIFT is negative for a right shift, hence the negation.
-            assign extra_scaled[ge] =
-                aux_features[EXTRA_SEL[ge]] >>> (-EXTRA_SHIFT[ge]);
+    // |z| = sqrt(re^2 + im^2) custa caro. A aproximacao alpha-max-beta-min
+    //   |z| ~= max(|re|,|im|) + 0.375 * min(|re|,|im|)
+    // erra no maximo ~6.8% e sai em somadores e shifts, sem multiplicador.
+    // 0.375 = 1/2 - 1/8, logo (mn>>1) - (mn>>3).
+    function automatic logic [DATA_WIDTH-1:0] abs_sat (input logic signed [DATA_WIDTH-1:0] v);
+        if (!v[DATA_WIDTH-1])                        return v[DATA_WIDTH-1:0];
+        else if (v == {1'b1, {(DATA_WIDTH-1){1'b0}}}) return {1'b0, {(DATA_WIDTH-1){1'b1}}};
+        else                                          return (-v);
+    endfunction
+
+    logic [DATA_WIDTH-1:0]   abs_re, abs_im, mx, mn;
+    logic [DATA_WIDTH+1:0]   mag_full;
+    logic signed [ACC_WIDTH-1:0] bin_feature;
+
+    always_comb begin
+        abs_re = abs_sat(fft_real);
+        abs_im = abs_sat(fft_imag);
+        mx     = (abs_re >= abs_im) ? abs_re : abs_im;
+        mn     = (abs_re >= abs_im) ? abs_im : abs_re;
+
+        mag_full = {2'b0, mx} + {2'b0, (mn >> 1)} - {2'b0, (mn >> 3)};
+
+        if (USE_MAGNITUDE) begin
+            // satura no maximo positivo representavel
+            if (mag_full > {2'b0, 1'b0, {(DATA_WIDTH-1){1'b1}}})
+                bin_feature = ACC_WIDTH'({1'b0, {(DATA_WIDTH-1){1'b1}}});
+            else
+                bin_feature = ACC_WIDTH'(mag_full[DATA_WIDTH-1:0]);
+        end else begin
+            bin_feature = ACC_WIDTH'(fft_real);
         end
-    endgenerate
+    end
 
     // ------------------------------------------------------------------
-    // Frame admission
+    // Extras: shift constante, um assign por slot. Fora do always_ff para
+    // que nenhum array de parametro seja indexado por variavel procedural
+    // (Quartus Lite transforma isso num cone de mux).
     // ------------------------------------------------------------------
-    logic fft_xfer;
-    logic frame_start;
-    logic capturing;
-    logic take;
+    // EXTRA_SHIFT e negativo para deslocamento a direita, dai a negacao.
+    logic signed [ACC_WIDTH-1:0] extra_scaled [N_EXTRA];
+
+    assign extra_scaled[0] = aux_features[EXTRA_SEL[0]] >>> (-EXTRA_SHIFT[0]); // Temp A
+    assign extra_scaled[1] = aux_features[EXTRA_SEL[1]] >>> (-EXTRA_SHIFT[1]); // Temp B
+    assign extra_scaled[2] = aux_features[EXTRA_SEL[2]] >>> (-EXTRA_SHIFT[2]); // U-phase_pow
+    assign extra_scaled[3] = mdc_k0                     >>> (-EXTRA_SHIFT[3]); // mdc_k0
+
+    // ------------------------------------------------------------------
+    // Admissao de frame e montagem da rodada
+    // ------------------------------------------------------------------
+    // A FFT compartilhada serializa os sensores: emite os 64 bins do sensor A,
+    // levanta fft_done, passa para o proximo. Juntamos os quatro numa rodada.
+    //
+    // Um frame e aceito ou recusado NO PRIMEIRO BIN, nunca no meio. Recusar na
+    // entrada e o que impede features_reg de ser reescrito debaixo de uma
+    // inferencia que ainda esta lendo -- o `mlp` amostra `features` de forma
+    // combinacional durante toda a sua execucao (~165 ciclos).
+    logic       fft_xfer;
+    logic       frame_start;
+    logic       capturing;
+    logic       take;
+    logic [N_VIB-1:0] round_mask;   // quais sensores ja entraram nesta rodada
 
     assign fft_xfer    = fft_valid && fft_ready;
     assign frame_start = fft_xfer && (fft_bin == 6'd0);
     assign take        = frame_start ? (!mlp_busy && !mlp_start) : capturing;
 
-    logic [IDX_W-1:0] bin_re;
-    logic [IDX_W-1:0] bin_im;
-    assign bin_re = IDX_W'(fft_bin);
-    assign bin_im = IDX_W'(fft_bin) + IDX_W'(HALF);
+    // Endereco do bin dentro do vetor: sensor * BINS_USED + bin
+    logic [IDX_W-1:0] bin_addr;
+    assign bin_addr = IDX_W'(fft_sensor_id) * IDX_W'(BINS_USED) + IDX_W'(fft_bin);
 
-    always_ff @(posedge clk or negedge reset_n) begin
-        if (!reset_n) begin
+    logic bin_in_range;
+    assign bin_in_range = (fft_bin < 6'(BINS_USED));
+
+    always_ff @(posedge clk) begin
+        if (reset) begin
             mlp_start     <= 1'b0;
-            mlp_sensor_id <= 2'd0;
             capturing     <= 1'b0;
+            round_mask    <= '0;
             frame_dropped <= 1'b0;
             for (int i = 0; i < N_IN; i++)
                 features_reg[i] <= '0;
@@ -108,33 +173,100 @@ module fft_to_mlp_collector #(
 
             if (frame_start) begin
                 capturing <= take;
-                if (take) mlp_sensor_id <= fft_sensor_id;
-                else      frame_dropped <= 1'b1;
+                if (!take) begin
+                    // Rodada incompleta nao serve: descarta o que ja tinha
+                    frame_dropped <= 1'b1;
+                    round_mask    <= '0;
+                end
             end
 
-            if (fft_xfer && take) begin
-                features_reg[bin_re] <= fft_real;
-                features_reg[bin_im] <= fft_imag;
-            end
+            // So os bins 0..BINS_USED-1 viram feature; os demais sao o espelho
+            // conjugado e nao carregam informacao nova.
+            if (fft_xfer && take && bin_in_range)
+                features_reg[bin_addr] <= bin_feature;
 
             if (fft_done) begin
                 capturing <= 1'b0;
+
                 if (capturing) begin
-                    for (int e = 0; e < N_EXTRA; e++)
-                        features_reg[N_BINS + e] <= extra_scaled[e];
-                    mlp_start <= 1'b1;
+                    automatic logic [N_VIB-1:0] next_mask;
+                    next_mask = round_mask | (N_VIB'(1) << fft_sensor_id);
+
+                    if (&next_mask) begin
+                        // Rodada completa: congela os agregados e dispara
+                        for (int e = 0; e < N_EXTRA; e++)
+                            features_reg[N_BINS + e] <= extra_scaled[e];
+                        mlp_start  <= 1'b1;
+                        round_mask <= '0;
+                    end else begin
+                        round_mask <= next_mask;
+                    end
                 end
             end
         end
     end
 
+    // ------------------------------------------------------------------
+    // MLP_SENSOR_ID_NOTE
+    // ------------------------------------------------------------------
+    // Nao existe mais "o sensor desta inferencia": o vetor cobre os quatro de
+    // uma vez. mlp_sensor_id fica em zero so para nao quebrar a interface do
+    // inference_arbiter.
+    //
+    // >>> IMPACTO NO sensor_fault_mask <<<
+    // O arbiter usava mlp_sensor_id para atribuir a falha a um sensor
+    // especifico. Com o modelo olhando os quatro juntos, essa atribuicao NAO E
+    // MAIS POSSIVEL pela via do MLP -- a saida do modelo e uma classe para a
+    // maquina inteira, nao por sensor. O arbiter precisa ser revisto: ou o
+    // sensor_fault_mask passa a vir so do caminho da CNN, ou vira um flag
+    // global, ou se treina um modelo por sensor. Nao decidi isso por voce.
+    assign mlp_sensor_id = 2'd0;
+
     // synthesis translate_off
     initial begin
         if (DATA_WIDTH != ACC_WIDTH)
             $fatal(1, "[fft_to_mlp_collector] DATA_WIDTH != mlp ACC_WIDTH.");
-        if (N_BINS != 2 * 64)
-            $fatal(1, "[fft_to_mlp_collector] N_BINS nao casa com 64 bins re+im.");
+        if (N_BINS != N_VIB * BINS_USED)
+            $fatal(1, "[fft_to_mlp_collector] N_BINS (%0d) != N_VIB*BINS_USED (%0d).",
+                   N_BINS, N_VIB * BINS_USED);
+        if (N_EXTRA != 4)
+            $fatal(1, "[fft_to_mlp_collector] N_EXTRA=%0d; o mapa de extras assume 4.",
+                   N_EXTRA);
     end
     // synthesis translate_on
+
+    // ------------------------------------------------------------------
+    // MAGNITUDE_NOTE
+    // ------------------------------------------------------------------
+    // O comentario do mlp_tb_dpi diz "|rFFT| bins" -- MAGNITUDE, nao a parte
+    // real. Voce descreveu como "nao usar o valor imaginario", que pode
+    // significar duas coisas diferentes:
+    //
+    //   USE_MAGNITUDE = 1 (default) : |z| ~= max + 0.375*min. Casa com o texto
+    //       do TB. E uma APROXIMACAO: erra ate ~6.8% contra a magnitude exata.
+    //       Se o modelo foi treinado com np.abs(rfft(...)) exato, esse erro
+    //       entra como ruido de entrada. Da para trocar por CORDIC ou
+    //       sqrt(re^2+im^2) se a acuracia sofrer.
+    //
+    //   USE_MAGNITUDE = 0 : joga fft_real direto na feature. So esta correto
+    //       se o modelo tiver sido treinado com a parte real, o que o TB nao
+    //       sugere.
+    //
+    // Deixei em 1 por causa do TB. Se voce tiver o notebook de treino, vale
+    // confirmar o que exatamente alimentou as 128 primeiras colunas.
+    //
+    // ------------------------------------------------------------------
+    // MDC_K0_NOTE
+    // ------------------------------------------------------------------
+    // features[N_BINS+3] = mdc_k0, faixa 0..64 no TB. Nao e nenhum dos tres
+    // sensores auxiliares -- e um agregado do proprio frame (pelo nome e pela
+    // faixa, algo como a componente DC / media do bloco, k=0).
+    //
+    // O pipeline de FFT atual NAO exporta esse valor: o front-end tem um
+    // estagio de remocao de media, mas a media removida nao aparece na lista
+    // de portas. Por isso ele entra aqui como porta de entrada `mdc_k0`, para
+    // ser ligada quando a fonte existir. Enquanto estiver amarrada em zero, a
+    // quarta feature agregada vai constante para o modelo.
+    // ------------------------------------------------------------------
 
 endmodule
