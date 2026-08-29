@@ -51,7 +51,6 @@ module tb_uart;
     logic [7:0] data_in;
     logic       tx_en;
     logic       tx;
-    logic       tx2;
     logic       tx_busy;
 
     logic       rx;
@@ -59,8 +58,6 @@ module tb_uart;
     logic       ready;
     logic       ready_clr;
     logic [7:0] data_out;
-
-    logic [7:0] LEDR;
 
     // Loopback digital: a saida serial volta direto para a entrada serial
     assign rx = tx;
@@ -73,19 +70,17 @@ module tb_uart;
         .BAUD_RATE   (BAUD_RATE),
         .OVERSAMPLE  (OVERSAMPLE)
     ) dut (
-        .clk   (clk),
+        .clk       (clk),
         .rst       (rst),
         .data_in   (data_in),
         .tx_en     (tx_en),
         .tx        (tx),
-        .tx2       (tx2),
         .tx_busy   (tx_busy),
         .rx        (rx),
         .rx_en     (rx_en),
         .ready     (ready),
         .ready_clr (ready_clr),
-        .data_out  (data_out),
-        .LEDR      (LEDR)
+        .data_out  (data_out)
     );
 
     // -------------------------------------------------------------------

@@ -22,28 +22,22 @@ module uart #(
     parameter int BAUD_RATE   = 115_200,      // Taxa de baud da linha serial
     parameter int OVERSAMPLE  = 16            // Fator de sobreamostragem do Rx
 )(
-    input  logic         clk,   // Clock do sistema
+    input  logic         clk,     // Clock do sistema
     input  logic         rst,     // Reset sincrono, ATIVO EM ALTO (mesma polaridade nos 3 submodulos)
 
     // Transmissor
-    input  logic [7:0]   data_in,   // Byte a transmitir
-    input  logic         tx_en,    // Dispara tx (ativo em baixo, ver transmitter.sv)
-    output logic         tx,       // Saida serial
-    output logic         tx2,      // Copia de tx para uso em outro pino
-    output logic         tx_busy,  // Alto durante uma transmissao
+    input  logic [7:0]   data_in, // Byte a transmitir
+    input  logic         tx_en,   // Dispara tx (ativo em baixo, ver transmitter.sv)
+    output logic         tx,      // Saida serial
+    output logic         tx_busy, // Alto durante uma transmissao
 
     // Receptor
     input  logic         rx,          // Entrada serial
     input  logic         rx_en,       // Habilita rx (ativo em baixo, ver receiver.sv)
     output logic         ready,       // Alto quando ha um byte novo em data_out
     input  logic         ready_clr,   // Limpa "ready" apos a leitura
-    output logic [7:0]   data_out,    // Byte recebido
-
-    output logic [7:0]   LEDR         // Espelha data_in nos LEDs (debug)
+    output logic [7:0]   data_out     // Byte recebido
 );
-
-    assign LEDR = data_in;
-    assign tx2  = tx;
 
     logic tx_clk_en, rx_clk_en;
 
@@ -61,7 +55,7 @@ module uart #(
     transmitter uart_tx (
         .clk     (clk),
         .rst     (rst),
-        .clk_en   (tx_clk_en),
+        .clk_en  (tx_clk_en),
         .data_in (data_in),
         .tx_en   (tx_en),
         .tx      (tx),
@@ -73,7 +67,7 @@ module uart #(
     ) uart_rx (
         .clk       (clk),
         .rst       (rst),
-        .clk_en     (rx_clk_en),
+        .clk_en    (rx_clk_en),
         .rx        (rx),
         .rx_en     (rx_en),
         .ready_clr (ready_clr),
