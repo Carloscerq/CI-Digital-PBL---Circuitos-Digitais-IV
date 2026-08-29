@@ -52,6 +52,8 @@ class dense_layer_fsm_directed_random_test extends dense_layer_fsm_base_test;
         dseq = dense_layer_fsm_directed_seq::type_id::create("dseq");
         dseq.start(env.agent.sequencer);
 
+        phase.get_objection().set_drain_time(this, 30_000_000);
+
         rseq = dense_layer_fsm_random_seq::type_id::create("rseq");
         rseq.num_frames = 2;
         rseq.start(env.agent.sequencer);

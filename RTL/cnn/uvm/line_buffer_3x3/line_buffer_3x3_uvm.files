@@ -1,4 +1,4 @@
-../../rtl/line_buffer_3x3.sv
-line_buffer_3x3_if.sv
-line_buffer_3x3_pkg.sv
-tb/line_buffer_3x3_uvm_top.sv
+cnn/rtl/line_buffer_3x3.sv
+cnn/uvm/line_buffer_3x3/line_buffer_3x3_if.sv
+cnn/uvm/line_buffer_3x3/line_buffer_3x3_pkg.sv
+cnn/uvm/line_buffer_3x3/tb/line_buffer_3x3_uvm_top.sv

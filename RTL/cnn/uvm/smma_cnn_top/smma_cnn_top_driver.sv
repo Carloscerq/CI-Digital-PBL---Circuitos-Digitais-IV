@@ -77,27 +77,34 @@ class smma_cnn_top_driver extends uvm_driver #(smma_cnn_top_seq_item);
     endtask
 
     task automatic drive_frame(smma_cnn_top_seq_item item);
-        vif.s_axis_valid = 1'b0;
-        vif.s_axis_last  = 1'b0;
-        for (int ch = 0; ch < IN_CHANNELS; ch++) vif.s_axis_data[ch] = '0;
+        vif.s_axis_valid <= 1'b0;
+        vif.s_axis_last  <= 1'b0;
+        for (int ch = 0; ch < IN_CHANNELS; ch++) vif.s_axis_data[ch] <= '0;
+    
+        // Align to driving edge
         @(negedge vif.clk);
-
+    
         for (int r = 0; r < IMG_HEIGHT; r++) begin
             for (int c = 0; c < IMG_WIDTH; c++) begin
-                vif.s_axis_valid = 1'b1;
-
+                vif.s_axis_valid <= 1'b1;
+                vif.s_axis_last  <= (r == IMG_HEIGHT - 1) && (c == IMG_WIDTH - 1);
+            
                 for (int ch = 0; ch < IN_CHANNELS; ch++)
-                    vif.s_axis_data[ch] = item.pixels[r][c][ch];
-
-                vif.s_axis_last = (r == IMG_HEIGHT - 1) && (c == IMG_WIDTH - 1);
-
-                @(posedge vif.clk);
-                while (!vif.s_axis_ready) @(posedge vif.clk);
+                    vif.s_axis_data[ch] <= item.pixels[r][c][ch];
+            
+                // Wait until the handshake completes at posedge
+                do begin
+                    @(posedge vif.clk);
+                end while (!vif.s_axis_ready);
+            
+                // Transition signals on negedge to guarantee setup time before next posedge
+                @(negedge vif.clk);
             end
         end
-
-        vif.s_axis_valid = 1'b0;
-        vif.s_axis_last  = 1'b0;
+    
+        vif.s_axis_valid <= 1'b0;
+        vif.s_axis_last  <= 1'b0;
+        for (int ch = 0; ch < IN_CHANNELS; ch++) vif.s_axis_data[ch] <= '0;
     endtask
 
 endclass
