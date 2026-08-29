@@ -9,11 +9,15 @@
 //  Clock: free-running, 10ns period (`always #5 clk = ~clk;`), same
 //  period every other UVM testbench in this repo uses.
 //
-//  Reset: held high then dropped after #22 (so it deasserts mid-cycle),
-//  mirroring smma_cnn_top_uvm_top.sv's own reset sequencing -- no
-//  existing FFT-pipeline tb (tb_fft_lms_dataset.sv) was found to give a
-//  more specific convention to follow, so this repo's other UVM
-//  top-level testbench's convention was reused.
+//  Reset is NOT sequenced here: preprocess_lms_fft_driver drives it
+//  from its UVM reset_phase (two posedges high, deasserted on a
+//  negedge -- the same sequencing the old `initial ... #22` here
+//  applied), so all interface timing lives inside the phase schedule
+//  and the test's stimulus can sit in main_phase, which cannot start
+//  before reset_phase has finished. No existing FFT-pipeline tb
+//  (tb_fft_lms_dataset.sv) gave a more specific reset convention to
+//  follow, so this repo's other UVM testbenches' convention was
+//  reused.
 //
 //  USE_LMS=0 -- the DUT's simpler single-input-stream mode, and the
 //  primary/required configuration for this testbench (see
@@ -94,13 +98,6 @@ module preprocess_lms_fft_uvm_top;
     );
 
     initial begin
-        vif.reset          = 1'b1;
-        vif.desired_valid  = 1'b0;
-        vif.desired_sample = '0;
-        vif.fft_ready      = 1'b0;
-
-        #22 vif.reset = 1'b0;
-
         uvm_config_db #(virtual preprocess_lms_fft_if)::set(null, "uvm_test_top.env.agent.*", "vif", vif);
 
         run_test();

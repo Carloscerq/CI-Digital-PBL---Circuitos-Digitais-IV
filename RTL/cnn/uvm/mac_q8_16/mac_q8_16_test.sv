@@ -8,6 +8,12 @@
 //                     the directed corner cases ported from
 //                     tb_mac_q8_16.sv, then the saturation-magnitude
 //                     sweep, then the tap-count-swept random sequence.
+//
+//  Stimulus runs in main_phase, not run_phase: reset is applied in
+//  mac_q8_16_driver's UVM reset_phase, and main_phase is the first
+//  run-time phase guaranteed to start only after reset_phase has
+//  dropped its objection -- run_phase spans the whole run-time
+//  schedule, so it would have overlapped reset.
 // ---------------------------------------------------------------------
 class mac_q8_16_base_test #(
     int DATA_WIDTH = 24,
@@ -38,7 +44,7 @@ class mac_q8_16_default_test extends mac_q8_16_base_test #(24, 16, 64);
         super.new(name, parent);
     endfunction
 
-    task run_phase(uvm_phase phase);
+    task main_phase(uvm_phase phase);
         mac_q8_16_directed_seq #(24, 16, 64) dseq;
         mac_q8_16_sat_seq #(24, 16, 64)      sseq;
         mac_q8_16_random_seq #(24, 16, 64)   rseq;

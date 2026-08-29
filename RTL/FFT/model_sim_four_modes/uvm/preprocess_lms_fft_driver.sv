@@ -36,9 +36,38 @@ class preprocess_lms_fft_driver extends uvm_driver #(preprocess_lms_fft_seq_item
             `uvm_fatal("NOVIF", "virtual interface not set for driver")
     endfunction
 
-    task run_phase(uvm_phase phase);
+    // ------------------------------------------------------------------
+    //  reset_phase -- the UVM run-time phase that owns reset. This used
+    //  to be sequenced from an `initial` block in
+    //  preprocess_lms_fft_uvm_top.sv; it belongs here because the driver is
+    //  the component that holds the vif and drives the DUT's inputs.
+    //  Raising an objection across the whole phase is what makes the
+    //  schedule really wait for reset to finish, which in turn is what
+    //  lets the bench's test class start its sequences from main_phase
+    //  with no chance of stimulus overlapping reset -- run_phase spans
+    //  the entire run-time schedule, so it would have overlapped it.
+    // ------------------------------------------------------------------
+    // Two posedges of reset, the same two the old `#22` hand-sequenced
+    // reset covered at this bench's 10ns clock period.
+    localparam int RESET_CYCLES = 2;
+
+    task reset_phase(uvm_phase phase);
+        phase.raise_objection(this, "preprocess_lms_fft: applying reset");
+
+        vif.reset          = 1'b1;
         vif.desired_valid  = 1'b0;
         vif.desired_sample = '0;
+
+        repeat (RESET_CYCLES) @(posedge vif.clk);
+        // Deassert on a negedge so reset never changes on the same edge
+        // the DUT's synchronous reset samples.
+        @(negedge vif.clk);
+        vif.reset = 1'b0;
+
+        phase.drop_objection(this, "preprocess_lms_fft: reset released");
+    endtask
+
+    task run_phase(uvm_phase phase);
         @(negedge vif.clk);
 
         forever begin

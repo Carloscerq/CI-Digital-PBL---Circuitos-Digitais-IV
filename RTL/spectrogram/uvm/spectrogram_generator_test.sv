@@ -19,6 +19,12 @@
 //  dropping its objection, with a generous real-time bound as a safety
 //  net against hanging forever if a real bug ever stops output from
 //  arriving.
+//
+//  Stimulus runs in main_phase, not run_phase: reset is applied in
+//  spectrogram_generator_driver's UVM reset_phase, and main_phase is the first
+//  run-time phase guaranteed to start only after reset_phase has
+//  dropped its objection -- run_phase spans the whole run-time
+//  schedule, so it would have overlapped reset.
 // ---------------------------------------------------------------------
 class spectrogram_generator_base_test extends uvm_test;
 
@@ -45,7 +51,7 @@ class spectrogram_generator_directed_random_test extends spectrogram_generator_b
         super.new(name, parent);
     endfunction
 
-    task run_phase(uvm_phase phase);
+    task main_phase(uvm_phase phase);
         spectrogram_generator_directed_seq dseq;
         spectrogram_generator_random_seq   rseq;
         int unsigned total_frames;

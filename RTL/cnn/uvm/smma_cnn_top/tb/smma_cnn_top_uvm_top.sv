@@ -3,12 +3,19 @@
 //  CNN's full 4-stage top-level pipeline (line_buffer_3x3 -> conv2d_fsm
 //  -> maxpool_2x2 -> dense_layer_fsm).
 //
-//  Clock and reset sequencing mirror tb_smma_cnn_top.sv exactly: a
-//  free-running clk toggling every #5 (10ns period), reset held high then
-//  dropped after #22 (so it deasserts mid-cycle, same as the original
-//  tb), s_axis_valid/s_axis_last/s_axis_data and m_axis_ready held at
-//  their idle values until the UVM run phase's own driver/monitor take
-//  over.
+//  This module owns ONLY the free-running clock (toggling every #5, a
+//  10ns period, same as tb_smma_cnn_top.sv), the DUT/interface
+//  instances and the config_db handoff. Reset and the slave-side idle
+//  values are NOT sequenced here: they belong to the UVM run-time
+//  reset_phase, driven by smma_cnn_top_driver (which owns the vif) --
+//  see smma_cnn_top_driver.sv. That keeps stimulus timing entirely
+//  inside the UVM phase schedule, and lets the test's stimulus sit in
+//  main_phase, which by construction cannot start until reset_phase has
+//  finished (unlike a run_phase, which would race a
+//  module-initial-block reset). The DUT sees the same sequencing
+//  tb_smma_cnn_top.sv applies -- reset high across the first
+//  RESET_CYCLES posedges, deasserted mid-cycle -- just expressed as a
+//  phase instead of an `initial ... #22`.
 //
 //  There's exactly one valid geometry here (see smma_cnn_top_pkg.sv),
 //  so no elaboration-time cfg object is needed -- unlike perceptron's
@@ -63,7 +70,7 @@ module smma_cnn_top_uvm_top;
         .IN_FEATURES (2048)
     ) dut (
         .clk                   (vif.clk),
-        .reset                   (vif.reset),
+        .reset                 (vif.reset),
         .s_axis_valid          (vif.s_axis_valid),
         .s_axis_ready          (vif.s_axis_ready),
         .s_axis_data           (vif.s_axis_data),
@@ -82,14 +89,6 @@ module smma_cnn_top_uvm_top;
     always_comb vif.dense_data_probe = dut.dense_data;
 
     initial begin
-        vif.reset          = 1'b1;
-        vif.s_axis_valid = 1'b0;
-        vif.s_axis_last  = 1'b0;
-        vif.m_axis_ready = 1'b0;
-        for (int ch = 0; ch < 4; ch++) vif.s_axis_data[ch] = '0;
-
-        #22 vif.reset = 1'b0;
-
         uvm_config_db #(virtual smma_cnn_top_if)::set(null, "uvm_test_top.env.agent.*", "vif", vif);
 
         run_test();

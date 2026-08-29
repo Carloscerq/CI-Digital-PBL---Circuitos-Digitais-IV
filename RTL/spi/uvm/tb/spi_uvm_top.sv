@@ -3,8 +3,10 @@
 //  spi_controller_tb.sv's topology exactly: one spi_controller plus a
 //  generate loop of N_SLAVES=2 spi_slave instances on a shared bus
 //  (slave 0: mode 0, CLK_DIV=4; slave 1: mode 3, CLK_DIV=6), with the
-//  same combinational miso mux, clk generation, reset sequencing, the
-//  CLK_DIV>=4 fatal guard, and the safety-net timeout.
+//  same combinational miso mux, clk generation, the CLK_DIV>=4 fatal
+//  guard, and the safety-net timeout. Reset is NOT sequenced here: it
+//  is an spi_if variable driven from spi_driver's UVM reset_phase, so
+//  all interface timing stays inside the phase schedule.
 // ---------------------------------------------------------------------
 `timescale 1ns/1ps
 
@@ -24,7 +26,6 @@ module spi_uvm_top;
     localparam bit CPHA    [N_SLAVES] = '{1'b0, 1'b1};
 
     logic clk = 1'b0;
-    logic reset;
 
     always #5 clk = ~clk;
 
@@ -36,7 +37,7 @@ module spi_uvm_top;
                 $fatal(1, "spi_slave needs CLK_DIV >= 4, slave %0d has %0d",
                        s, CLK_DIV[s]);
 
-    spi_if #(SIZE, N_SLAVES) vif (.clk(clk), .reset(reset));
+    spi_if #(SIZE, N_SLAVES) vif (.clk(clk));
 
     spi_controller #(
         .SIZE(SIZE),
@@ -46,7 +47,7 @@ module spi_uvm_top;
         .CPHA(CPHA)
     ) controller (
         .clk(clk),
-        .reset(reset),
+        .reset(vif.reset),
         .data_in(vif.data_in),
         .address(vif.address),
         .start(vif.start),
@@ -70,7 +71,7 @@ module spi_uvm_top;
                 .CPHA(CPHA[s])
             ) u_slave (
                 .clk(clk),
-                .reset(reset),
+                .reset(vif.reset),
                 .data_in(vif.slave_data_in[s]),
                 .data_out(vif.slave_data_out[s]),
                 .data_valid(vif.slave_data_valid[s]),
@@ -88,12 +89,6 @@ module spi_uvm_top;
         vif.miso = 1'b0;
         for (int s = 0; s < N_SLAVES; s++)
             if (!vif.slave_select_n[s]) vif.miso = slave_miso[s];
-    end
-
-    initial begin
-        reset = 1'b1;
-        repeat (4) @(negedge clk);
-        reset = 1'b0;
     end
 
     initial begin

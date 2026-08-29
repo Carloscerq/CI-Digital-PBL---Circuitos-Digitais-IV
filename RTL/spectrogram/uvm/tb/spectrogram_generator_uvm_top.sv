@@ -1,11 +1,16 @@
 // ---------------------------------------------------------------------
 //  spectrogram_generator_uvm_top  --  DUT + interface + UVM entry point
-//  for the spectrogram ping-pong double buffer. Clock period and reset
-//  sequencing mirror tb_spectrogram_generator.sv exactly: a free-running
-//  clk toggling every #5 (10ns period), reset held high then dropped
-//  after #22 (so it deasserts mid-cycle, same as the original tb),
-//  s_axis_valid/s_axis_last and m_axis_ready held at their idle values
-//  until the UVM run phase's own driver/monitor take over.
+//  for the spectrogram ping-pong double buffer. This module owns only
+//  the free-running clk (toggling every #5, a 10ns period, as in
+//  tb_spectrogram_generator.sv), the DUT/interface instances and the
+//  config_db handoff. Reset and the DUT's idle input values are driven
+//  by spectrogram_generator_driver's UVM reset_phase rather than from
+//  an `initial` block here, so all interface timing lives inside the
+//  phase schedule and the test's stimulus can sit in main_phase, which
+//  cannot start before reset_phase has finished. The DUT still sees
+//  tb_spectrogram_generator.sv's sequencing -- reset high across the
+//  first two posedges, deasserted mid-cycle -- and m_axis_ready stays
+//  with the monitor, which drives it from time 0.
 //
 //  No cfg object is needed: like smma_cnn_top_uvm_top.sv, there's
 //  exactly one valid geometry here (see spectrogram_generator_pkg.sv),
@@ -42,13 +47,6 @@ module spectrogram_generator_uvm_top;
     );
 
     initial begin
-        vif.reset          = 1'b1;
-        vif.s_axis_valid = 1'b0;
-        vif.s_axis_last  = 1'b0;
-        vif.m_axis_ready = 1'b0;
-
-        #22 vif.reset = 1'b0;
-
         uvm_config_db #(virtual spectrogram_generator_if)::set(
             null, "uvm_test_top.env.agent.*", "vif", vif);
 
