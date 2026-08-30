@@ -36,7 +36,9 @@ class maxpool_2x2_seq_item extends uvm_sequence_item;
     function bit do_compare(uvm_object rhs, uvm_comparer comparer);
         maxpool_2x2_seq_item rhs_;
         if (!$cast(rhs_, rhs)) return 0;
-        return (pixels == rhs_.pixels);
+        foreach (pixels[r, c, ch])
+            if (pixels[r][c][ch] !== rhs_.pixels[r][c][ch]) return 0;
+        return 1;
     endfunction
 
 endclass

@@ -34,16 +34,16 @@ module spectrogram_generator_uvm_top;
         .BINS_PER_FRAME        (32),
         .FRAMES_PER_SPECTROGRAM(32)
     ) dut (
-        .clk         (vif.clk),
-        .reset         (vif.reset),
-        .s_axis_valid(vif.s_axis_valid),
-        .s_axis_ready(vif.s_axis_ready),
-        .s_axis_data (vif.s_axis_data),
-        .s_axis_last (vif.s_axis_last),
-        .m_axis_valid(vif.m_axis_valid),
-        .m_axis_ready(vif.m_axis_ready),
-        .m_axis_data (vif.m_axis_data),
-        .m_axis_last (vif.m_axis_last)
+        .clk     (vif.clk),
+        .reset   (vif.reset),
+        .s_valid (vif.s_axis_valid),
+        .s_ready (vif.s_axis_ready),
+        .s_data  (vif.s_axis_data),
+        .s_last  (vif.s_axis_last),
+        .m_valid (vif.m_axis_valid),
+        .m_ready (vif.m_axis_ready),
+        .m_data  (vif.m_axis_data),
+        .m_last  (vif.m_axis_last)
     );
 
     initial begin
