@@ -1,4 +1,4 @@
-RTL/mac/mac.sv
-RTL/mac/uvm/mac_if.sv
-RTL/mac/uvm/mac_pkg.sv
-RTL/mac/uvm/tb/mac_uvm_top.sv
+mac/mac.sv
+mac/uvm/mac_if.sv
+mac/uvm/mac_pkg.sv
+mac/uvm/tb/mac_uvm_top.sv
