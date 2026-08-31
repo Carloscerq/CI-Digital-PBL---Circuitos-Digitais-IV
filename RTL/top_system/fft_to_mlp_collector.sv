@@ -217,4 +217,38 @@ module fft_to_mlp_collector #(
     end
     // synthesis translate_on
 
+    // ------------------------------------------------------------------
+    // MAGNITUDE_NOTE
+    // ------------------------------------------------------------------
+    // O comentario do mlp_tb_dpi diz "|rFFT| bins" -- MAGNITUDE, nao a parte
+    // real. Voce descreveu como "nao usar o valor imaginario", que pode
+    // significar duas coisas diferentes:
+    //
+    //   USE_MAGNITUDE = 1 (default) : |z| ~= max + 0.375*min. Casa com o texto
+    //       do TB. E uma APROXIMACAO: erra ate ~6.8% contra a magnitude exata.
+    //       Se o modelo foi treinado com np.abs(rfft(...)) exato, esse erro
+    //       entra como ruido de entrada. Da para trocar por CORDIC ou
+    //       sqrt(re^2+im^2) se a acuracia sofrer.
+    //
+    //   USE_MAGNITUDE = 0 : joga fft_real direto na feature. So esta correto
+    //       se o modelo tiver sido treinado com a parte real, o que o TB nao
+    //       sugere.
+    //
+    // Deixei em 1 por causa do TB. Se voce tiver o notebook de treino, vale
+    // confirmar o que exatamente alimentou as 128 primeiras colunas.
+    //
+    // ------------------------------------------------------------------
+    // MDC_K0_NOTE
+    // ------------------------------------------------------------------
+    // features[N_BINS+3] = mdc_k0, faixa 0..64 no TB. Nao e nenhum dos tres
+    // sensores auxiliares -- e um agregado do proprio frame (pelo nome e pela
+    // faixa, algo como a componente DC / media do bloco, k=0).
+    //
+    // O pipeline de FFT atual NAO exporta esse valor: o front-end tem um
+    // estagio de remocao de media, mas a media removida nao aparece na lista
+    // de portas. Por isso ele entra aqui como porta de entrada `mdc_k0`, para
+    // ser ligada quando a fonte existir. Enquanto estiver amarrada em zero, a
+    // quarta feature agregada vai constante para o modelo.
+    // ------------------------------------------------------------------
+
 endmodule

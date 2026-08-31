@@ -66,13 +66,13 @@ on the Quartus Prime software download page.
 +---------------------------------------------------------------------------------------------------+---------------------------+
 
 
-+------------------------------------------------------------------------------------------------------------------+
-; Simulation Generated Files                                                                                       ;
-+------------------------------------------------------------------------------------------------------------------+
-; Generated Files                                                                                                  ;
-+------------------------------------------------------------------------------------------------------------------+
-; /home/felipe/Documents/Projects/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/simulation/questa/quartus.svo ;
-+------------------------------------------------------------------------------------------------------------------+
++------------------------------------------------------------------------------------------------------------+
+; Simulation Generated Files                                                                                 ;
++------------------------------------------------------------------------------------------------------------+
+; Generated Files                                                                                            ;
++------------------------------------------------------------------------------------------------------------+
+; /home/cidigital/Documents/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/simulation/questa/quartus.svo ;
++------------------------------------------------------------------------------------------------------------+
 
 
 +-----------------------------+
@@ -84,7 +84,7 @@ Info: Running Quartus Prime EDA Netlist Writer
     Info: Processing started: Mon Aug 31 11:32:03 2026
 Info: Command: quartus_eda --read_settings_files=off --write_settings_files=off quartus -c quartus
 Warning (18236): Number of processors has not been specified which may cause overloading on shared machines.  Set the global assignment NUM_PARALLEL_PROCESSORS in your QSF to an appropriate value for best performance.
-Info (204019): Generated file quartus.svo in folder "/home/felipe/Documents/Projects/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/simulation/questa/" for EDA simulation tool
+Info (204019): Generated file quartus.svo in folder "/home/cidigital/Documents/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/simulation/questa/" for EDA simulation tool
 Info: Quartus Prime EDA Netlist Writer was successful. 0 errors, 1 warning
     Info: Peak virtual memory: 855 megabytes
     Info: Processing ended: Mon Aug 31 11:32:06 2026

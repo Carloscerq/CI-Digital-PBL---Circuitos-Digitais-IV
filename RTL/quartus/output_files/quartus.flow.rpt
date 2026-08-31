@@ -113,17 +113,17 @@ on the Quartus Prime software download page.
 +----------------------+--------------+-------------------------+---------------------+------------------------------------+
 
 
-+---------------------------------------------------------------------------------+
-; Flow OS Summary                                                                 ;
-+----------------------+------------------+---------+------------+----------------+
-; Module Name          ; Machine Hostname ; OS Name ; OS Version ; Processor type ;
-+----------------------+------------------+---------+------------+----------------+
-; Analysis & Synthesis ; ubuntu           ; Ubuntu  ; 26         ; x86_64         ;
-; Fitter               ; ubuntu           ; Ubuntu  ; 26         ; x86_64         ;
-; Assembler            ; ubuntu           ; Ubuntu  ; 26         ; x86_64         ;
-; Timing Analyzer      ; ubuntu           ; Ubuntu  ; 26         ; x86_64         ;
-; EDA Netlist Writer   ; ubuntu           ; Ubuntu  ; 26         ; x86_64         ;
-+----------------------+------------------+---------+------------+----------------+
++------------------------------------------------------------------------------------------+
+; Flow OS Summary                                                                          ;
++----------------------+-----------------------+-------------+------------+----------------+
+; Module Name          ; Machine Hostname      ; OS Name     ; OS Version ; Processor type ;
++----------------------+-----------------------+-------------+------------+----------------+
+; Analysis & Synthesis ; localhost.localdomain ; Rocky Linux ; 9          ; x86_64         ;
+; Fitter               ; localhost.localdomain ; Rocky Linux ; 9          ; x86_64         ;
+; Assembler            ; localhost.localdomain ; Rocky Linux ; 9          ; x86_64         ;
+; Timing Analyzer      ; localhost.localdomain ; Rocky Linux ; 9          ; x86_64         ;
+; EDA Netlist Writer   ; localhost.localdomain ; Rocky Linux ; 9          ; x86_64         ;
++----------------------+-----------------------+-------------+------------+----------------+
 
 
 ------------
