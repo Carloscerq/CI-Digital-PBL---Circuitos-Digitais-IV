@@ -6,7 +6,7 @@ module maxpool_2x2 #(
     parameter int CHANNELS = 8
 )(
     input  logic               clk,
-    input  logic               rst,
+    input  logic               reset,
     
     // Stream Slave (from Conv2D)
     input  logic               s_valid,
@@ -34,7 +34,7 @@ module maxpool_2x2 #(
     logic [$clog2(IMG_WIDTH)-1:0] row;
     
     always_ff @(posedge clk) begin
-        if (rst) begin
+        if (reset) begin
             col <= '0;
             row <= '0;
         end else if (s_valid && s_ready) begin
@@ -69,7 +69,7 @@ module maxpool_2x2 #(
     logic               m_last_reg;
 
     always_ff @(posedge clk) begin
-        if (rst) begin
+        if (reset) begin
             m_valid_reg <= 1'b0;
             m_last_reg  <= 1'b0;
         end else if (s_ready) begin

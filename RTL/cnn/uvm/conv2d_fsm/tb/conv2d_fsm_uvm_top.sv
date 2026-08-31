@@ -3,11 +3,16 @@
 //  CNN's convolution FSM (CHANNELS=8 parallel MAC-based convolutions +
 //  bias + ReLU per 3x3xIN_CHANNELS window).
 //
-//  Clock and reset sequencing mirror tb_conv2d_fsm.sv exactly: a
-//  free-running clk toggling every #5 (10ns period), rst held high then
-//  dropped after #22 (so it deasserts mid-cycle, same as the original
-//  directed tb), s_valid/s_last held low and m_ready held low until the
-//  UVM run phase's own driver/monitor take over.
+//  This module owns only the free-running clk (toggling every #5, a
+//  10ns period, as in tb_conv2d_fsm.sv), the DUT/interface instances
+//  and the config_db handoff. Reset and the DUT's idle input values
+//  are driven by conv2d_fsm_driver's UVM reset_phase rather than from
+//  an `initial` block here, so all interface timing lives inside the
+//  phase schedule and the test's stimulus can sit in main_phase, which
+//  cannot start before reset_phase has finished. The DUT still sees
+//  tb_conv2d_fsm.sv's sequencing -- reset high across the first two
+//  posedges, deasserted mid-cycle -- and m_ready stays with the
+//  monitor, which drives it from time 0.
 //
 //  There's exactly one valid geometry here (DATA_WIDTH=24/FRAC_BITS=16/
 //  CHANNELS=8/IN_CHANNELS=4, tied to the trained weights in
@@ -39,7 +44,7 @@ module conv2d_fsm_uvm_top;
         .IN_CHANNELS(4)
     ) dut (
         .clk    (vif.clk),
-        .rst    (vif.rst),
+        .reset    (vif.reset),
         .s_valid(vif.s_valid),
         .s_ready(vif.s_ready),
         .s_window(vif.s_window),
@@ -51,17 +56,6 @@ module conv2d_fsm_uvm_top;
     );
 
     initial begin
-        vif.rst     = 1'b1;
-        vif.s_valid = 1'b0;
-        vif.s_last  = 1'b0;
-        vif.m_ready = 1'b0;
-        for (int ch = 0; ch < 4; ch++)
-            for (int r = 0; r < 3; r++)
-                for (int c = 0; c < 3; c++)
-                    vif.s_window[ch][r][c] = '0;
-
-        #22 vif.rst = 1'b0;
-
         uvm_config_db #(virtual conv2d_fsm_if)::set(null, "uvm_test_top.env.agent.*", "vif", vif);
 
         run_test();

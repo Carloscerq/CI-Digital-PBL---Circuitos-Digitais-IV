@@ -3,7 +3,7 @@
 //  DUT's protocol state (it drives only fft_ready, the standard
 //  "monitor owns the randomized backpressure on the master side" shape
 //  used by every downstream-facing UVM monitor in this repo, e.g.
-//  smma_cnn_top_monitor/line_buffer_3x3_monitor/conv2d_fsm_monitor).
+//  cnn_top_monitor/line_buffer_3x3_monitor/conv2d_fsm_monitor).
 //  Three concurrent jobs:
 //
 //  (a) drive_backpressure() -- randomized ~75% fft_ready, toggled every
@@ -46,7 +46,7 @@
 //  Python-computed golden reference) for no real extra confidence at
 //  this stage -- see preprocess_lms_fft_scoreboard.sv for the full
 //  scope rationale, mirroring the same call made for
-//  RTL/cnn/uvm/smma_cnn_top/.
+//  RTL/cnn/uvm/cnn_top/.
 // ---------------------------------------------------------------------
 class preprocess_lms_fft_monitor extends uvm_monitor;
 

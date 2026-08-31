@@ -5,7 +5,7 @@ module gcd_tb ();
   localparam RANDOM_TRIALS = 50;
 
   logic clk;
-  logic reset_n;
+  logic reset;
 
   logic start_small;
   logic [SIZE-1: 0] in_small [N_SMALL];
@@ -19,7 +19,7 @@ module gcd_tb ();
 
   gcd #(.AMOUNT_OF_NUMBERS(N_SMALL), .SIZE(SIZE)) dut_small (
     .clk(clk),
-    .reset_n(reset_n),
+    .reset(reset),
     .start(start_small),
     .in(in_small),
     .out(out_small),
@@ -28,7 +28,7 @@ module gcd_tb ();
 
   gcd #(.AMOUNT_OF_NUMBERS(N_FULL), .SIZE(SIZE)) dut_full (
     .clk(clk),
-    .reset_n(reset_n),
+    .reset(reset),
     .start(start_full),
     .in(in_full),
     .out(out_full),
@@ -122,12 +122,12 @@ module gcd_tb ();
   initial begin
     start_small = 0;
     start_full = 0;
-    reset_n = 1;
+    reset = 1'b0;
     load_small(0, 0, 0, 0, 0);
     for (i = 0; i < N_FULL; i = i + 1) in_full[i] = 0;
 
-    @(negedge clk) reset_n = 0;
-    @(negedge clk) reset_n = 1;
+    @(negedge clk) reset = 1'b1;
+    @(negedge clk) reset = 1'b0;
 
     // directed cases
     load_small(12, 18, 24, 36, 60);      validate_small(6);

@@ -6,9 +6,12 @@
 //                    is needed -- unlike perceptron_uvm_top, nothing
 //                    about the DUT instance varies from run to run.
 //
-//  Reset sequence mirrors mlp_tb_dpi.sv exactly: 4 negedges with
-//  rst_n low, then rst_n high, then 2 more negedges before anything
-//  else happens.
+//  Reset is NOT sequenced here: mlp_driver drives it from its UVM
+//  reset_phase, so all interface timing lives inside the phase schedule
+//  and the test's stimulus sits in main_phase, which cannot start
+//  before reset_phase has finished. The sequence itself still mirrors
+//  mlp_tb_dpi.sv exactly: 4 negedges with reset high, then reset low,
+//  then 2 more negedges before anything else happens.
 // ---------------------------------------------------------------------
 `timescale 1ns/1ps
 
@@ -25,7 +28,7 @@ module mlp_uvm_top;
 
     mlp dut (
         .clk       (vif.clk),
-        .rst_n     (vif.rst_n),
+        .reset     (vif.reset),
         .start     (vif.start),
         .features  (vif.features),
         .logits    (vif.logits),
@@ -35,13 +38,6 @@ module mlp_uvm_top;
     );
 
     initial begin
-        vif.rst_n = 1'b0;
-        vif.start = 1'b0;
-
-        repeat (4) @(negedge clk);
-        vif.rst_n = 1'b1;
-        repeat (2) @(negedge clk);
-
         uvm_config_db #(virtual mlp_if)::set(null, "uvm_test_top.env.agent.*", "vif", vif);
 
         run_test();

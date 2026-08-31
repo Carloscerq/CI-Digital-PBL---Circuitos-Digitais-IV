@@ -1,12 +1,17 @@
 // ---------------------------------------------------------------------
 //  filtro_lms_uvm_top  --  DUT + interface + UVM entry point, MU left at
 //  its default (24'sd1638, matching filtro_lms_scoreboard.sv's shadow
-//  golden model). clk period and reset sequencing mirror
-//  tb_filtro_lms.v exactly: 10ns period (`forever #5 clk = ~clk`),
-//  `reset` (active-low, despite the name -- see filtro_lms_if.sv) held
-//  low for 30ns then released, with a further 20ns settle before
-//  stimulus starts flowing (tb_filtro_lms.v's `rst_n=0; #30; rst_n=1;
-//  #20;`).
+//  golden model). The clock period mirrors tb_filtro_lms.v exactly:
+//  10ns (`forever #5 clk = ~clk`).
+//
+//  Reset is NOT sequenced here -- filtro_lms_driver drives it from its
+//  UVM reset_phase, keeping all interface timing inside the phase
+//  schedule and letting the test's stimulus sit in main_phase, which
+//  cannot start before reset_phase has finished. The DUT still sees
+//  tb_filtro_lms.v's sequence: `reset` (active-high, synchronous --
+//  see filtro_lms_if.sv) held high for 3 cycles then released, with a
+//  further 2 idle cycles before stimulus flows (tb_filtro_lms.v's
+//  `reset=1; #30; reset=0; #20;`).
 // ---------------------------------------------------------------------
 `timescale 1ns/1ps
 
@@ -40,15 +45,6 @@ module filtro_lms_uvm_top;
     );
 
     initial begin
-        vif.reset    = 1'b0;
-        vif.in_valid = 1'b0;
-        vif.fft_re   = 24'sd0;
-        vif.fft_im   = 24'sd0;
-
-        #30;
-        vif.reset = 1'b1;
-        #20;
-
         uvm_config_db #(virtual filtro_lms_if)::set(
             null, "uvm_test_top.env.agent.*", "vif", vif);
         uvm_config_db #(virtual filtro_lms_if)::set(

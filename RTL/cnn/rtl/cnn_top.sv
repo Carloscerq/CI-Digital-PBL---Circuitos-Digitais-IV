@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 // ============================================================================
-// SMMA CNN top
+// CNN top
 // ============================================================================
 // Stream handshake used on every port here and throughout the CNN: a beat
 // transfers when valid and ready are both high on a rising clock edge, and
@@ -9,18 +9,22 @@
 // only signals -- there is no sideband (keep/strobe/id/user), no address phase
 // and no bursts.
 // ============================================================================
-module smma_cnn_top #(
-    parameter int DATA_WIDTH = 24,
-    parameter int FRAC_BITS = 16,
-    parameter int IMG_WIDTH = 32,
-    parameter int IMG_HEIGHT = 32,
+module cnn_top #(
+    parameter int DATA_WIDTH  = 24,
+    parameter int FRAC_BITS   = 16,
+    parameter int IMG_WIDTH   = 32,
+    parameter int IMG_HEIGHT  = 32,
     parameter int IN_CHANNELS = 4,   // 4 physical sensors
-    parameter int CHANNELS = 8,
+    parameter int CHANNELS    = 8,
     parameter int OUT_CLASSES = 4,
-    parameter int IN_FEATURES = 2048
+    parameter int IN_FEATURES = 2048,
+    parameter CONV2_WEIGHTS_FILE = "./mem/cnn/conv2d_weights.mem",
+    parameter CONV2_BIASES_FILE  = "./mem/cnn/conv2d_biases.mem",
+    parameter DENSE_WEIGHTS_FILE = "./mem/cnn/dense_weights.mem",
+    parameter DENSE_BIASES_FILE  = "./mem/cnn/dense_biases.mem"
 )(
     input  logic clk,
-    input  logic rst,
+    input  logic reset,
     
     // Stream slave: one pixel per channel per beat
     input  logic s_valid,
@@ -53,7 +57,7 @@ module smma_cnn_top #(
         .IN_CHANNELS(IN_CHANNELS)
     ) u_line_buffer (
         .clk(clk),
-        .rst(rst),
+        .reset(reset),
         .s_valid(s_valid),
         .s_ready(s_ready),
         .s_data(s_data),
@@ -76,10 +80,12 @@ module smma_cnn_top #(
         .DATA_WIDTH(DATA_WIDTH),
         .FRAC_BITS(FRAC_BITS),
         .CHANNELS(CHANNELS),
-        .IN_CHANNELS(IN_CHANNELS)
+        .IN_CHANNELS(IN_CHANNELS),
+        .CONV2_WEIGHTS_FILE(CONV2_WEIGHTS_FILE),
+        .CONV2_BIASES_FILE(CONV2_BIASES_FILE)
     ) u_conv2d (
         .clk(clk),
-        .rst(rst),
+        .reset(reset),
         .s_valid(lb_valid),
         .s_ready(lb_ready),
         .s_window(lb_window),
@@ -104,7 +110,7 @@ module smma_cnn_top #(
         .CHANNELS(CHANNELS)
     ) u_maxpool (
         .clk(clk),
-        .rst(rst),
+        .reset(reset),
         .s_valid(conv_valid),
         .s_ready(conv_ready),
         .s_data(conv_data),
@@ -125,10 +131,12 @@ module smma_cnn_top #(
         .FRAC_BITS(FRAC_BITS),
         .IN_CHANNELS(CHANNELS),
         .OUT_CLASSES(OUT_CLASSES),
-        .IN_FEATURES(IN_FEATURES)
+        .IN_FEATURES(IN_FEATURES),
+        .DENSE_WEIGHTS_FILE(DENSE_WEIGHTS_FILE),
+        .DENSE_BIASES_FILE(DENSE_BIASES_FILE)
     ) u_dense_layer (
         .clk(clk),
-        .rst(rst),
+        .reset(reset),
         .s_valid(pool_valid),
         .s_ready(pool_ready),
         .s_data(pool_data),

@@ -19,7 +19,7 @@ module spi_controller #(
   parameter int ADDR_W = (AMOUNT_OF_SLAVES > 1) ? $clog2(AMOUNT_OF_SLAVES) : 1
 ) (
   input logic clk,
-  input logic reset_n,
+  input logic reset,
   // fabric side
   input logic [SIZE-1:0] data_in,
   input logic [ADDR_W-1:0] address,
@@ -135,8 +135,8 @@ module spi_controller #(
     endcase
   end
 
-  always_ff @(posedge clk or negedge reset_n) begin
-    if (!reset_n) begin
+  always_ff @(posedge clk) begin
+    if (reset) begin
       state <= S_IDLE;
       div_counter <= '0;
       counter <= '0;

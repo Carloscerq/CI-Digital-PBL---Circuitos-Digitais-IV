@@ -135,14 +135,7 @@ module fft_to_mlp_collector #(
 
     // ------------------------------------------------------------------
     // Admissao de frame e montagem da rodada
-    // ------------------------------------------------------------------
-    // A FFT compartilhada serializa os sensores: emite os 64 bins do sensor A,
-    // levanta fft_done, passa para o proximo. Juntamos os quatro numa rodada.
-    //
-    // Um frame e aceito ou recusado NO PRIMEIRO BIN, nunca no meio. Recusar na
-    // entrada e o que impede features_reg de ser reescrito debaixo de uma
-    // inferencia que ainda esta lendo -- o `mlp` amostra `features` de forma
-    // combinacional durante toda a sua execucao (~165 ciclos).
+    // ------------------------------------------------------------------.
     logic       fft_xfer;
     logic       frame_start;
     logic       capturing;
@@ -209,17 +202,6 @@ module fft_to_mlp_collector #(
     // ------------------------------------------------------------------
     // MLP_SENSOR_ID_NOTE
     // ------------------------------------------------------------------
-    // Nao existe mais "o sensor desta inferencia": o vetor cobre os quatro de
-    // uma vez. mlp_sensor_id fica em zero so para nao quebrar a interface do
-    // inference_arbiter.
-    //
-    // >>> IMPACTO NO sensor_fault_mask <<<
-    // O arbiter usava mlp_sensor_id para atribuir a falha a um sensor
-    // especifico. Com o modelo olhando os quatro juntos, essa atribuicao NAO E
-    // MAIS POSSIVEL pela via do MLP -- a saida do modelo e uma classe para a
-    // maquina inteira, nao por sensor. O arbiter precisa ser revisto: ou o
-    // sensor_fault_mask passa a vir so do caminho da CNN, ou vira um flag
-    // global, ou se treina um modelo por sensor. Nao decidi isso por voce.
     assign mlp_sensor_id = 2'd0;
 
     // synthesis translate_off

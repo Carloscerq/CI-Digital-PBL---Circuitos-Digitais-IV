@@ -18,11 +18,10 @@
 //  dropping en during the drain would stall the very propagation this
 //  driver is waiting for.
 //
-//  rst is deliberately NOT touched here: reset sequencing is a
+//  reset is deliberately NOT touched here: reset sequencing is a
 //  top/test-level concern (see tb/mac_q8_16_uvm_top.sv), and by the time
-//  items start flowing through this driver rst is assumed already
-//  deasserted. Note mac_q8_16's rst is SYNCHRONOUS (unlike RTL/mac's
-//  async rst_n), which only matters for how the top sequences it.
+//  items start flowing through this driver reset is assumed already
+//  deasserted.
 // ---------------------------------------------------------------------
 class mac_q8_16_driver #(
     int DATA_WIDTH = 24,
@@ -43,6 +42,40 @@ class mac_q8_16_driver #(
         if (!uvm_config_db #(virtual mac_q8_16_if #(DATA_WIDTH, FRAC_BITS))::get(this, "", "vif", vif))
             `uvm_fatal("NOVIF", "virtual interface not set for driver")
     endfunction
+
+    // ------------------------------------------------------------------
+    //  reset_phase -- the UVM run-time phase that owns reset. This used
+    //  to be sequenced from an `initial` block in
+    //  mac_q8_16_uvm_top.sv; it belongs here because the driver is
+    //  the component that holds the vif and drives the DUT's inputs.
+    //  Raising an objection across the whole phase is what makes the
+    //  schedule really wait for reset to finish, which in turn is what
+    //  lets the bench's test class start its sequences from main_phase
+    //  with no chance of stimulus overlapping reset -- run_phase spans
+    //  the entire run-time schedule, so it would have overlapped it.
+    // ------------------------------------------------------------------
+    // Two posedges of reset plus one settled idle cycle -- what the old
+    // `#20 reset=0; @(negedge clk);` gave at this bench's 10ns period.
+    localparam int RESET_CYCLES = 2;
+
+    task reset_phase(uvm_phase phase);
+        phase.raise_objection(this, "mac_q8_16: applying reset");
+
+        vif.reset = 1'b1;
+        vif.en    = 1'b0;
+        vif.clr   = 1'b0;
+        vif.a     = '0;
+        vif.b     = '0;
+
+        repeat (RESET_CYCLES) @(posedge vif.clk);
+        // Deassert on a negedge so reset never changes on the same edge
+        // the DUT's synchronous reset samples.
+        @(negedge vif.clk);
+        vif.reset = 1'b0;
+        @(negedge vif.clk);
+
+        phase.drop_objection(this, "mac_q8_16: reset released");
+    endtask
 
     task run_phase(uvm_phase phase);
         forever begin

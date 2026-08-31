@@ -7,8 +7,11 @@
 #   ./run_uvm.sh +UVM_VERBOSITY=UVM_HIGH        # per-item logging
 #   ./run_uvm.sh +UVM_TESTNAME=mac_q8_16_default_test
 
+cd "$(dirname "$0")/../../.." || exit 1
+
 xrun -64bit -sv -uvmhome CDNS-1.2 -timescale 1ns/1ps -access +rwc \
      -top mac_q8_16_uvm_top \
-     -f mac_q8_16_uvm.files \
+     -incdir cnn/uvm/mac_q8_16 \
+     -f cnn/uvm/mac_q8_16/mac_q8_16_uvm.files \
      +UVM_TESTNAME=mac_q8_16_default_test \
      "$@"

@@ -1,10 +1,10 @@
-Analysis & Synthesis Status : Successful - Sat Aug 29 15:17:01 2026
+Analysis & Synthesis Status : Successful - Mon Aug 31 11:30:23 2026
 Quartus Prime Version : 25.1std.0 Build 1129 10/21/2025 SC Lite Edition
 Revision Name : quartus
 Top-level Entity Name : top_system
 Family : Cyclone V
 Logic utilization (in ALMs) : N/A
-Total registers : 10899
+Total registers : 10873
 Total pins : 12
 Total virtual pins : 0
 Total block memory bits : 580,552

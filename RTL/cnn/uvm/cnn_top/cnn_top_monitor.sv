@@ -1,11 +1,11 @@
 // ---------------------------------------------------------------------
-//  smma_cnn_top_monitor  --  entirely passive, and entirely
+//  cnn_top_monitor  --  entirely passive, and entirely
 //  self-sufficient: it watches BOTH halves of the top-level AXI4-Stream
 //  boundary directly on the interface and needs no cooperation from the
 //  driver (unlike line_buffer_3x3's driver, which had to publish a
 //  golden frame for its scoreboard's bit-exact reconstruction -- this
 //  testbench is protocol/integration-level only, see
-//  smma_cnn_top_scoreboard.sv). Two independent, concurrent jobs:
+//  cnn_top_scoreboard.sv). Two independent, concurrent jobs:
 //
 //  (a) watch_input() -- counts s_axis_valid && s_axis_ready beats as
 //      they're accepted, resetting the count to 0 every time an
@@ -16,11 +16,11 @@
 //      anything the driver does or knows.
 //
 //  (b) watch_output() -- applies the same randomized ~1/3 m_axis_ready
-//      backpressure monitor_top() in tb_smma_cnn_top.sv does
+//      backpressure monitor_top() in tb_cnn_top.sv does
 //      ($urandom_range(0,2) != 0, toggled every negedge), and on every
 //      accepted output beat (m_axis_valid && m_axis_ready) builds a
 //      result item: the 4 named logits, m_axis_last, the
-//      dense_data_probe snapshot (see smma_cnn_top_if.sv for how that's
+//      dense_data_probe snapshot (see cnn_top_if.sv for how that's
 //      wired), and the input frame length popped off
 //      input_beat_queue's front -- this is how "beats never arrive
 //      early" is caught structurally: if no input frame has finished
@@ -41,12 +41,12 @@
 //  sitting unconsumed in input_beat_queue at the end of the run means
 //  its matching output never arrived.
 // ---------------------------------------------------------------------
-class smma_cnn_top_monitor extends uvm_monitor;
+class cnn_top_monitor extends uvm_monitor;
 
-    `uvm_component_utils(smma_cnn_top_monitor)
+    `uvm_component_utils(cnn_top_monitor)
 
-    virtual smma_cnn_top_if vif;
-    uvm_analysis_port #(smma_cnn_top_seq_item) ap;
+    virtual cnn_top_if vif;
+    uvm_analysis_port #(cnn_top_seq_item) ap;
 
     // FIFO of completed input-frame accepted-beat counts, produced by
     // watch_input() and consumed by watch_output() to pair each output
@@ -63,7 +63,7 @@ class smma_cnn_top_monitor extends uvm_monitor;
 
     function void build_phase(uvm_phase phase);
         super.build_phase(phase);
-        if (!uvm_config_db #(virtual smma_cnn_top_if)::get(this, "", "vif", vif))
+        if (!uvm_config_db #(virtual cnn_top_if)::get(this, "", "vif", vif))
             `uvm_fatal("NOVIF", "virtual interface not set for monitor")
     endfunction
 
@@ -80,7 +80,7 @@ class smma_cnn_top_monitor extends uvm_monitor;
         accepted = 0;
         forever begin
             @(posedge vif.clk);
-            if (vif.rst) begin
+            if (vif.reset) begin
                 accepted = 0;
             end else if (vif.s_axis_valid && vif.s_axis_ready) begin
                 accepted++;
@@ -99,7 +99,7 @@ class smma_cnn_top_monitor extends uvm_monitor;
 
     // --- (b) master-side backpressure, capture, stability check --------
     task automatic watch_output();
-        smma_cnn_top_seq_item item;
+        cnn_top_seq_item item;
         bit                            prev_valid;
         logic signed [DATA_WIDTH-1:0]  prev_normal, prev_unbalance, prev_misalign, prev_bearing;
 
@@ -133,7 +133,7 @@ class smma_cnn_top_monitor extends uvm_monitor;
             end
 
             if (vif.m_axis_valid && vif.m_axis_ready) begin
-                item = smma_cnn_top_seq_item::type_id::create("item");
+                item = cnn_top_seq_item::type_id::create("item");
                 item.logit_normal    = vif.m_axis_data_normal;
                 item.logit_unbalance = vif.m_axis_data_unbalance;
                 item.logit_misalign  = vif.m_axis_data_misalign;

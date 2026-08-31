@@ -34,6 +34,38 @@ class line_buffer_3x3_driver extends uvm_driver #(line_buffer_3x3_seq_item);
             `uvm_fatal("NOVIF", "virtual interface not set for driver")
     endfunction
 
+    // ------------------------------------------------------------------
+    //  reset_phase -- the UVM run-time phase that owns reset. This used
+    //  to be sequenced from an `initial` block in
+    //  line_buffer_3x3_uvm_top.sv; it belongs here because the driver is
+    //  the component that holds the vif and drives the DUT's inputs.
+    //  Raising an objection across the whole phase is what makes the
+    //  schedule really wait for reset to finish, which in turn is what
+    //  lets the bench's test class start its sequences from main_phase
+    //  with no chance of stimulus overlapping reset -- run_phase spans
+    //  the entire run-time schedule, so it would have overlapped it.
+    // ------------------------------------------------------------------
+    // Two posedges of reset, the same two the old `#22` hand-sequenced
+    // reset covered at this bench's 10ns clock period.
+    localparam int RESET_CYCLES = 2;
+
+    task reset_phase(uvm_phase phase);
+        phase.raise_objection(this, "line_buffer_3x3: applying reset");
+
+        vif.reset   = 1'b1;
+        vif.s_valid = 1'b0;
+        vif.s_last  = 1'b0;
+        for (int ch = 0; ch < IN_CHANNELS; ch++) vif.s_data[ch] = '0;
+
+        repeat (RESET_CYCLES) @(posedge vif.clk);
+        // Deassert on a negedge so reset never changes on the same edge
+        // the DUT's synchronous reset samples.
+        @(negedge vif.clk);
+        vif.reset = 1'b0;
+
+        phase.drop_objection(this, "line_buffer_3x3: reset released");
+    endtask
+
     task run_phase(uvm_phase phase);
         forever begin
             seq_item_port.get_next_item(req);

@@ -1,4 +1,4 @@
-../../rtl/maxpool_2x2.sv
-maxpool_2x2_if.sv
-maxpool_2x2_pkg.sv
-tb/maxpool_2x2_uvm_top.sv
+cnn/rtl/maxpool_2x2.sv
+cnn/uvm/maxpool_2x2/maxpool_2x2_if.sv
+cnn/uvm/maxpool_2x2/maxpool_2x2_pkg.sv
+cnn/uvm/maxpool_2x2/tb/maxpool_2x2_uvm_top.sv

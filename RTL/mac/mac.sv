@@ -4,7 +4,7 @@ module mac #(
     parameter int SUM_WIDTH    = 40   // must hold NUM_INPUTS * 2**(DW+WW-2)
 )(
     input  logic clk,
-    input  logic rst,
+    input  logic reset,
 
     input  logic load,                             // acc <= data*weight  (first tap)
     input  logic en,                               // acc <= acc + data*weight
@@ -19,7 +19,7 @@ module mac #(
     always_comb prod = data * weight;
 
     always_ff @(posedge clk) begin
-        if (rst)    acc <= '0;
+        if (reset)     acc <= '0;
         else if (load) acc <= SUM_WIDTH'(prod);
         else if (en)   acc <= acc + SUM_WIDTH'(prod);
     end

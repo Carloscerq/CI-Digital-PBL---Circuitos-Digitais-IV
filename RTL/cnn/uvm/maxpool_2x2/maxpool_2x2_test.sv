@@ -9,6 +9,12 @@
 //  tb_maxpool_2x2.sv's monotonic pixel pattern), then a small
 //  randomized-content sweep with manufactured tie cases (see
 //  maxpool_2x2_random_seq), same shape as line_buffer_3x3_directed_random_test.
+//
+//  Stimulus runs in main_phase, not run_phase: reset is applied in
+//  maxpool_2x2_driver's UVM reset_phase, and main_phase is the first
+//  run-time phase guaranteed to start only after reset_phase has
+//  dropped its objection -- run_phase spans the whole run-time
+//  schedule, so it would have overlapped reset.
 // ---------------------------------------------------------------------
 class maxpool_2x2_base_test extends uvm_test;
 
@@ -35,7 +41,7 @@ class maxpool_2x2_directed_random_test extends maxpool_2x2_base_test;
         super.new(name, parent);
     endfunction
 
-    task run_phase(uvm_phase phase);
+    task main_phase(uvm_phase phase);
         maxpool_2x2_directed_seq dseq;
         maxpool_2x2_random_seq   rseq;
 

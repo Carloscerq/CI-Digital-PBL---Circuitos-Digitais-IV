@@ -3,12 +3,12 @@
 //  (the DUT's slave-side handshake granularity), matching the "one item
 //  = one protocol-level unit" convention used across this repo's UVM
 //  testbenches, just at beat rather than frame granularity here (unlike
-//  smma_cnn_top_seq_item, which is one item per whole 1024-pixel
+//  cnn_top_seq_item, which is one item per whole 1024-pixel
 //  frame -- the FFT pipeline's input side has no natural "frame"
 //  boundary from the driver's point of view, only the 32:1-decimated/
 //  64-sample-hop framing happening deep inside the DUT).
 //
-//  This item does double duty, the same split smma_cnn_top_seq_item
+//  This item does double duty, the same split cnn_top_seq_item
 //  uses:
 //   - `desired_sample` is the randomized/directed stimulus the driver
 //     streams in (see preprocess_lms_fft_driver.sv and

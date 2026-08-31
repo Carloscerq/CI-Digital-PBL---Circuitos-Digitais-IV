@@ -27,7 +27,7 @@ module spi_controller_tb ();
   localparam int ADDR_W = (N_SLAVES > 1) ? $clog2(N_SLAVES) : 1;
 
   logic clk = 1'b0;
-  logic reset_n;
+  logic reset;
 
   always #5 clk = ~clk;
 
@@ -61,7 +61,7 @@ module spi_controller_tb ();
     .CPHA(CPHA)
   ) controller (
     .clk(clk),
-    .reset_n(reset_n),
+    .reset(reset),
     .data_in(data_in),
     .address(address),
     .start(start),
@@ -91,7 +91,7 @@ module spi_controller_tb ();
         .CPHA(CPHA[s])
       ) u_slave (
         .clk(clk),
-        .reset_n(reset_n),
+        .reset(reset),
         .data_in(slave_data_in[s]),
         .data_out(slave_data_out[s]),
         .data_valid(slave_valid[s]),
@@ -261,14 +261,14 @@ module spi_controller_tb ();
   endtask
 
   initial begin
-    reset_n     = 1'b0;
+    reset     = 1'b1;
     start       = 1'b0;
     hold_select = 1'b0;
     data_in     = '0;
     address     = '0;
     for (int s = 0; s < N_SLAVES; s++) slave_data_in[s] = '0;
     repeat (4) @(negedge clk);
-    reset_n = 1'b1;
+    reset = 1'b0;
 
     $display("=== spi_controller_tb : %0d bits, %0d slaves ===", SIZE, N_SLAVES);
     for (int s = 0; s < N_SLAVES; s++)

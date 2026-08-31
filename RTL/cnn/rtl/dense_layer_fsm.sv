@@ -5,10 +5,12 @@ module dense_layer_fsm #(
     parameter int FRAC_BITS = 16,
     parameter int IN_CHANNELS = 8,
     parameter int OUT_CLASSES = 4,
-    parameter int IN_FEATURES = 2048 // Total flattened features
+    parameter int IN_FEATURES = 2048, // Total flattened features
+    parameter DENSE_WEIGHTS_FILE = "./mem/cnn/dense_weights.mem",
+    parameter DENSE_BIASES_FILE = "./mem/cnn/dense_biases.mem"
 )(
     input  logic               clk,
-    input  logic               rst,
+    input  logic               reset,
     
     // Stream Slave Interface (from maxpool)
     input  logic               s_valid,
@@ -46,7 +48,7 @@ module dense_layer_fsm #(
 
     // State, channel, wait counter, and ROM address registers
     always_ff @(posedge clk) begin
-        if (rst) begin
+        if (reset) begin
             state    <= ST_IDLE;
             ch       <= '0;
             wait_cnt <= '0;
@@ -85,10 +87,10 @@ module dense_layer_fsm #(
     
     initial begin
         // Load the 8192 weights (4 classes * 2048 features)
-        $readmemh("../mem/cnn/dense_weights.mem", rom_array);
+        $readmemh(DENSE_WEIGHTS_FILE, rom_array);
         
         // Load the 4 bias values
-        $readmemh("../mem/cnn/dense_biases.mem", biases);
+        $readmemh(DENSE_BIASES_FILE, biases);
         
         $display("[INIT] Dense Layer ROM and Biases successfully loaded from files.");
     end
@@ -202,7 +204,7 @@ module dense_layer_fsm #(
                 .FRAC_BITS(FRAC_BITS)
             ) mac_inst (
                 .clk(clk),
-                .rst(rst),
+                .reset(reset),
                 .en(mac_en),
                 .clr(mac_clr),
                 .a(mac_a[i]),

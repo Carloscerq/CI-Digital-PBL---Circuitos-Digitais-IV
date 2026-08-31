@@ -9,6 +9,12 @@
 //                                 300-vector constrained-random sweep
 //                                 (see mlp_random_seq), same shape as
 //                                 perceptron_wide_random_test.
+//
+//  Stimulus runs in main_phase, not run_phase: reset is applied in
+//  mlp_driver's UVM reset_phase, and main_phase is the first
+//  run-time phase guaranteed to start only after reset_phase has
+//  dropped its objection -- run_phase spans the whole run-time
+//  schedule, so it would have overlapped reset.
 // ---------------------------------------------------------------------
 class mlp_base_test extends uvm_test;
 
@@ -35,7 +41,7 @@ class mlp_directed_random_test extends mlp_base_test;
         super.new(name, parent);
     endfunction
 
-    task run_phase(uvm_phase phase);
+    task main_phase(uvm_phase phase);
         mlp_directed_seq dseq;
         mlp_random_seq   rseq;
 

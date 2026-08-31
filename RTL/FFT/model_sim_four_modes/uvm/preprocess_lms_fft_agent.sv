@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------
 //  preprocess_lms_fft_agent  --  standard sequencer/driver/monitor
-//  bundle. Always active, mirroring smma_cnn_top_agent/mac_q8_16_agent
+//  bundle. Always active, mirroring cnn_top_agent/mac_q8_16_agent
 //  -- this testbench only needs one active agent driving/observing the
 //  preprocess_lms_fft_four_modes DUT.
 // ---------------------------------------------------------------------

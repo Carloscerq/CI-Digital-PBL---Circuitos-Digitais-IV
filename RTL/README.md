@@ -15,7 +15,7 @@ interfaces; per-module READMEs can be added under each directory later.
 | `top_system/` | Top level and all inter-subsystem glue | yes |
 | `FFT/model_sim_four_modes_quartus_shared_fft/` | **Active** front-end: FIR decimator → frame buffer → mean removal → Hann → shared FFT | yes |
 | `FFT/model_sim_four_modes/`, `FFT/model_sim_four_modes_quartus/` | Older single-channel variants, kept for reference and simulation | no |
-| `cnn/rtl/` | `smma_cnn_top` and its layers (line buffer, conv2d, maxpool, dense) | yes |
+| `cnn/rtl/` | `cnn_top` and its layers (line buffer, conv2d, maxpool, dense) | yes |
 | `cnn/tb/`, `spectrogram/tb/` | Testbenches | no |
 | `mlp_model/` | `mlp.sv` + `mlp_weights_pkg` (dimensions and ROM address map) | yes |
 | `spectrogram/rtl/` | `spectrogram_generator` — ping-pong M10K buffer | yes |
@@ -38,10 +38,11 @@ slave (consuming) side and `m_*` on the master (producing) side. There is no
 sideband, no address phase, no bursts — this is **not** AXI, and the naming
 was deliberately changed to stop implying otherwise.
 
-**Clock and reset.** One 50 MHz domain, `clk`. `reset_n` is asynchronous and
-active-low at the pins; `top_system` derives `reset = ~reset_n` for the
-subsystems that want it active-high. The SPI pins cross into `clk` through
-synchronisers inside `spi_slave` and are false-pathed in the SDC.
+**Clock and reset.** One 50 MHz domain, `clk`. `reset` is **synchronous and
+active-high** everywhere — one name, one polarity, sampled on `posedge clk`
+alongside every other input, so it must be held across at least one rising
+edge to take effect. The SPI pins cross into `clk` through synchronisers
+inside `spi_slave` and are false-pathed in the SDC.
 
 **Fixed point.** Two formats coexist, by subsystem:
 
@@ -156,7 +157,56 @@ windows.
 
 They are latched, not pulsed — clear them with a reset.
 
-## 7. Open items
+## 7. Simulation
+
+Every subsystem has a UVM bench under `<subsystem>/uvm/`. Each bench directory
+holds two runners, both using the same `.files` list, top module and default
+test, so a bench behaves identically either way:
+
+| Script | Simulator |
+|---|---|
+| `run_uvm.sh` | Cadence Xcelium (`xrun`) |
+| `run_uvm_vsim.sh` | Questa/ModelSim (`vlog` + `vsim`) |
+
+```sh
+export PATH=/path/to/questasim/linux_x86_64:$PATH   # or set QUESTA_HOME
+
+RTL/mac/uvm/run_uvm_vsim.sh                            # default test
+RTL/mac/uvm/run_uvm_vsim.sh +UVM_VERBOSITY=UVM_HIGH    # per-item logging
+RTL/mac/uvm/run_uvm_vsim.sh +UVM_TESTNAME=mac_protocol_test
+RTL/mac/uvm/run_uvm_vsim.sh --gui                      # interactive, waves kept
+```
+
+Anything after the script name is forwarded to `vsim`, and a later
+`+UVM_TESTNAME` overrides the default.
+
+The wrappers are one line each; the work is in `scripts/uvm_vsim.sh`, which
+also runs standalone by bench id (`scripts/uvm_vsim.sh --list` for the 15 ids).
+`scripts/run_all_uvm_vsim.sh` runs the whole set and prints a pass/fail table,
+exiting non-zero if anything failed — add `--compile-only` to stop after
+`vlog`, which is a fast syntax/elaboration check that needs no licence.
+
+Three things worth knowing:
+
+- **UVM 1.2.** The benches match the Xcelium scripts' `-uvmhome CDNS-1.2`, so
+  the runner links Questa's prebuilt `uvm-1.2` library, *not* the 1.1d that
+  `modelsim.ini` maps to `mtiUvm` by default. Override with `UVM_LIB` /
+  `UVM_SRC` if your install puts them elsewhere.
+- **Working directory.** Everything runs from `RTL/sim_vsim/` (gitignored),
+  one level below `RTL/`, because the DUTs load their ROM images with paths
+  like `../mem/cnn/dense_weights.mem`, chosen for the Quartus project dir.
+  Run from anywhere else and `$readmemh` silently loads nothing — and
+  `dense_layer_fsm.sv` prints "successfully loaded" unconditionally, so a
+  wrong cwd looks like a pass with all-zero results.
+- **Verdict.** `vsim` exits 0 even when a test fails, so the runner parses the
+  UVM report summary and fails on any `UVM_ERROR` / `UVM_FATAL`. A missing
+  simulation licence is reported separately (`BLOCKED`, exit 3) rather than as
+  a broken bench.
+
+The non-UVM testbenches (`cnn/tb/`, `spectrogram/tb/`, `*_tb.sv`) are driven by
+`sim_cnn.do`, `spectrogram/sim.do`, and `mlp_model/run_tests.sh`.
+
+## 8. Open items
 
 - **No pin assignments.** The `.qsf` has none; add them before programming.
 - **MLP extra features.** There are five non-vibration sensors but the trained

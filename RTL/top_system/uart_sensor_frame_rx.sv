@@ -3,46 +3,6 @@
 // ============================================================================
 // uart_sensor_frame_rx
 // ============================================================================
-// Substitui o spi_sensor_frame_rx quando a ingestao de sensores passa de SPI
-// para UART.
-//
-// POR QUE ESTE MODULO PRECISOU EXISTIR
-// ------------------------------------
-// O SPI entregava o delimitador de quadro de graca: uma asserção de
-// slave_select_n = uma epoca de aquisicao. O spi_sensor_frame_rx so precisava
-// contar bytes enquanto "spi_selected" estivesse ativo.
-//
-// UART nao tem esse sinal. E um fluxo de bytes sem inicio nem fim, entao o
-// enquadramento precisa ser construido no protocolo. Este modulo usa tres
-// mecanismos, todos necessarios:
-//
-//   1) PALAVRA DE SINCRONISMO (SYNC0, SYNC1) marca o inicio do quadro.
-//   2) CHECKSUM (XOR de todos os bytes de payload) detecta corrupcao. Numa
-//      linha serial assincrona nao ha clock compartilhado; um unico glitch
-//      desloca todos os bytes seguintes. Sem checksum, lixo entraria no
-//      pipeline de inferencia como se fosse dado bom.
-//   3) TIMEOUT DE OCIOSIDADE ressincroniza se o transmissor parar no meio de
-//      um quadro. Sem isso, uma unica interrupcao deixaria o receptor
-//      travado esperando bytes que nunca chegam.
-//
-// FORMATO DO QUADRO (padrao: 30 bytes)
-// ------------------------------------
-//   [0]      SYNC0                     (0xA5)
-//   [1]      SYNC1                     (0x5A)
-//   [2..28]  payload: N_SENSORS palavras de BYTES_PER_WORD bytes,
-//            MSB primeiro (big-endian), na ordem
-//              0..3 = vibracao, 4..6 = corrente, 7..8 = temperatura
-//   [29]     checksum = XOR de todos os bytes de payload
-//
-// GARANTIA DE INTEGRIDADE
-// -----------------------
-// sensor_data so e atualizado quando um quadro passa no checksum. Um quadro
-// corrompido nunca aparece na saida -- importante porque aux_features (a
-// parte de corrente/temperatura) e lida combinacionalmente do sensor_data
-// pelo coletor do MLP, ou seja, NAO e protegida por frame_valid. Se
-// escrevessemos direto em sensor_data, lixo de um quadro rejeitado poderia
-// ser amostrado pelo MLP.
-// ============================================================================
 module uart_sensor_frame_rx #(
     parameter int DATA_WIDTH     = 24,
     parameter int N_SENSORS      = 9,
@@ -57,7 +17,7 @@ module uart_sensor_frame_rx #(
     parameter int IDLE_TIMEOUT_BYTES = 4
 )(
     input  logic clk,
-    input  logic reset,
+    input  logic reset,     // Reset SINCRONO, ATIVO EM ALTO (padrao do projeto)
 
     // Interface com o receptor UART (receiver.sv)
     input  logic [7:0] rx_data,
@@ -77,9 +37,6 @@ module uart_sensor_frame_rx #(
     // ------------------------------------------------------------------
     // Consumo de bytes do receptor UART
     // ------------------------------------------------------------------
-    // O receiver mantem "ready" alto ate receber "ready_clr", e nao tem FIFO:
-    // um byte novo sobrescreve o anterior. Consumimos em ~3 ciclos de clock,
-    // contra ~4340 ciclos por byte na linha, entao nunca ha overrun.
     typedef enum logic {B_IDLE, B_CLR} byte_state_e;
     byte_state_e byte_state;
 

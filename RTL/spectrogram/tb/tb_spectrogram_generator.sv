@@ -3,7 +3,7 @@
 module tb_spectrogram_generator();
 
     logic clk;
-    logic rst;
+    logic reset;
     
     logic s_valid;
     logic s_ready;
@@ -113,11 +113,11 @@ module tb_spectrogram_generator();
     endtask
 
     initial begin
-        rst = 1'b1;
+        reset = 1'b1;
         s_valid = 1'b0;
         m_ready = 1'b0;
         
-        #22 rst = 1'b0;
+        #22 reset = 1'b0;
         
         $display("Starting Ping-Pong Double Buffering Test...");
         

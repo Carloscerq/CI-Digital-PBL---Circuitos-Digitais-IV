@@ -1,5 +1,5 @@
 Timing Analyzer report for quartus
-Sat Aug 29 15:19:54 2026
+Mon Aug 31 11:32:02 2026
 Quartus Prime Version 25.1std.0 Build 1129 10/21/2025 SC Lite Edition
 
 
@@ -99,26 +99,24 @@ on the Quartus Prime software download page.
 ; Number detected on machine ; 16          ;
 ; Maximum allowed            ; 16          ;
 ;                            ;             ;
-; Average used               ; 6.49        ;
-; Maximum used               ; 16          ;
+; Average used               ; 6.13        ;
+; Maximum used               ; 14          ;
 ;                            ;             ;
 ; Usage by Processor         ; % Time Used ;
 ;     Processor 1            ; 100.0%      ;
-;     Processor 2            ;  41.3%      ;
-;     Processor 3            ;  41.3%      ;
-;     Processor 4            ;  41.2%      ;
-;     Processor 5            ;  35.4%      ;
-;     Processor 6            ;  35.4%      ;
-;     Processor 7            ;  35.4%      ;
-;     Processor 8            ;  35.4%      ;
-;     Processor 9            ;  35.4%      ;
-;     Processor 10           ;  35.4%      ;
-;     Processor 11           ;  35.4%      ;
-;     Processor 12           ;  35.4%      ;
-;     Processor 13           ;  35.4%      ;
-;     Processor 14           ;  35.4%      ;
-;     Processor 15           ;  35.4%      ;
-;     Processor 16           ;  35.4%      ;
+;     Processor 2            ;  44.5%      ;
+;     Processor 3            ;  42.9%      ;
+;     Processor 4            ;  42.9%      ;
+;     Processor 5            ;  38.2%      ;
+;     Processor 6            ;  38.2%      ;
+;     Processor 7            ;  38.2%      ;
+;     Processor 8            ;  38.2%      ;
+;     Processor 9            ;  38.2%      ;
+;     Processor 10           ;  38.2%      ;
+;     Processor 11           ;  38.2%      ;
+;     Processor 12           ;  38.2%      ;
+;     Processor 13           ;  38.2%      ;
+;     Processor 14           ;  38.2%      ;
 +----------------------------+-------------+
 
 
@@ -127,7 +125,7 @@ on the Quartus Prime software download page.
 +----------------+--------+--------------------------+
 ; SDC File Path  ; Status ; Read at                  ;
 +----------------+--------+--------------------------+
-; top_system.sdc ; OK     ; Sat Aug 29 15:19:43 2026 ;
+; top_system.sdc ; OK     ; Mon Aug 31 11:31:55 2026 ;
 +----------------+--------+--------------------------+
 
 
@@ -145,7 +143,7 @@ on the Quartus Prime software download page.
 +-----------+-----------------+------------+------+
 ; Fmax      ; Restricted Fmax ; Clock Name ; Note ;
 +-----------+-----------------+------------+------+
-; 54.45 MHz ; 54.45 MHz       ; clk        ;      ;
+; 56.04 MHz ; 56.04 MHz       ; clk        ;      ;
 +-----------+-----------------+------------+------+
 This panel reports FMAX for every clock in the design, regardless of the user-specified clock periods.  FMAX is only computed for paths where the source and destination registers or ports are driven by the same clock.  Paths of different clocks, including generated clocks, are ignored.  For paths between a clock and its inversion, FMAX is computed as if the rising and falling edges are scaled along with FMAX, such that the duty cycle (in terms of a percentage) is maintained. Altera recommends that you always use clock constraints and other slack reports for sign-off analysis.
 
@@ -161,7 +159,7 @@ HTML report is unavailable in plain text report export.
 +-------+-------+---------------------+
 ; Clock ; Slack ; End Point TNS       ;
 +-------+-------+---------------------+
-; clk   ; 1.634 ; 0.000               ;
+; clk   ; 2.157 ; 0.000               ;
 +-------+-------+---------------------+
 
 
@@ -170,7 +168,7 @@ HTML report is unavailable in plain text report export.
 +-------+-------+--------------------+
 ; Clock ; Slack ; End Point TNS      ;
 +-------+-------+--------------------+
-; clk   ; 0.248 ; 0.000              ;
+; clk   ; 0.247 ; 0.000              ;
 +-------+-------+--------------------+
 
 
@@ -198,22 +196,16 @@ No paths to report.
 -----------------------------------------------
 ; Slow 1100mV 85C Model Metastability Summary ;
 -----------------------------------------------
-The design MTBF is not calculated because there are no specified synchronizers in the design.
-Number of Synchronizer Chains Found: 844
-Shortest Synchronizer Chain: 2 Registers
-Fraction of Chains for which MTBFs Could Not be Calculated: 1.000
-Worst Case Available Settling Time: 16.754 ns
+No synchronizer chains to report.
 
 
-
-
-+------------------------------------------------+
-; Slow 1100mV 0C Model Fmax Summary              ;
-+----------+-----------------+------------+------+
-; Fmax     ; Restricted Fmax ; Clock Name ; Note ;
-+----------+-----------------+------------+------+
-; 54.0 MHz ; 54.0 MHz        ; clk        ;      ;
-+----------+-----------------+------------+------+
++-------------------------------------------------+
+; Slow 1100mV 0C Model Fmax Summary               ;
++-----------+-----------------+------------+------+
+; Fmax      ; Restricted Fmax ; Clock Name ; Note ;
++-----------+-----------------+------------+------+
+; 55.71 MHz ; 55.71 MHz       ; clk        ;      ;
++-----------+-----------------+------------+------+
 This panel reports FMAX for every clock in the design, regardless of the user-specified clock periods.  FMAX is only computed for paths where the source and destination registers or ports are driven by the same clock.  Paths of different clocks, including generated clocks, are ignored.  For paths between a clock and its inversion, FMAX is computed as if the rising and falling edges are scaled along with FMAX, such that the duty cycle (in terms of a percentage) is maintained. Altera recommends that you always use clock constraints and other slack reports for sign-off analysis.
 
 
@@ -222,7 +214,7 @@ This panel reports FMAX for every clock in the design, regardless of the user-sp
 +-------+-------+--------------------+
 ; Clock ; Slack ; End Point TNS      ;
 +-------+-------+--------------------+
-; clk   ; 1.480 ; 0.000              ;
+; clk   ; 2.051 ; 0.000              ;
 +-------+-------+--------------------+
 
 
@@ -231,7 +223,7 @@ This panel reports FMAX for every clock in the design, regardless of the user-sp
 +-------+-------+-------------------+
 ; Clock ; Slack ; End Point TNS     ;
 +-------+-------+-------------------+
-; clk   ; 0.241 ; 0.000             ;
+; clk   ; 0.235 ; 0.000             ;
 +-------+-------+-------------------+
 
 
@@ -259,13 +251,7 @@ No paths to report.
 ----------------------------------------------
 ; Slow 1100mV 0C Model Metastability Summary ;
 ----------------------------------------------
-The design MTBF is not calculated because there are no specified synchronizers in the design.
-Number of Synchronizer Chains Found: 844
-Shortest Synchronizer Chain: 2 Registers
-Fraction of Chains for which MTBFs Could Not be Calculated: 1.000
-Worst Case Available Settling Time: 16.915 ns
-
-
+No synchronizer chains to report.
 
 
 +-------------------------------------+
@@ -273,7 +259,7 @@ Worst Case Available Settling Time: 16.915 ns
 +-------+--------+--------------------+
 ; Clock ; Slack  ; End Point TNS      ;
 +-------+--------+--------------------+
-; clk   ; 10.386 ; 0.000              ;
+; clk   ; 10.194 ; 0.000              ;
 +-------+--------+--------------------+
 
 
@@ -282,7 +268,7 @@ Worst Case Available Settling Time: 16.915 ns
 +-------+-------+--------------------+
 ; Clock ; Slack ; End Point TNS      ;
 +-------+-------+--------------------+
-; clk   ; 0.129 ; 0.000              ;
+; clk   ; 0.086 ; 0.000              ;
 +-------+-------+--------------------+
 
 
@@ -310,13 +296,7 @@ No paths to report.
 -----------------------------------------------
 ; Fast 1100mV 85C Model Metastability Summary ;
 -----------------------------------------------
-The design MTBF is not calculated because there are no specified synchronizers in the design.
-Number of Synchronizer Chains Found: 844
-Shortest Synchronizer Chain: 2 Registers
-Fraction of Chains for which MTBFs Could Not be Calculated: 1.000
-Worst Case Available Settling Time: 17.926 ns
-
-
+No synchronizer chains to report.
 
 
 +------------------------------------+
@@ -324,7 +304,7 @@ Worst Case Available Settling Time: 17.926 ns
 +-------+--------+-------------------+
 ; Clock ; Slack  ; End Point TNS     ;
 +-------+--------+-------------------+
-; clk   ; 11.245 ; 0.000             ;
+; clk   ; 11.866 ; 0.000             ;
 +-------+--------+-------------------+
 
 
@@ -333,7 +313,7 @@ Worst Case Available Settling Time: 17.926 ns
 +-------+-------+-------------------+
 ; Clock ; Slack ; End Point TNS     ;
 +-------+-------+-------------------+
-; clk   ; 0.111 ; 0.000             ;
+; clk   ; 0.016 ; 0.000             ;
 +-------+-------+-------------------+
 
 
@@ -361,13 +341,7 @@ No paths to report.
 ----------------------------------------------
 ; Fast 1100mV 0C Model Metastability Summary ;
 ----------------------------------------------
-The design MTBF is not calculated because there are no specified synchronizers in the design.
-Number of Synchronizer Chains Found: 844
-Shortest Synchronizer Chain: 2 Registers
-Fraction of Chains for which MTBFs Could Not be Calculated: 1.000
-Worst Case Available Settling Time: 18.184 ns
-
-
+No synchronizer chains to report.
 
 
 +-----------------------------------------------------------------------------+
@@ -375,8 +349,8 @@ Worst Case Available Settling Time: 18.184 ns
 +------------------+-------+-------+----------+---------+---------------------+
 ; Clock            ; Setup ; Hold  ; Recovery ; Removal ; Minimum Pulse Width ;
 +------------------+-------+-------+----------+---------+---------------------+
-; Worst-case Slack ; 1.480 ; 0.111 ; N/A      ; N/A     ; 8.581               ;
-;  clk             ; 1.480 ; 0.111 ; N/A      ; N/A     ; 8.581               ;
+; Worst-case Slack ; 2.051 ; 0.016 ; N/A      ; N/A     ; 8.581               ;
+;  clk             ; 2.051 ; 0.016 ; N/A      ; N/A     ; 8.581               ;
 ; Design-wide TNS  ; 0.0   ; 0.0   ; 0.0      ; 0.0     ; 0.0                 ;
 ;  clk             ; 0.000 ; 0.000 ; N/A      ; N/A     ; 0.000               ;
 +------------------+-------+-------+----------+---------+---------------------+
@@ -415,15 +389,15 @@ Worst Case Available Settling Time: 18.184 ns
 +----------------------+--------------+---------------------+---------------------+------------------------------+------------------------------+---------------------+---------------------+--------------------------------------+--------------------------------------+-----------------------------+-----------------------------+----------------------------+----------------------------+-----------------------------+-----------------------------+--------------------+--------------------+-------------------------------------+-------------------------------------+----------------------------+----------------------------+---------------------------+---------------------------+
 ; Pin                  ; I/O Standard ; Board Delay on Rise ; Board Delay on Fall ; Steady State Voh at FPGA Pin ; Steady State Vol at FPGA Pin ; Voh Max at FPGA Pin ; Vol Min at FPGA Pin ; Ringback Voltage on Rise at FPGA Pin ; Ringback Voltage on Fall at FPGA Pin ; 10-90 Rise Time at FPGA Pin ; 90-10 Fall Time at FPGA Pin ; Monotonic Rise at FPGA Pin ; Monotonic Fall at FPGA Pin ; Steady State Voh at Far-end ; Steady State Vol at Far-end ; Voh Max at Far-end ; Vol Min at Far-end ; Ringback Voltage on Rise at Far-end ; Ringback Voltage on Fall at Far-end ; 10-90 Rise Time at Far-end ; 90-10 Fall Time at Far-end ; Monotonic Rise at Far-end ; Monotonic Fall at Far-end ;
 +----------------------+--------------+---------------------+---------------------+------------------------------+------------------------------+---------------------+---------------------+--------------------------------------+--------------------------------------+-----------------------------+-----------------------------+----------------------------+----------------------------+-----------------------------+-----------------------------+--------------------+--------------------+-------------------------------------+-------------------------------------+----------------------------+----------------------------+---------------------------+---------------------------+
-; sys_error            ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 1.88e-07 V                   ; 2.35 V              ; -0.0185 V           ; 0.153 V                              ; 0.099 V                              ; 4.6e-10 s                   ; 4.48e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 1.88e-07 V                  ; 2.35 V             ; -0.0185 V          ; 0.153 V                             ; 0.099 V                             ; 4.6e-10 s                  ; 4.48e-10 s                 ; No                        ; Yes                       ;
-; status_leds[0]       ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.19e-07 V                   ; 2.4 V               ; -0.039 V            ; 0.21 V                               ; 0.145 V                              ; 4.67e-10 s                  ; 4.63e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.19e-07 V                  ; 2.4 V              ; -0.039 V           ; 0.21 V                              ; 0.145 V                             ; 4.67e-10 s                 ; 4.63e-10 s                 ; No                        ; Yes                       ;
-; status_leds[1]       ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.19e-07 V                   ; 2.4 V               ; -0.039 V            ; 0.21 V                               ; 0.145 V                              ; 4.67e-10 s                  ; 4.63e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.19e-07 V                  ; 2.4 V              ; -0.039 V           ; 0.21 V                              ; 0.145 V                             ; 4.67e-10 s                 ; 4.63e-10 s                 ; No                        ; Yes                       ;
-; status_leds[2]       ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.15e-07 V                   ; 2.41 V              ; -0.0495 V           ; 0.18 V                               ; 0.115 V                              ; 4.54e-10 s                  ; 4.44e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.15e-07 V                  ; 2.41 V             ; -0.0495 V          ; 0.18 V                              ; 0.115 V                             ; 4.54e-10 s                 ; 4.44e-10 s                 ; No                        ; Yes                       ;
+; sys_error            ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.19e-07 V                   ; 2.4 V               ; -0.039 V            ; 0.21 V                               ; 0.145 V                              ; 4.67e-10 s                  ; 4.63e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.19e-07 V                  ; 2.4 V              ; -0.039 V           ; 0.21 V                              ; 0.145 V                             ; 4.67e-10 s                 ; 4.63e-10 s                 ; No                        ; Yes                       ;
+; status_leds[0]       ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.15e-07 V                   ; 2.41 V              ; -0.0495 V           ; 0.18 V                               ; 0.115 V                              ; 4.54e-10 s                  ; 4.44e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.15e-07 V                  ; 2.41 V             ; -0.0495 V          ; 0.18 V                              ; 0.115 V                             ; 4.54e-10 s                 ; 4.44e-10 s                 ; No                        ; Yes                       ;
+; status_leds[1]       ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.15e-07 V                   ; 2.41 V              ; -0.0492 V           ; 0.181 V                              ; 0.116 V                              ; 4.54e-10 s                  ; 4.44e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.15e-07 V                  ; 2.41 V             ; -0.0492 V          ; 0.181 V                             ; 0.116 V                             ; 4.54e-10 s                 ; 4.44e-10 s                 ; No                        ; Yes                       ;
+; status_leds[2]       ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.19e-07 V                   ; 2.4 V               ; -0.039 V            ; 0.21 V                               ; 0.145 V                              ; 4.67e-10 s                  ; 4.63e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.19e-07 V                  ; 2.4 V              ; -0.039 V           ; 0.21 V                              ; 0.145 V                             ; 4.67e-10 s                 ; 4.63e-10 s                 ; No                        ; Yes                       ;
 ; sensor_fault_mask[0] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 1.88e-07 V                   ; 2.35 V              ; -0.0185 V           ; 0.153 V                              ; 0.099 V                              ; 4.6e-10 s                   ; 4.48e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 1.88e-07 V                  ; 2.35 V             ; -0.0185 V          ; 0.153 V                             ; 0.099 V                             ; 4.6e-10 s                  ; 4.48e-10 s                 ; No                        ; Yes                       ;
 ; alert_flag           ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.15e-07 V                   ; 2.41 V              ; -0.0492 V           ; 0.181 V                              ; 0.116 V                              ; 4.54e-10 s                  ; 4.44e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.15e-07 V                  ; 2.41 V             ; -0.0492 V          ; 0.181 V                             ; 0.116 V                             ; 4.54e-10 s                 ; 4.44e-10 s                 ; No                        ; Yes                       ;
-; sensor_fault_mask[1] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 1.88e-07 V                   ; 2.35 V              ; -0.0185 V           ; 0.153 V                              ; 0.099 V                              ; 4.6e-10 s                   ; 4.48e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 1.88e-07 V                  ; 2.35 V             ; -0.0185 V          ; 0.153 V                             ; 0.099 V                             ; 4.6e-10 s                  ; 4.48e-10 s                 ; No                        ; Yes                       ;
-; sensor_fault_mask[2] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.15e-07 V                   ; 2.41 V              ; -0.0495 V           ; 0.18 V                               ; 0.115 V                              ; 4.54e-10 s                  ; 4.44e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.15e-07 V                  ; 2.41 V             ; -0.0495 V          ; 0.18 V                              ; 0.115 V                             ; 4.54e-10 s                 ; 4.44e-10 s                 ; No                        ; Yes                       ;
-; sensor_fault_mask[3] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.15e-07 V                   ; 2.41 V              ; -0.0492 V           ; 0.181 V                              ; 0.116 V                              ; 4.54e-10 s                  ; 4.44e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.15e-07 V                  ; 2.41 V             ; -0.0492 V          ; 0.181 V                             ; 0.116 V                             ; 4.54e-10 s                 ; 4.44e-10 s                 ; No                        ; Yes                       ;
+; sensor_fault_mask[1] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.15e-07 V                   ; 2.41 V              ; -0.0495 V           ; 0.18 V                               ; 0.115 V                              ; 4.54e-10 s                  ; 4.44e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.15e-07 V                  ; 2.41 V             ; -0.0495 V          ; 0.18 V                              ; 0.115 V                             ; 4.54e-10 s                 ; 4.44e-10 s                 ; No                        ; Yes                       ;
+; sensor_fault_mask[2] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.15e-07 V                   ; 2.41 V              ; -0.0492 V           ; 0.181 V                              ; 0.116 V                              ; 4.54e-10 s                  ; 4.44e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.15e-07 V                  ; 2.41 V             ; -0.0492 V          ; 0.181 V                             ; 0.116 V                             ; 4.54e-10 s                 ; 4.44e-10 s                 ; No                        ; Yes                       ;
+; sensor_fault_mask[3] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.19e-07 V                   ; 2.4 V               ; -0.039 V            ; 0.21 V                               ; 0.145 V                              ; 4.67e-10 s                  ; 4.63e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.19e-07 V                  ; 2.4 V              ; -0.039 V           ; 0.21 V                              ; 0.145 V                             ; 4.67e-10 s                 ; 4.63e-10 s                 ; No                        ; Yes                       ;
 +----------------------+--------------+---------------------+---------------------+------------------------------+------------------------------+---------------------+---------------------+--------------------------------------+--------------------------------------+-----------------------------+-----------------------------+----------------------------+----------------------------+-----------------------------+-----------------------------+--------------------+--------------------+-------------------------------------+-------------------------------------+----------------------------+----------------------------+---------------------------+---------------------------+
 
 
@@ -432,15 +406,15 @@ Worst Case Available Settling Time: 18.184 ns
 +----------------------+--------------+---------------------+---------------------+------------------------------+------------------------------+---------------------+---------------------+--------------------------------------+--------------------------------------+-----------------------------+-----------------------------+----------------------------+----------------------------+-----------------------------+-----------------------------+--------------------+--------------------+-------------------------------------+-------------------------------------+----------------------------+----------------------------+---------------------------+---------------------------+
 ; Pin                  ; I/O Standard ; Board Delay on Rise ; Board Delay on Fall ; Steady State Voh at FPGA Pin ; Steady State Vol at FPGA Pin ; Voh Max at FPGA Pin ; Vol Min at FPGA Pin ; Ringback Voltage on Rise at FPGA Pin ; Ringback Voltage on Fall at FPGA Pin ; 10-90 Rise Time at FPGA Pin ; 90-10 Fall Time at FPGA Pin ; Monotonic Rise at FPGA Pin ; Monotonic Fall at FPGA Pin ; Steady State Voh at Far-end ; Steady State Vol at Far-end ; Voh Max at Far-end ; Vol Min at Far-end ; Ringback Voltage on Rise at Far-end ; Ringback Voltage on Fall at Far-end ; 10-90 Rise Time at Far-end ; 90-10 Fall Time at Far-end ; Monotonic Rise at Far-end ; Monotonic Fall at Far-end ;
 +----------------------+--------------+---------------------+---------------------+------------------------------+------------------------------+---------------------+---------------------+--------------------------------------+--------------------------------------+-----------------------------+-----------------------------+----------------------------+----------------------------+-----------------------------+-----------------------------+--------------------+--------------------+-------------------------------------+-------------------------------------+----------------------------+----------------------------+---------------------------+---------------------------+
-; sys_error            ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.27e-05 V                   ; 2.34 V              ; -0.0089 V           ; 0.206 V                              ; 0.058 V                              ; 4.97e-10 s                  ; 5.13e-10 s                  ; Yes                        ; Yes                        ; 2.32 V                      ; 2.27e-05 V                  ; 2.34 V             ; -0.0089 V          ; 0.206 V                             ; 0.058 V                             ; 4.97e-10 s                 ; 5.13e-10 s                 ; Yes                       ; Yes                       ;
-; status_leds[0]       ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.56e-05 V                   ; 2.38 V              ; -0.026 V            ; 0.249 V                              ; 0.089 V                              ; 4.95e-10 s                  ; 6.01e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.56e-05 V                  ; 2.38 V             ; -0.026 V           ; 0.249 V                             ; 0.089 V                             ; 4.95e-10 s                 ; 6.01e-10 s                 ; No                        ; Yes                       ;
-; status_leds[1]       ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.56e-05 V                   ; 2.38 V              ; -0.026 V            ; 0.249 V                              ; 0.089 V                              ; 4.95e-10 s                  ; 6.01e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.56e-05 V                  ; 2.38 V             ; -0.026 V           ; 0.249 V                             ; 0.089 V                             ; 4.95e-10 s                 ; 6.01e-10 s                 ; No                        ; Yes                       ;
-; status_leds[2]       ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.52e-05 V                   ; 2.38 V              ; -0.0315 V           ; 0.205 V                              ; 0.182 V                              ; 4.74e-10 s                  ; 4.85e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.52e-05 V                  ; 2.38 V             ; -0.0315 V          ; 0.205 V                             ; 0.182 V                             ; 4.74e-10 s                 ; 4.85e-10 s                 ; No                        ; Yes                       ;
+; sys_error            ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.56e-05 V                   ; 2.38 V              ; -0.026 V            ; 0.249 V                              ; 0.089 V                              ; 4.95e-10 s                  ; 6.01e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.56e-05 V                  ; 2.38 V             ; -0.026 V           ; 0.249 V                             ; 0.089 V                             ; 4.95e-10 s                 ; 6.01e-10 s                 ; No                        ; Yes                       ;
+; status_leds[0]       ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.52e-05 V                   ; 2.38 V              ; -0.0315 V           ; 0.205 V                              ; 0.182 V                              ; 4.74e-10 s                  ; 4.85e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.52e-05 V                  ; 2.38 V             ; -0.0315 V          ; 0.205 V                             ; 0.182 V                             ; 4.74e-10 s                 ; 4.85e-10 s                 ; No                        ; Yes                       ;
+; status_leds[1]       ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.52e-05 V                   ; 2.38 V              ; -0.032 V            ; 0.204 V                              ; 0.181 V                              ; 4.74e-10 s                  ; 4.85e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.52e-05 V                  ; 2.38 V             ; -0.032 V           ; 0.204 V                             ; 0.181 V                             ; 4.74e-10 s                 ; 4.85e-10 s                 ; No                        ; Yes                       ;
+; status_leds[2]       ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.56e-05 V                   ; 2.38 V              ; -0.026 V            ; 0.249 V                              ; 0.089 V                              ; 4.95e-10 s                  ; 6.01e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.56e-05 V                  ; 2.38 V             ; -0.026 V           ; 0.249 V                             ; 0.089 V                             ; 4.95e-10 s                 ; 6.01e-10 s                 ; No                        ; Yes                       ;
 ; sensor_fault_mask[0] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.27e-05 V                   ; 2.34 V              ; -0.0089 V           ; 0.206 V                              ; 0.058 V                              ; 4.97e-10 s                  ; 5.13e-10 s                  ; Yes                        ; Yes                        ; 2.32 V                      ; 2.27e-05 V                  ; 2.34 V             ; -0.0089 V          ; 0.206 V                             ; 0.058 V                             ; 4.97e-10 s                 ; 5.13e-10 s                 ; Yes                       ; Yes                       ;
 ; alert_flag           ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.52e-05 V                   ; 2.38 V              ; -0.032 V            ; 0.204 V                              ; 0.181 V                              ; 4.74e-10 s                  ; 4.85e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.52e-05 V                  ; 2.38 V             ; -0.032 V           ; 0.204 V                             ; 0.181 V                             ; 4.74e-10 s                 ; 4.85e-10 s                 ; No                        ; Yes                       ;
-; sensor_fault_mask[1] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.27e-05 V                   ; 2.34 V              ; -0.0089 V           ; 0.206 V                              ; 0.058 V                              ; 4.97e-10 s                  ; 5.13e-10 s                  ; Yes                        ; Yes                        ; 2.32 V                      ; 2.27e-05 V                  ; 2.34 V             ; -0.0089 V          ; 0.206 V                             ; 0.058 V                             ; 4.97e-10 s                 ; 5.13e-10 s                 ; Yes                       ; Yes                       ;
-; sensor_fault_mask[2] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.52e-05 V                   ; 2.38 V              ; -0.0315 V           ; 0.205 V                              ; 0.182 V                              ; 4.74e-10 s                  ; 4.85e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.52e-05 V                  ; 2.38 V             ; -0.0315 V          ; 0.205 V                             ; 0.182 V                             ; 4.74e-10 s                 ; 4.85e-10 s                 ; No                        ; Yes                       ;
-; sensor_fault_mask[3] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.52e-05 V                   ; 2.38 V              ; -0.032 V            ; 0.204 V                              ; 0.181 V                              ; 4.74e-10 s                  ; 4.85e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.52e-05 V                  ; 2.38 V             ; -0.032 V           ; 0.204 V                             ; 0.181 V                             ; 4.74e-10 s                 ; 4.85e-10 s                 ; No                        ; Yes                       ;
+; sensor_fault_mask[1] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.52e-05 V                   ; 2.38 V              ; -0.0315 V           ; 0.205 V                              ; 0.182 V                              ; 4.74e-10 s                  ; 4.85e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.52e-05 V                  ; 2.38 V             ; -0.0315 V          ; 0.205 V                             ; 0.182 V                             ; 4.74e-10 s                 ; 4.85e-10 s                 ; No                        ; Yes                       ;
+; sensor_fault_mask[2] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.52e-05 V                   ; 2.38 V              ; -0.032 V            ; 0.204 V                              ; 0.181 V                              ; 4.74e-10 s                  ; 4.85e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.52e-05 V                  ; 2.38 V             ; -0.032 V           ; 0.204 V                             ; 0.181 V                             ; 4.74e-10 s                 ; 4.85e-10 s                 ; No                        ; Yes                       ;
+; sensor_fault_mask[3] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.32 V                       ; 2.56e-05 V                   ; 2.38 V              ; -0.026 V            ; 0.249 V                              ; 0.089 V                              ; 4.95e-10 s                  ; 6.01e-10 s                  ; No                         ; Yes                        ; 2.32 V                      ; 2.56e-05 V                  ; 2.38 V             ; -0.026 V           ; 0.249 V                             ; 0.089 V                             ; 4.95e-10 s                 ; 6.01e-10 s                 ; No                        ; Yes                       ;
 +----------------------+--------------+---------------------+---------------------+------------------------------+------------------------------+---------------------+---------------------+--------------------------------------+--------------------------------------+-----------------------------+-----------------------------+----------------------------+----------------------------+-----------------------------+-----------------------------+--------------------+--------------------+-------------------------------------+-------------------------------------+----------------------------+----------------------------+---------------------------+---------------------------+
 
 
@@ -449,15 +423,15 @@ Worst Case Available Settling Time: 18.184 ns
 +----------------------+--------------+---------------------+---------------------+------------------------------+------------------------------+---------------------+---------------------+--------------------------------------+--------------------------------------+-----------------------------+-----------------------------+----------------------------+----------------------------+-----------------------------+-----------------------------+--------------------+--------------------+-------------------------------------+-------------------------------------+----------------------------+----------------------------+---------------------------+---------------------------+
 ; Pin                  ; I/O Standard ; Board Delay on Rise ; Board Delay on Fall ; Steady State Voh at FPGA Pin ; Steady State Vol at FPGA Pin ; Voh Max at FPGA Pin ; Vol Min at FPGA Pin ; Ringback Voltage on Rise at FPGA Pin ; Ringback Voltage on Fall at FPGA Pin ; 10-90 Rise Time at FPGA Pin ; 90-10 Fall Time at FPGA Pin ; Monotonic Rise at FPGA Pin ; Monotonic Fall at FPGA Pin ; Steady State Voh at Far-end ; Steady State Vol at Far-end ; Voh Max at Far-end ; Vol Min at Far-end ; Ringback Voltage on Rise at Far-end ; Ringback Voltage on Fall at Far-end ; 10-90 Rise Time at Far-end ; 90-10 Fall Time at Far-end ; Monotonic Rise at Far-end ; Monotonic Fall at Far-end ;
 +----------------------+--------------+---------------------+---------------------+------------------------------+------------------------------+---------------------+---------------------+--------------------------------------+--------------------------------------+-----------------------------+-----------------------------+----------------------------+----------------------------+-----------------------------+-----------------------------+--------------------+--------------------+-------------------------------------+-------------------------------------+----------------------------+----------------------------+---------------------------+---------------------------+
-; sys_error            ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 3.54e-06 V                   ; 2.81 V              ; -0.0578 V           ; 0.303 V                              ; 0.28 V                               ; 2.93e-10 s                  ; 3.01e-10 s                  ; No                         ; No                         ; 2.75 V                      ; 3.54e-06 V                  ; 2.81 V             ; -0.0578 V          ; 0.303 V                             ; 0.28 V                              ; 2.93e-10 s                 ; 3.01e-10 s                 ; No                        ; No                        ;
-; status_leds[0]       ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 4.25e-06 V                   ; 2.9 V               ; -0.107 V            ; 0.378 V                              ; 0.16 V                               ; 2.87e-10 s                  ; 4.28e-10 s                  ; No                         ; No                         ; 2.75 V                      ; 4.25e-06 V                  ; 2.9 V              ; -0.107 V           ; 0.378 V                             ; 0.16 V                              ; 2.87e-10 s                 ; 4.28e-10 s                 ; No                        ; No                        ;
-; status_leds[1]       ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 4.25e-06 V                   ; 2.9 V               ; -0.107 V            ; 0.378 V                              ; 0.16 V                               ; 2.87e-10 s                  ; 4.28e-10 s                  ; No                         ; No                         ; 2.75 V                      ; 4.25e-06 V                  ; 2.9 V              ; -0.107 V           ; 0.378 V                             ; 0.16 V                              ; 2.87e-10 s                 ; 4.28e-10 s                 ; No                        ; No                        ;
-; status_leds[2]       ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 4.14e-06 V                   ; 2.91 V              ; -0.121 V            ; 0.326 V                              ; 0.297 V                              ; 2.74e-10 s                  ; 2.8e-10 s                   ; No                         ; No                         ; 2.75 V                      ; 4.14e-06 V                  ; 2.91 V             ; -0.121 V           ; 0.326 V                             ; 0.297 V                             ; 2.74e-10 s                 ; 2.8e-10 s                  ; No                        ; No                        ;
+; sys_error            ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 4.25e-06 V                   ; 2.9 V               ; -0.107 V            ; 0.378 V                              ; 0.16 V                               ; 2.87e-10 s                  ; 4.28e-10 s                  ; No                         ; No                         ; 2.75 V                      ; 4.25e-06 V                  ; 2.9 V              ; -0.107 V           ; 0.378 V                             ; 0.16 V                              ; 2.87e-10 s                 ; 4.28e-10 s                 ; No                        ; No                        ;
+; status_leds[0]       ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 4.14e-06 V                   ; 2.91 V              ; -0.121 V            ; 0.326 V                              ; 0.297 V                              ; 2.74e-10 s                  ; 2.8e-10 s                   ; No                         ; No                         ; 2.75 V                      ; 4.14e-06 V                  ; 2.91 V             ; -0.121 V           ; 0.326 V                             ; 0.297 V                             ; 2.74e-10 s                 ; 2.8e-10 s                  ; No                        ; No                        ;
+; status_leds[1]       ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 4.14e-06 V                   ; 2.91 V              ; -0.119 V            ; 0.326 V                              ; 0.298 V                              ; 2.74e-10 s                  ; 2.8e-10 s                   ; No                         ; No                         ; 2.75 V                      ; 4.14e-06 V                  ; 2.91 V             ; -0.119 V           ; 0.326 V                             ; 0.298 V                             ; 2.74e-10 s                 ; 2.8e-10 s                  ; No                        ; No                        ;
+; status_leds[2]       ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 4.25e-06 V                   ; 2.9 V               ; -0.107 V            ; 0.378 V                              ; 0.16 V                               ; 2.87e-10 s                  ; 4.28e-10 s                  ; No                         ; No                         ; 2.75 V                      ; 4.25e-06 V                  ; 2.9 V              ; -0.107 V           ; 0.378 V                             ; 0.16 V                              ; 2.87e-10 s                 ; 4.28e-10 s                 ; No                        ; No                        ;
 ; sensor_fault_mask[0] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 3.54e-06 V                   ; 2.81 V              ; -0.0578 V           ; 0.303 V                              ; 0.28 V                               ; 2.93e-10 s                  ; 3.01e-10 s                  ; No                         ; No                         ; 2.75 V                      ; 3.54e-06 V                  ; 2.81 V             ; -0.0578 V          ; 0.303 V                             ; 0.28 V                              ; 2.93e-10 s                 ; 3.01e-10 s                 ; No                        ; No                        ;
 ; alert_flag           ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 4.14e-06 V                   ; 2.91 V              ; -0.119 V            ; 0.326 V                              ; 0.298 V                              ; 2.74e-10 s                  ; 2.8e-10 s                   ; No                         ; No                         ; 2.75 V                      ; 4.14e-06 V                  ; 2.91 V             ; -0.119 V           ; 0.326 V                             ; 0.298 V                             ; 2.74e-10 s                 ; 2.8e-10 s                  ; No                        ; No                        ;
-; sensor_fault_mask[1] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 3.54e-06 V                   ; 2.81 V              ; -0.0578 V           ; 0.303 V                              ; 0.28 V                               ; 2.93e-10 s                  ; 3.01e-10 s                  ; No                         ; No                         ; 2.75 V                      ; 3.54e-06 V                  ; 2.81 V             ; -0.0578 V          ; 0.303 V                             ; 0.28 V                              ; 2.93e-10 s                 ; 3.01e-10 s                 ; No                        ; No                        ;
-; sensor_fault_mask[2] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 4.14e-06 V                   ; 2.91 V              ; -0.121 V            ; 0.326 V                              ; 0.297 V                              ; 2.74e-10 s                  ; 2.8e-10 s                   ; No                         ; No                         ; 2.75 V                      ; 4.14e-06 V                  ; 2.91 V             ; -0.121 V           ; 0.326 V                             ; 0.297 V                             ; 2.74e-10 s                 ; 2.8e-10 s                  ; No                        ; No                        ;
-; sensor_fault_mask[3] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 4.14e-06 V                   ; 2.91 V              ; -0.119 V            ; 0.326 V                              ; 0.298 V                              ; 2.74e-10 s                  ; 2.8e-10 s                   ; No                         ; No                         ; 2.75 V                      ; 4.14e-06 V                  ; 2.91 V             ; -0.119 V           ; 0.326 V                             ; 0.298 V                             ; 2.74e-10 s                 ; 2.8e-10 s                  ; No                        ; No                        ;
+; sensor_fault_mask[1] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 4.14e-06 V                   ; 2.91 V              ; -0.121 V            ; 0.326 V                              ; 0.297 V                              ; 2.74e-10 s                  ; 2.8e-10 s                   ; No                         ; No                         ; 2.75 V                      ; 4.14e-06 V                  ; 2.91 V             ; -0.121 V           ; 0.326 V                             ; 0.297 V                             ; 2.74e-10 s                 ; 2.8e-10 s                  ; No                        ; No                        ;
+; sensor_fault_mask[2] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 4.14e-06 V                   ; 2.91 V              ; -0.119 V            ; 0.326 V                              ; 0.298 V                              ; 2.74e-10 s                  ; 2.8e-10 s                   ; No                         ; No                         ; 2.75 V                      ; 4.14e-06 V                  ; 2.91 V             ; -0.119 V           ; 0.326 V                             ; 0.298 V                             ; 2.74e-10 s                 ; 2.8e-10 s                  ; No                        ; No                        ;
+; sensor_fault_mask[3] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 4.25e-06 V                   ; 2.9 V               ; -0.107 V            ; 0.378 V                              ; 0.16 V                               ; 2.87e-10 s                  ; 4.28e-10 s                  ; No                         ; No                         ; 2.75 V                      ; 4.25e-06 V                  ; 2.9 V              ; -0.107 V           ; 0.378 V                             ; 0.16 V                              ; 2.87e-10 s                 ; 4.28e-10 s                 ; No                        ; No                        ;
 +----------------------+--------------+---------------------+---------------------+------------------------------+------------------------------+---------------------+---------------------+--------------------------------------+--------------------------------------+-----------------------------+-----------------------------+----------------------------+----------------------------+-----------------------------+-----------------------------+--------------------+--------------------+-------------------------------------+-------------------------------------+----------------------------+----------------------------+---------------------------+---------------------------+
 
 
@@ -466,15 +440,15 @@ Worst Case Available Settling Time: 18.184 ns
 +----------------------+--------------+---------------------+---------------------+------------------------------+------------------------------+---------------------+---------------------+--------------------------------------+--------------------------------------+-----------------------------+-----------------------------+----------------------------+----------------------------+-----------------------------+-----------------------------+--------------------+--------------------+-------------------------------------+-------------------------------------+----------------------------+----------------------------+---------------------------+---------------------------+
 ; Pin                  ; I/O Standard ; Board Delay on Rise ; Board Delay on Fall ; Steady State Voh at FPGA Pin ; Steady State Vol at FPGA Pin ; Voh Max at FPGA Pin ; Vol Min at FPGA Pin ; Ringback Voltage on Rise at FPGA Pin ; Ringback Voltage on Fall at FPGA Pin ; 10-90 Rise Time at FPGA Pin ; 90-10 Fall Time at FPGA Pin ; Monotonic Rise at FPGA Pin ; Monotonic Fall at FPGA Pin ; Steady State Voh at Far-end ; Steady State Vol at Far-end ; Voh Max at Far-end ; Vol Min at Far-end ; Ringback Voltage on Rise at Far-end ; Ringback Voltage on Fall at Far-end ; 10-90 Rise Time at Far-end ; 90-10 Fall Time at Far-end ; Monotonic Rise at Far-end ; Monotonic Fall at Far-end ;
 +----------------------+--------------+---------------------+---------------------+------------------------------+------------------------------+---------------------+---------------------+--------------------------------------+--------------------------------------+-----------------------------+-----------------------------+----------------------------+----------------------------+-----------------------------+-----------------------------+--------------------+--------------------+-------------------------------------+-------------------------------------+----------------------------+----------------------------+---------------------------+---------------------------+
-; sys_error            ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 0.000213 V                   ; 2.79 V              ; -0.0324 V           ; 0.139 V                              ; 0.119 V                              ; 4.42e-10 s                  ; 4.33e-10 s                  ; No                         ; Yes                        ; 2.75 V                      ; 0.000213 V                  ; 2.79 V             ; -0.0324 V          ; 0.139 V                             ; 0.119 V                             ; 4.42e-10 s                 ; 4.33e-10 s                 ; No                        ; Yes                       ;
-; status_leds[0]       ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 0.000247 V                   ; 2.85 V              ; -0.0711 V           ; 0.204 V                              ; 0.181 V                              ; 4.55e-10 s                  ; 4.49e-10 s                  ; No                         ; No                         ; 2.75 V                      ; 0.000247 V                  ; 2.85 V             ; -0.0711 V          ; 0.204 V                             ; 0.181 V                             ; 4.55e-10 s                 ; 4.49e-10 s                 ; No                        ; No                        ;
-; status_leds[1]       ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 0.000247 V                   ; 2.85 V              ; -0.0711 V           ; 0.204 V                              ; 0.181 V                              ; 4.55e-10 s                  ; 4.49e-10 s                  ; No                         ; No                         ; 2.75 V                      ; 0.000247 V                  ; 2.85 V             ; -0.0711 V          ; 0.204 V                             ; 0.181 V                             ; 4.55e-10 s                 ; 4.49e-10 s                 ; No                        ; No                        ;
-; status_leds[2]       ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 0.000242 V                   ; 2.86 V              ; -0.0814 V           ; 0.36 V                               ; 0.156 V                              ; 3e-10 s                     ; 4.34e-10 s                  ; No                         ; No                         ; 2.75 V                      ; 0.000242 V                  ; 2.86 V             ; -0.0814 V          ; 0.36 V                              ; 0.156 V                             ; 3e-10 s                    ; 4.34e-10 s                 ; No                        ; No                        ;
+; sys_error            ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 0.000247 V                   ; 2.85 V              ; -0.0711 V           ; 0.204 V                              ; 0.181 V                              ; 4.55e-10 s                  ; 4.49e-10 s                  ; No                         ; No                         ; 2.75 V                      ; 0.000247 V                  ; 2.85 V             ; -0.0711 V          ; 0.204 V                             ; 0.181 V                             ; 4.55e-10 s                 ; 4.49e-10 s                 ; No                        ; No                        ;
+; status_leds[0]       ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 0.000242 V                   ; 2.86 V              ; -0.0814 V           ; 0.36 V                               ; 0.156 V                              ; 3e-10 s                     ; 4.34e-10 s                  ; No                         ; No                         ; 2.75 V                      ; 0.000242 V                  ; 2.86 V             ; -0.0814 V          ; 0.36 V                              ; 0.156 V                             ; 3e-10 s                    ; 4.34e-10 s                 ; No                        ; No                        ;
+; status_leds[1]       ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 0.000242 V                   ; 2.86 V              ; -0.0805 V           ; 0.358 V                              ; 0.156 V                              ; 3.01e-10 s                  ; 4.34e-10 s                  ; No                         ; No                         ; 2.75 V                      ; 0.000242 V                  ; 2.86 V             ; -0.0805 V          ; 0.358 V                             ; 0.156 V                             ; 3.01e-10 s                 ; 4.34e-10 s                 ; No                        ; No                        ;
+; status_leds[2]       ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 0.000247 V                   ; 2.85 V              ; -0.0711 V           ; 0.204 V                              ; 0.181 V                              ; 4.55e-10 s                  ; 4.49e-10 s                  ; No                         ; No                         ; 2.75 V                      ; 0.000247 V                  ; 2.85 V             ; -0.0711 V          ; 0.204 V                             ; 0.181 V                             ; 4.55e-10 s                 ; 4.49e-10 s                 ; No                        ; No                        ;
 ; sensor_fault_mask[0] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 0.000213 V                   ; 2.79 V              ; -0.0324 V           ; 0.139 V                              ; 0.119 V                              ; 4.42e-10 s                  ; 4.33e-10 s                  ; No                         ; Yes                        ; 2.75 V                      ; 0.000213 V                  ; 2.79 V             ; -0.0324 V          ; 0.139 V                             ; 0.119 V                             ; 4.42e-10 s                 ; 4.33e-10 s                 ; No                        ; Yes                       ;
 ; alert_flag           ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 0.000242 V                   ; 2.86 V              ; -0.0805 V           ; 0.358 V                              ; 0.156 V                              ; 3.01e-10 s                  ; 4.34e-10 s                  ; No                         ; No                         ; 2.75 V                      ; 0.000242 V                  ; 2.86 V             ; -0.0805 V          ; 0.358 V                             ; 0.156 V                             ; 3.01e-10 s                 ; 4.34e-10 s                 ; No                        ; No                        ;
-; sensor_fault_mask[1] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 0.000213 V                   ; 2.79 V              ; -0.0324 V           ; 0.139 V                              ; 0.119 V                              ; 4.42e-10 s                  ; 4.33e-10 s                  ; No                         ; Yes                        ; 2.75 V                      ; 0.000213 V                  ; 2.79 V             ; -0.0324 V          ; 0.139 V                             ; 0.119 V                             ; 4.42e-10 s                 ; 4.33e-10 s                 ; No                        ; Yes                       ;
-; sensor_fault_mask[2] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 0.000242 V                   ; 2.86 V              ; -0.0814 V           ; 0.36 V                               ; 0.156 V                              ; 3e-10 s                     ; 4.34e-10 s                  ; No                         ; No                         ; 2.75 V                      ; 0.000242 V                  ; 2.86 V             ; -0.0814 V          ; 0.36 V                              ; 0.156 V                             ; 3e-10 s                    ; 4.34e-10 s                 ; No                        ; No                        ;
-; sensor_fault_mask[3] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 0.000242 V                   ; 2.86 V              ; -0.0805 V           ; 0.358 V                              ; 0.156 V                              ; 3.01e-10 s                  ; 4.34e-10 s                  ; No                         ; No                         ; 2.75 V                      ; 0.000242 V                  ; 2.86 V             ; -0.0805 V          ; 0.358 V                             ; 0.156 V                             ; 3.01e-10 s                 ; 4.34e-10 s                 ; No                        ; No                        ;
+; sensor_fault_mask[1] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 0.000242 V                   ; 2.86 V              ; -0.0814 V           ; 0.36 V                               ; 0.156 V                              ; 3e-10 s                     ; 4.34e-10 s                  ; No                         ; No                         ; 2.75 V                      ; 0.000242 V                  ; 2.86 V             ; -0.0814 V          ; 0.36 V                              ; 0.156 V                             ; 3e-10 s                    ; 4.34e-10 s                 ; No                        ; No                        ;
+; sensor_fault_mask[2] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 0.000242 V                   ; 2.86 V              ; -0.0805 V           ; 0.358 V                              ; 0.156 V                              ; 3.01e-10 s                  ; 4.34e-10 s                  ; No                         ; No                         ; 2.75 V                      ; 0.000242 V                  ; 2.86 V             ; -0.0805 V          ; 0.358 V                             ; 0.156 V                             ; 3.01e-10 s                 ; 4.34e-10 s                 ; No                        ; No                        ;
+; sensor_fault_mask[3] ; 2.5 V        ; 0 s                 ; 0 s                 ; 2.75 V                       ; 0.000247 V                   ; 2.85 V              ; -0.0711 V           ; 0.204 V                              ; 0.181 V                              ; 4.55e-10 s                  ; 4.49e-10 s                  ; No                         ; No                         ; 2.75 V                      ; 0.000247 V                  ; 2.85 V             ; -0.0711 V          ; 0.204 V                             ; 0.181 V                             ; 4.55e-10 s                 ; 4.49e-10 s                 ; No                        ; No                        ;
 +----------------------+--------------+---------------------+---------------------+------------------------------+------------------------------+---------------------+---------------------+--------------------------------------+--------------------------------------+-----------------------------+-----------------------------+----------------------------+----------------------------+-----------------------------+-----------------------------+--------------------+--------------------+-------------------------------------+-------------------------------------+----------------------------+----------------------------+---------------------------+---------------------------+
 
 
@@ -510,18 +484,18 @@ No dedicated SERDES Transmitter circuitry present in device or used in design
 No non-DPA dedicated SERDES Receiver circuitry present in device or used in design
 
 
-+-------------------------------------------------+
-; Unconstrained Paths Summary                     ;
-+---------------------------------+-------+-------+
-; Property                        ; Setup ; Hold  ;
-+---------------------------------+-------+-------+
-; Illegal Clocks                  ; 0     ; 0     ;
-; Unconstrained Clocks            ; 0     ; 0     ;
-; Unconstrained Input Ports       ; 2     ; 2     ;
-; Unconstrained Input Port Paths  ; 10399 ; 10399 ;
-; Unconstrained Output Ports      ; 0     ; 0     ;
-; Unconstrained Output Port Paths ; 0     ; 0     ;
-+---------------------------------+-------+-------+
++------------------------------------------------+
+; Unconstrained Paths Summary                    ;
++---------------------------------+-------+------+
+; Property                        ; Setup ; Hold ;
++---------------------------------+-------+------+
+; Illegal Clocks                  ; 0     ; 0    ;
+; Unconstrained Clocks            ; 0     ; 0    ;
+; Unconstrained Input Ports       ; 1     ; 1    ;
+; Unconstrained Input Port Paths  ; 1     ; 1    ;
+; Unconstrained Output Ports      ; 0     ; 0    ;
+; Unconstrained Output Port Paths ; 0     ; 0    ;
++---------------------------------+-------+------+
 
 
 +-------------------------------------+
@@ -538,7 +512,6 @@ No non-DPA dedicated SERDES Receiver circuitry present in device or used in desi
 +------------+--------------------------------------------------------------------------------------+
 ; Input Port ; Comment                                                                              ;
 +------------+--------------------------------------------------------------------------------------+
-; reset      ; No input delay, min/max delays, false-path exceptions, or max skew assignments found ;
 ; uart_rx    ; No input delay, min/max delays, false-path exceptions, or max skew assignments found ;
 +------------+--------------------------------------------------------------------------------------+
 
@@ -548,7 +521,6 @@ No non-DPA dedicated SERDES Receiver circuitry present in device or used in desi
 +------------+--------------------------------------------------------------------------------------+
 ; Input Port ; Comment                                                                              ;
 +------------+--------------------------------------------------------------------------------------+
-; reset      ; No input delay, min/max delays, false-path exceptions, or max skew assignments found ;
 ; uart_rx    ; No input delay, min/max delays, false-path exceptions, or max skew assignments found ;
 +------------+--------------------------------------------------------------------------------------+
 
@@ -559,7 +531,7 @@ No non-DPA dedicated SERDES Receiver circuitry present in device or used in desi
 Info: *******************************************************************
 Info: Running Quartus Prime Timing Analyzer
     Info: Version 25.1std.0 Build 1129 10/21/2025 SC Lite Edition
-    Info: Processing started: Sat Aug 29 15:19:34 2026
+    Info: Processing started: Mon Aug 31 11:31:52 2026
 Info: Command: quartus_sta quartus -c quartus
 Info: qsta_default_script.tcl version: #1
 Warning (18236): Number of processors has not been specified which may cause overloading on shared machines.  Set the global assignment NUM_PARALLEL_PROCESSORS in your QSF to an appropriate value for best performance.
@@ -568,124 +540,93 @@ Info (21077): Low junction temperature is 0 degrees C
 Info (21077): High junction temperature is 85 degrees C
 Info (332104): Reading SDC File: 'top_system.sdc'
 Info (332151): Clock uncertainty is not calculated until you update the timing netlist.
-Warning (332174): Ignored filter at top_system.sdc(19): spi_serial_clock could not be matched with a port File: /home/cidigital/Documents/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 19
-Warning (332049): Ignored set_false_path at top_system.sdc(19): Argument <from> is an empty collection File: /home/cidigital/Documents/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 19
-    Info (332050): set_false_path -from [get_ports {spi_serial_clock}] File: /home/cidigital/Documents/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 19
-Warning (332174): Ignored filter at top_system.sdc(20): spi_slave_select_n could not be matched with a port File: /home/cidigital/Documents/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 20
-Warning (332049): Ignored set_false_path at top_system.sdc(20): Argument <from> is an empty collection File: /home/cidigital/Documents/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 20
-    Info (332050): set_false_path -from [get_ports {spi_slave_select_n}] File: /home/cidigital/Documents/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 20
-Warning (332174): Ignored filter at top_system.sdc(21): spi_mosi could not be matched with a port File: /home/cidigital/Documents/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 21
-Warning (332049): Ignored set_false_path at top_system.sdc(21): Argument <from> is an empty collection File: /home/cidigital/Documents/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 21
-    Info (332050): set_false_path -from [get_ports {spi_mosi}] File: /home/cidigital/Documents/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 21
-Warning (332174): Ignored filter at top_system.sdc(25): reset_n could not be matched with a port File: /home/cidigital/Documents/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 25
-Warning (332049): Ignored set_false_path at top_system.sdc(25): Argument <from> is an empty collection File: /home/cidigital/Documents/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 25
-    Info (332050): set_false_path -from [get_ports {reset_n}] File: /home/cidigital/Documents/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 25
-Warning (332174): Ignored filter at top_system.sdc(32): spi_miso could not be matched with a port File: /home/cidigital/Documents/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 32
-Warning (332049): Ignored set_false_path at top_system.sdc(32): Argument <to> is an empty collection File: /home/cidigital/Documents/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 32
-    Info (332050): set_false_path -to [get_ports {spi_miso}] File: /home/cidigital/Documents/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 32
+Warning (332174): Ignored filter at top_system.sdc(19): spi_serial_clock could not be matched with a port File: /home/felipe/Documents/Projects/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 19
+Warning (332049): Ignored set_false_path at top_system.sdc(19): Argument <from> is an empty collection File: /home/felipe/Documents/Projects/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 19
+    Info (332050): set_false_path -from [get_ports {spi_serial_clock}] File: /home/felipe/Documents/Projects/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 19
+Warning (332174): Ignored filter at top_system.sdc(20): spi_slave_select_n could not be matched with a port File: /home/felipe/Documents/Projects/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 20
+Warning (332049): Ignored set_false_path at top_system.sdc(20): Argument <from> is an empty collection File: /home/felipe/Documents/Projects/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 20
+    Info (332050): set_false_path -from [get_ports {spi_slave_select_n}] File: /home/felipe/Documents/Projects/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 20
+Warning (332174): Ignored filter at top_system.sdc(21): spi_mosi could not be matched with a port File: /home/felipe/Documents/Projects/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 21
+Warning (332049): Ignored set_false_path at top_system.sdc(21): Argument <from> is an empty collection File: /home/felipe/Documents/Projects/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 21
+    Info (332050): set_false_path -from [get_ports {spi_mosi}] File: /home/felipe/Documents/Projects/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 21
+Warning (332174): Ignored filter at top_system.sdc(40): spi_miso could not be matched with a port File: /home/felipe/Documents/Projects/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 40
+Warning (332049): Ignored set_false_path at top_system.sdc(40): Argument <to> is an empty collection File: /home/felipe/Documents/Projects/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 40
+    Info (332050): set_false_path -to [get_ports {spi_miso}] File: /home/felipe/Documents/Projects/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/top_system.sdc Line: 40
 Info (332123): Deriving Clock Uncertainty. Please refer to report_sdc in the Timing Analyzer to see clock uncertainties.
 Info: Found TIMING_ANALYZER_REPORT_SCRIPT_INCLUDE_DEFAULT_ANALYSIS = ON
 Info: Analyzing Slow 1100mV 85C Model
-Info (332146): Worst-case setup slack is 1.634
+Info (332146): Worst-case setup slack is 2.157
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
-    Info (332119):     1.634               0.000 clk 
-Info (332146): Worst-case hold slack is 0.248
+    Info (332119):     2.157               0.000 clk 
+Info (332146): Worst-case hold slack is 0.247
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
-    Info (332119):     0.248               0.000 clk 
+    Info (332119):     0.247               0.000 clk 
 Info (332140): No Recovery paths to report
 Info (332140): No Removal paths to report
 Info (332146): Worst-case minimum pulse width slack is 8.643
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
     Info (332119):     8.643               0.000 clk 
-Info (332114): Report Metastability: Found 844 synchronizer chains.
-    Info (332114): The design MTBF is not calculated because there are no specified synchronizers in the design.
-    Info (332114): Number of Synchronizer Chains Found: 844
-    Info (332114): Shortest Synchronizer Chain: 2 Registers
-    Info (332114): Fraction of Chains for which MTBFs Could Not be Calculated: 1.000
-    Info (332114): Worst Case Available Settling Time: 16.754 ns
-    Info (332114): 
 Info: Analyzing Slow 1100mV 0C Model
 Info (334003): Started post-fitting delay annotation
 Info (334004): Delay annotation completed successfully
 Info (332123): Deriving Clock Uncertainty. Please refer to report_sdc in the Timing Analyzer to see clock uncertainties.
-Info (332146): Worst-case setup slack is 1.480
+Info (332146): Worst-case setup slack is 2.051
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
-    Info (332119):     1.480               0.000 clk 
-Info (332146): Worst-case hold slack is 0.241
+    Info (332119):     2.051               0.000 clk 
+Info (332146): Worst-case hold slack is 0.235
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
-    Info (332119):     0.241               0.000 clk 
+    Info (332119):     0.235               0.000 clk 
 Info (332140): No Recovery paths to report
 Info (332140): No Removal paths to report
 Info (332146): Worst-case minimum pulse width slack is 8.581
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
     Info (332119):     8.581               0.000 clk 
-Info (332114): Report Metastability: Found 844 synchronizer chains.
-    Info (332114): The design MTBF is not calculated because there are no specified synchronizers in the design.
-    Info (332114): Number of Synchronizer Chains Found: 844
-    Info (332114): Shortest Synchronizer Chain: 2 Registers
-    Info (332114): Fraction of Chains for which MTBFs Could Not be Calculated: 1.000
-    Info (332114): Worst Case Available Settling Time: 16.915 ns
-    Info (332114): 
 Info: Analyzing Fast 1100mV 85C Model
 Info (334003): Started post-fitting delay annotation
 Info (334004): Delay annotation completed successfully
 Info (332123): Deriving Clock Uncertainty. Please refer to report_sdc in the Timing Analyzer to see clock uncertainties.
-Info (332146): Worst-case setup slack is 10.386
+Info (332146): Worst-case setup slack is 10.194
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
-    Info (332119):    10.386               0.000 clk 
-Info (332146): Worst-case hold slack is 0.129
+    Info (332119):    10.194               0.000 clk 
+Info (332146): Worst-case hold slack is 0.086
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
-    Info (332119):     0.129               0.000 clk 
+    Info (332119):     0.086               0.000 clk 
 Info (332140): No Recovery paths to report
 Info (332140): No Removal paths to report
 Info (332146): Worst-case minimum pulse width slack is 8.783
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
     Info (332119):     8.783               0.000 clk 
-Info (332114): Report Metastability: Found 844 synchronizer chains.
-    Info (332114): The design MTBF is not calculated because there are no specified synchronizers in the design.
-    Info (332114): Number of Synchronizer Chains Found: 844
-    Info (332114): Shortest Synchronizer Chain: 2 Registers
-    Info (332114): Fraction of Chains for which MTBFs Could Not be Calculated: 1.000
-    Info (332114): Worst Case Available Settling Time: 17.926 ns
-    Info (332114): 
 Info: Analyzing Fast 1100mV 0C Model
 Info (332123): Deriving Clock Uncertainty. Please refer to report_sdc in the Timing Analyzer to see clock uncertainties.
-Info (332146): Worst-case setup slack is 11.245
+Info (332146): Worst-case setup slack is 11.866
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
-    Info (332119):    11.245               0.000 clk 
-Info (332146): Worst-case hold slack is 0.111
+    Info (332119):    11.866               0.000 clk 
+Info (332146): Worst-case hold slack is 0.016
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
-    Info (332119):     0.111               0.000 clk 
+    Info (332119):     0.016               0.000 clk 
 Info (332140): No Recovery paths to report
 Info (332140): No Removal paths to report
 Info (332146): Worst-case minimum pulse width slack is 8.774
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
     Info (332119):     8.774               0.000 clk 
-Info (332114): Report Metastability: Found 844 synchronizer chains.
-    Info (332114): The design MTBF is not calculated because there are no specified synchronizers in the design.
-    Info (332114): Number of Synchronizer Chains Found: 844
-    Info (332114): Shortest Synchronizer Chain: 2 Registers
-    Info (332114): Fraction of Chains for which MTBFs Could Not be Calculated: 1.000
-    Info (332114): Worst Case Available Settling Time: 18.184 ns
-    Info (332114): 
 Info (332102): Design is not fully constrained for setup requirements
 Info (332102): Design is not fully constrained for hold requirements
-Info: Quartus Prime Timing Analyzer was successful. 0 errors, 11 warnings
-    Info: Peak virtual memory: 1423 megabytes
-    Info: Processing ended: Sat Aug 29 15:19:54 2026
-    Info: Elapsed time: 00:00:20
-    Info: Total CPU time (on all processors): 00:01:07
+Info: Quartus Prime Timing Analyzer was successful. 0 errors, 9 warnings
+    Info: Peak virtual memory: 1214 megabytes
+    Info: Processing ended: Mon Aug 31 11:32:02 2026
+    Info: Elapsed time: 00:00:10
+    Info: Total CPU time (on all processors): 00:00:43
 
 

@@ -130,7 +130,7 @@ RESERVED_INPUT_WITH_WEAK_PULLUP : AB8       :        :                   :      
 GND                          : AB9       : gnd    :                   :         :           :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : AB10      :        :                   :         : 3B        :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : AB11      :        :                   :         : 3B        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : AB12      :        :                   :         : 4A        :                
+sensor_fault_mask[2]         : AB12      : output : 2.5 V             :         : 4A        : N              
 RESERVED_INPUT_WITH_WEAK_PULLUP : AB13      :        :                   :         : 4A        :                
 GND                          : AB14      : gnd    :                   :         :           :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : AB15      :        :                   :         : 4A        :                
@@ -151,7 +151,7 @@ RESERVED_INPUT_WITH_WEAK_PULLUP : B7        :        :                   :      
 VREFB8AN0                    : B8        : power  :                   :         : 8A        :                
 GND                          : B9        : gnd    :                   :         :           :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : B10       :        :                   :         : 8A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : B11       :        :                   :         : 7A        :                
+status_leds[0]               : B11       : output : 2.5 V             :         : 7A        : N              
 RESERVED_INPUT_WITH_WEAK_PULLUP : B12       :        :                   :         : 7A        :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : B13       :        :                   :         : 7A        :                
 GND                          : B14       : gnd    :                   :         :           :                
@@ -173,12 +173,12 @@ VCCIO8A                      : C7        : power  :                   : 2.5V    
 RESERVED_INPUT_WITH_WEAK_PULLUP : C8        :        :                   :         : 8A        :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : C9        :        :                   :         : 8A        :                
 VCCPD7A8A                    : C10       : power  :                   : 2.5V    : 7A, 8A    :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : C11       :        :                   :         : 7A        :                
+alert_flag                   : C11       : output : 2.5 V             :         : 7A        : N              
 VCCIO7A                      : C12       : power  :                   : 2.5V    : 7A        :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : C13       :        :                   :         : 7A        :                
 VREFB7AN0                    : C14       : power  :                   :         : 7A        :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : C15       :        :                   :         : 7A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : C16       :        :                   :         : 7A        :                
+sensor_fault_mask[1]         : C16       : output : 2.5 V             :         : 7A        : N              
 GND                          : C17       : gnd    :                   :         :           :                
 NC                           : C18       :        :                   :         :           :                
 NC                           : C19       :        :                   :         :           :                
@@ -196,7 +196,7 @@ VCCPD7A8A                    : D8        : power  :                   : 2.5V    
 RESERVED_INPUT_WITH_WEAK_PULLUP : D9        :        :                   :         : 8A        :                
 GND                          : D10       : gnd    :                   :         :           :                
 VCC_AUX                      : D11       : power  :                   : 2.5V    :           :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : D12       :        :                   :         : 7A        :                
+status_leds[2]               : D12       : output : 2.5 V             :         : 7A        : N              
 RESERVED_INPUT_WITH_WEAK_PULLUP : D13       :        :                   :         : 7A        :                
 VCCPD7A8A                    : D14       : power  :                   : 2.5V    : 7A, 8A    :                
 VCCIO7A                      : D15       : power  :                   : 2.5V    : 7A        :                
@@ -218,7 +218,7 @@ VCCIO8A                      : E8        : power  :                   : 2.5V    
 RESERVED_INPUT_WITH_WEAK_PULLUP : E9        :        :                   :         : 8A        :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : E10       :        :                   :         : 8A        :                
 VCCPD7A8A                    : E11       : power  :                   : 2.5V    : 7A, 8A    :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : E12       :        :                   :         : 7A        :                
+sensor_fault_mask[0]         : E12       : output : 2.5 V             :         : 7A        : N              
 GND                          : E13       : gnd    :                   :         :           :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : E14       :        :                   :         : 7A        :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : E15       :        :                   :         : 7A        :                
@@ -260,8 +260,8 @@ RESERVED_INPUT_WITH_WEAK_PULLUP : G6        :        :                   :      
 VCCIO8A                      : G7        : power  :                   : 2.5V    : 8A        :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : G8        :        :                   :         : 8A        :                
 GND                          : G9        : gnd    :                   :         :           :                
-uart_rx                      : G10       : input  : 2.5 V             :         : 8A        : N              
-RESERVED_INPUT_WITH_WEAK_PULLUP : G11       :        :                   :         : 7A        :                
+RESERVED_INPUT_WITH_WEAK_PULLUP : G10       :        :                   :         : 8A        :                
+status_leds[1]               : G11       : output : 2.5 V             :         : 7A        : N              
 RESERVED_INPUT_WITH_WEAK_PULLUP : G12       :        :                   :         : 7A        :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : G13       :        :                   :         : 7A        :                
 VCCIO7A                      : G14       : power  :                   : 2.5V    : 7A        :                
@@ -307,7 +307,7 @@ RESERVED_INPUT_WITH_WEAK_PULLUP : J9        :        :                   :      
 VCC                          : J10       : power  :                   : 1.1V    :           :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : J11       :        :                   :         : 7A        :                
 VCC                          : J12       : power  :                   : 1.1V    :           :                
-sensor_fault_mask[0]         : J13       : output : 2.5 V             :         : 7A        : N              
+RESERVED_INPUT_WITH_WEAK_PULLUP : J13       :        :                   :         : 7A        :                
 VCC                          : J14       : power  :                   : 1.1V    :           :                
 GND                          : J15       : gnd    :                   :         :           :                
 VCC                          : J16       : power  :                   : 1.1V    :           :                
@@ -333,11 +333,11 @@ VCC                          : K13       : power  :                   : 1.1V    
 GND                          : K14       : gnd    :                   :         :           :                
 VCC                          : K15       : power  :                   : 1.1V    :           :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : K16       :        :                   :         : 7A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : K17       :        :                   :         : 5B        :                
+uart_rx                      : K17       : input  : 2.5 V             :         : 5B        : N              
 VCCIO5B                      : K18       : power  :                   : 2.5V    : 5B        :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : K19       :        :                   :         : 7A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : K20       :        :                   :         : 7A        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : K21       :        :                   :         : 5B        :                
+sensor_fault_mask[3]         : K20       : output : 2.5 V             :         : 7A        : N              
+reset                        : K21       : input  : 2.5 V             :         : 5B        : N              
 RESERVED_INPUT_WITH_WEAK_PULLUP : K22       :        :                   :         : 5B        :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : L1        :        :                   :         : 2A        :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : L2        :        :                   :         : 2A        :                
@@ -401,7 +401,7 @@ GND                          : N15       : gnd    :                   :         
 RESERVED_INPUT_WITH_WEAK_PULLUP : N16       :        :                   :         : 5B        :                
 GND                          : N17       : gnd    :                   :         :           :                
 VCCPD5B                      : N18       : power  :                   : 2.5V    : 5B        :                
-RESERVED_INPUT_WITH_WEAK_PULLUP : N19       :        :                   :         : 5B        :                
+sys_error                    : N19       : output : 2.5 V             :         : 5B        : N              
 RESERVED_INPUT_WITH_WEAK_PULLUP : N20       :        :                   :         : 5B        :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : N21       :        :                   :         : 5B        :                
 GND                          : N22       : gnd    :                   :         :           :                

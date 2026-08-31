@@ -5,26 +5,6 @@ import mlp_weights_pkg::*;   // N_IN, N_BINS, N_EXTRA, ACC_WIDTH
 // ============================================================================
 // Top Level System
 // ============================================================================
-// Seven sensors arrive over one UART receive line, framed one sync-word +
-// payload + checksum per acquisition epoch:
-//
-//   4 x vibration  -> shared 64-point FFT -> { MLP , spectrogram + CNN }
-//   1 x current    \
-//   2 x temperature -> MLP extra features (see EXTRA_SEL)
-//
-// Only the vibration channels need the FFT, and they share ONE fft_64 core:
-// preprocess_fft_shared_4sensor_q915_no_lms keeps four independent
-// FIR/frame/mean/Hann front-ends but round-robins a single FFT between them,
-// tagging every output bin with `fft_sensor_id`.
-//
-// That single tagged stream fans out to both inference paths:
-//
-//   Path A (MLP)  one feature buffer, time-multiplexed over the four sensors.
-//   Path B (CNN)  four private spectrograms, one per sensor, joined into the
-//                 CNN's four input channels so a whole beat is one pixel of
-//                 all four sensors.
-// ============================================================================
-
 module top_system #(
     parameter int DATA_WIDTH  = 24,
 
@@ -45,6 +25,11 @@ module top_system #(
     output logic       sys_error        // sticky: framing / overrun / desync
 );
 
+    localparam CONV2_WEIGHTS_FILE = "../mem/cnn/conv2d_weights.mem";
+    localparam CONV2_BIASES_FILE  = "../mem/cnn/conv2d_biases.mem";
+    localparam DENSE_WEIGHTS_FILE = "../mem/cnn/dense_weights.mem";
+    localparam DENSE_BIASES_FILE  = "../mem/cnn/dense_biases.mem";
+
     // ------------------------------------------------------------------------
     // Sensor map. Word order inside one UART frame.
     // ------------------------------------------------------------------------
@@ -60,6 +45,9 @@ module top_system #(
     localparam int BYTES_PER_WORD = DATA_WIDTH/8;                     // 3
     localparam int FRAME_BYTES    = 2 + N_SENSORS*BYTES_PER_WORD + 1; // 24
 
+    // ------------------------------------------------------------------------
+    // UART Data Ingestion
+    // ------------------------------------------------------------------------
     logic [2:0] uart_rx_sync;
     always_ff @(posedge clk) begin
         if (reset) uart_rx_sync <= 3'b111;
@@ -282,7 +270,7 @@ module top_system #(
 
     mlp u_mlp (
         .clk(clk),
-        .rst(reset),        // ver RESET_CONVERSION_NOTE (era rst_n)
+        .reset(reset),        // ver RESET_CONVERSION_NOTE (era rst_n)
         .start(mlp_start),
         .features(mlp_features),
         .logits(mlp_logits),
@@ -332,7 +320,7 @@ module top_system #(
                 .SENSOR_ID(s)
             ) u_fft_to_spec_adapter (
                 .clk(clk),
-                .rst(reset),
+                .reset(reset),
                 .fft_valid(fft_valid),
                 .fft_bin(fft_bin),
                 .fft_sensor_id(fft_sensor_id),
@@ -349,7 +337,7 @@ module top_system #(
                 .FRAMES_PER_SPECTROGRAM(SPEC_FRAMES)
             ) u_spectrogram (
                 .clk(clk),
-                .rst(reset),
+                .reset(reset),
                 .s_valid(spec_s_valid[s]),
                 .s_ready(spec_s_ready[s]),
                 .s_data(spec_s_data[s]),
@@ -399,14 +387,18 @@ module top_system #(
     logic signed [DATA_WIDTH-1:0] cnn_bearing;
     logic cnn_valid;
 
-    smma_cnn_top #(
+    cnn_top #(
         .DATA_WIDTH(DATA_WIDTH),
         .IMG_WIDTH(SPEC_BINS),
         .IMG_HEIGHT(SPEC_FRAMES),
-        .IN_CHANNELS(N_VIB)
+        .IN_CHANNELS(N_VIB),
+        .CONV2_WEIGHTS_FILE(CONV2_WEIGHTS_FILE),
+        .CONV2_BIASES_FILE(CONV2_BIASES_FILE),
+        .DENSE_WEIGHTS_FILE(DENSE_WEIGHTS_FILE),
+        .DENSE_BIASES_FILE(DENSE_BIASES_FILE)
     ) u_cnn (
         .clk(clk),
-        .rst(reset),
+        .reset(reset),
         .s_valid(cnn_s_valid),
         .s_ready(cnn_s_ready),
         .s_data(cnn_s_data),
