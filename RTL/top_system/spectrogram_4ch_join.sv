@@ -3,7 +3,7 @@
 // ============================================================================
 // Spectrogram Join: four 1-channel streams -> the CNN's 4-channel slave port
 // ============================================================================
-// smma_cnn_top consumes IN_CHANNELS = 4 co-located pixels per beat, one per
+// cnn_top consumes IN_CHANNELS = 4 co-located pixels per beat, one per
 // vibration sensor. Each sensor owns its own spectrogram_generator, so this
 // joiner walks all four in lockstep: a beat is presented only when every
 // channel has a pixel, and the ready is broadcast so all four advance

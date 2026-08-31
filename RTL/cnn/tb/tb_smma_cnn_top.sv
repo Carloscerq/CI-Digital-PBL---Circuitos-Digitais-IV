@@ -1,11 +1,11 @@
 `timescale 1ns/1ps
 
-module tb_smma_cnn_top();
+module tb_cnn_top();
 
     logic clk;
     logic reset;
     
-    // Interface signals matching smma_cnn_top
+    // Interface signals matching cnn_top
     logic s_valid;
     logic s_ready;
     logic signed [23:0] s_data [0:3];
@@ -29,7 +29,7 @@ module tb_smma_cnn_top();
     end
 
     // Instantiate the CNN Top Module
-    smma_cnn_top #(
+    cnn_top #(
         .DATA_WIDTH(24),
         .FRAC_BITS(16),
         .IMG_WIDTH(32),

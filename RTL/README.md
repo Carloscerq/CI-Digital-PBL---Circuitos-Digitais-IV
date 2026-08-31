@@ -15,7 +15,7 @@ interfaces; per-module READMEs can be added under each directory later.
 | `top_system/` | Top level and all inter-subsystem glue | yes |
 | `FFT/model_sim_four_modes_quartus_shared_fft/` | **Active** front-end: FIR decimator → frame buffer → mean removal → Hann → shared FFT | yes |
 | `FFT/model_sim_four_modes/`, `FFT/model_sim_four_modes_quartus/` | Older single-channel variants, kept for reference and simulation | no |
-| `cnn/rtl/` | `smma_cnn_top` and its layers (line buffer, conv2d, maxpool, dense) | yes |
+| `cnn/rtl/` | `cnn_top` and its layers (line buffer, conv2d, maxpool, dense) | yes |
 | `cnn/tb/`, `spectrogram/tb/` | Testbenches | no |
 | `mlp_model/` | `mlp.sv` + `mlp_weights_pkg` (dimensions and ROM address map) | yes |
 | `spectrogram/rtl/` | `spectrogram_generator` — ping-pong M10K buffer | yes |

@@ -5,7 +5,7 @@
 #
 #   ./run_uvm_verilator.sh                            # default test
 #   ./run_uvm_verilator.sh +UVM_VERBOSITY=UVM_HIGH    # per-item logging
-#   ./run_uvm_verilator.sh +UVM_TESTNAME=smma_cnn_top_directed_random_test
+#   ./run_uvm_verilator.sh +UVM_TESTNAME=cnn_top_directed_random_test
 #   ./run_uvm_verilator.sh --trace                    # FST waves for gtkwave
 #   ./run_uvm_verilator.sh --build-only               # verilate + compile only
 #

@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------
-//  smma_cnn_top_scoreboard  --  formalizes and extends what
-//  tb_smma_cnn_top.sv already checks informally (exactly one
+//  cnn_top_scoreboard  --  formalizes and extends what
+//  tb_cnn_top.sv already checks informally (exactly one
 //  m_axis_valid beat per frame with m_axis_last set, printed-not-
 //  checked logits), end-to-end through the real 4-stage DUT chain. It
 //  deliberately does NOT reimplement the pipeline's math as a golden
@@ -9,7 +9,7 @@
 //  dense_layer_fsm) already verify each stage's arithmetic bit-exact;
 //  duplicating that here would just re-check the same math for no real
 //  extra confidence. Every item this scoreboard receives is one
-//  observed output beat, built by smma_cnn_top_monitor.sv, which has
+//  observed output beat, built by cnn_top_monitor.sv, which has
 //  already independently counted the matching input frame's accepted
 //  beats and popped it off its FIFO (see that file for the "never
 //  early"/"never missing" checks, which live there since they need
@@ -30,7 +30,7 @@
 //   - port breakout -- m_axis_data_normal/unbalance/misalign/bearing
 //                       must equal probe_dense[0..3] respectively. Two
 //                       ways this could be verified were considered
-//                       (see smma_cnn_top_if.sv/smma_cnn_top_uvm_top.sv
+//                       (see cnn_top_if.sv/cnn_top_uvm_top.sv
 //                       for the write-up): a `bind`-based probe, or a
 //                       plain hierarchical reference from the new tb
 //                       top module into dut.dense_data. The latter was
@@ -48,9 +48,9 @@
 //  heuristic, not a hard protocol invariant, so it's a uvm_warning, not
 //  a uvm_error.
 // ---------------------------------------------------------------------
-class smma_cnn_top_scoreboard extends uvm_subscriber #(smma_cnn_top_seq_item);
+class cnn_top_scoreboard extends uvm_subscriber #(cnn_top_seq_item);
 
-    `uvm_component_utils(smma_cnn_top_scoreboard)
+    `uvm_component_utils(cnn_top_scoreboard)
 
     int unsigned n_outputs;
     int unsigned n_last_errors;
@@ -80,7 +80,7 @@ class smma_cnn_top_scoreboard extends uvm_subscriber #(smma_cnn_top_seq_item);
         result_cg.start();
     endfunction
 
-    function void write(smma_cnn_top_seq_item t);
+    function void write(cnn_top_seq_item t);
         bit ports_ok;
         bit x_ok;
 

@@ -2,14 +2,14 @@
 //  spectrogram_generator_base_test  --  builds the env. The DUT's
 //  geometry is fixed (DATA_WIDTH=24/BINS_PER_FRAME=32/
 //  FRAMES_PER_SPECTROGRAM=32, see spectrogram_generator_pkg.sv), so like
-//  smma_cnn_top_base_test/mlp_base_test there's nothing to parameterize
+//  cnn_top_base_test/mlp_base_test there's nothing to parameterize
 //  by inheritance.
 //
 //  spectrogram_generator_directed_random_test  --  runs the one directed
 //  closed-form-pattern frame (spectrogram_generator_directed_seq) first,
 //  then num_frames randomized-content frames
 //  (spectrogram_generator_random_seq), same shape as
-//  smma_cnn_top_directed_random_test / line_buffer_3x3_directed_random_test.
+//  cnn_top_directed_random_test / line_buffer_3x3_directed_random_test.
 //  start_item()/finish_item() returning only means the driver finished
 //  STREAMING a frame's words in -- the ping-pong buffer's own drain
 //  latency (plus randomized bursty input gaps and output backpressure)

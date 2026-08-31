@@ -8,7 +8,7 @@
 //  pipeline_busy liveness) live directly in the monitor instead, since
 //  they need live cycle-by-cycle interface state rather than a
 //  per-beat item -- same kind of monitor/scoreboard split
-//  smma_cnn_top_monitor.sv/smma_cnn_top_scoreboard.sv use.
+//  cnn_top_monitor.sv/cnn_top_scoreboard.sv use.
 //
 //  This is deliberately a protocol/integration-level scoreboard, NOT a
 //  bit-exact one: reimplementing the FIR/decimation/windowing/FFT math
@@ -17,7 +17,7 @@
 //  dataset-driven verification path (tb_fft_lms_dataset.sv, checked
 //  against an external Python-computed golden reference) for a first
 //  UVM pass that isn't what was asked for -- mirroring the same scope
-//  decision made for RTL/cnn/uvm/smma_cnn_top/.
+//  decision made for RTL/cnn/uvm/cnn_top/.
 //
 //  Per-beat checks:
 //   - bin sequencing -- fft_bin must equal the expected next bin

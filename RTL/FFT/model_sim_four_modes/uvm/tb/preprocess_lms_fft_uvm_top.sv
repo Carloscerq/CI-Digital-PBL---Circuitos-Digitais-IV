@@ -34,7 +34,7 @@
 //
 //  There's exactly one configuration exercised here (see
 //  preprocess_lms_fft_pkg.sv), so no elaboration-time cfg object is
-//  needed, mirroring smma_cnn_top_uvm_top.sv/line_buffer_3x3_uvm_top.sv.
+//  needed, mirroring cnn_top_uvm_top.sv/line_buffer_3x3_uvm_top.sv.
 // ---------------------------------------------------------------------
 `timescale 1ns/1ps
 

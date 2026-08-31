@@ -1,39 +1,22 @@
 `timescale 1ns / 1ps
 
+import mlp_weights_pkg::*;   // N_IN, N_BINS, N_EXTRA, ACC_WIDTH
+
 // ============================================================================
 // Top Level System
 // ============================================================================
-// Nine sensors arrive over one SPI slave port, framed one chip-select
-// assertion per acquisition epoch:
-//
-//   4 x vibration  -> shared 64-point FFT -> { MLP , spectrogram + CNN }
-//   3 x current    \
-//   2 x temperature -> MLP extra features (4 of the 5 are used, see EXTRA_SEL)
-//
-// Only the vibration channels need the FFT, and they share ONE fft_64 core:
-// preprocess_fft_shared_4sensor_q915_no_lms keeps four independent
-// FIR/frame/mean/Hann front-ends but round-robins a single FFT between them,
-// tagging every output bin with `fft_sensor_id`.
-//
-// That single tagged stream fans out to both inference paths:
-//
-//   Path A (MLP)  one 132-feature buffer, time-multiplexed over the four
-//                 sensors -- one inference per completed FFT frame.
-//   Path B (CNN)  four private spectrograms, one per sensor, joined into the
-//                 CNN's four input channels so a whole beat is one pixel of
-//                 all four sensors.
-// ============================================================================
 module top_system #(
-    parameter int DATA_WIDTH = 24
+    parameter int DATA_WIDTH  = 24,
+
+    // Parametros do enlace UART
+    parameter int CLK_FREQ_HZ = 50_000_000,
+    parameter int BAUD_RATE   = 115_200
 )(
     input  logic clk,
-    input  logic reset,                 // Synchronous active-high reset
+    input  logic reset,                 // Reset SINCRONO, ATIVO EM ALTO
 
-    // SPI slave pins -- every sensor value arrives here
-    input  logic spi_serial_clock,
-    input  logic spi_slave_select_n,
-    input  logic spi_mosi,
-    output logic spi_miso,
+    // UART receive pin -- every sensor value arrives here
+    input  logic uart_rx,
 
     // Decision outputs
     output logic [2:0] status_leds,     // [2]=Critical, [1]=Warning, [0]=Normal
@@ -42,63 +25,98 @@ module top_system #(
     output logic       sys_error        // sticky: framing / overrun / desync
 );
 
+    localparam CONV2_WEIGHTS_FILE = "../mem/cnn/conv2d_weights.mem";
+    localparam CONV2_BIASES_FILE  = "../mem/cnn/conv2d_biases.mem";
+    localparam DENSE_WEIGHTS_FILE = "../mem/cnn/dense_weights.mem";
+    localparam DENSE_BIASES_FILE  = "../mem/cnn/dense_biases.mem";
+
     // ------------------------------------------------------------------------
-    // Sensor map. Word order inside one SPI frame.
+    // Sensor map. Word order inside one UART frame.
     // ------------------------------------------------------------------------
     localparam int N_VIB     = 4;   // vibration    -> FFT
-    localparam int N_CUR     = 3;   // current      -> MLP extras
+    localparam int N_CUR     = 1;   // current      -> MLP extras
     localparam int N_TMP     = 2;   // temperature  -> MLP extras
-    localparam int N_SENSORS = N_VIB + N_CUR + N_TMP;   // 9
-    localparam int N_AUX     = N_CUR + N_TMP;           // 5
+    localparam int N_SENSORS = N_VIB + N_CUR + N_TMP;   // 7
+    localparam int N_AUX     = N_CUR + N_TMP;           // 3
 
     localparam int SPEC_BINS   = 32;  // bins per spectrogram row  (CNN width)
     localparam int SPEC_FRAMES = 32;  // rows per spectrogram      (CNN height)
 
-    // ------------------------------------------------------------------------
-    // SPI Data Ingestion
-    // ------------------------------------------------------------------------
-    logic [7:0] spi_data_out;
-    logic       spi_data_valid;
-    logic       spi_busy;
+    localparam int BYTES_PER_WORD = DATA_WIDTH/8;                     // 3
+    localparam int FRAME_BYTES    = 2 + N_SENSORS*BYTES_PER_WORD + 1; // 24
 
-    spi_slave #(
-        .SIZE(8),
-        .CPOL(1'b0),
-        .CPHA(1'b0)
-    ) u_spi_slave (
-        .clk(clk),
-        .reset(reset),
-        .data_in(8'd0), // Not transmitting data back for now
-        .data_out(spi_data_out),
-        .data_valid(spi_data_valid),
-        .busy(spi_busy),
-        .serial_clock(spi_serial_clock),
-        .slave_in_controller_out(spi_mosi),
-        .controller_in_slave_out(spi_miso),
-        .slave_select_n(spi_slave_select_n)
+    // ------------------------------------------------------------------------
+    // UART Data Ingestion
+    // ------------------------------------------------------------------------
+    logic [2:0] uart_rx_sync;
+    always_ff @(posedge clk) begin
+        if (reset) uart_rx_sync <= 3'b111;
+        else       uart_rx_sync <= {uart_rx_sync[1:0], uart_rx};
+    end
+
+    logic [7:0] uart_rx_data;
+    logic       uart_rx_ready;
+    logic       uart_rx_ready_clr;
+    logic       uart_rx_clk_en;
+    logic       uart_tx_clk_en_unused;
+
+    baudrate #(
+        .CLK_FREQ_HZ(CLK_FREQ_HZ),
+        .BAUD_RATE  (BAUD_RATE),
+        .OVERSAMPLE (16)
+    ) u_uart_baud (
+        .clk      (clk),
+        .rst      (reset),
+        .rx_clk_en(uart_rx_clk_en),
+        .tx_clk_en(uart_tx_clk_en_unused)
+    );
+
+    receiver #(
+        .OVERSAMPLE(16)
+    ) u_uart_rx (
+        .clk      (clk),
+        .rst      (reset),
+        .clk_en   (uart_rx_clk_en),
+        .rx       (uart_rx_sync[2]),
+        .rx_en    (1'b0),           // rx_en e ATIVO EM BAIXO: 0 = habilitado
+        .ready_clr(uart_rx_ready_clr),
+        .ready    (uart_rx_ready),
+        .data     (uart_rx_data)
     );
 
     logic signed [DATA_WIDTH-1:0] sensor_data [0:N_SENSORS-1];
     logic sensor_frame_valid;
     logic sensor_frame_error;
 
-    spi_sensor_frame_rx #(
-        .DATA_WIDTH(DATA_WIDTH),
-        .N_SENSORS(N_SENSORS),
-        .BYTES_PER_WORD(DATA_WIDTH/8)
+    uart_sensor_frame_rx #(
+        .DATA_WIDTH        (DATA_WIDTH),
+        .N_SENSORS         (N_SENSORS),
+        .BYTES_PER_WORD    (BYTES_PER_WORD),
+        .CLK_FREQ_HZ       (CLK_FREQ_HZ),
+        .BAUD_RATE         (BAUD_RATE),
+        .IDLE_TIMEOUT_BYTES(4)
     ) u_frame_rx (
-        .clk(clk),
-        .reset(reset),
-        .spi_data(spi_data_out),
-        .spi_valid(spi_data_valid),
-        .spi_selected(spi_busy),
-        .sensor_data(sensor_data),
-        .frame_valid(sensor_frame_valid),
-        .frame_error(sensor_frame_error)
+        .clk         (clk),
+        .reset       (reset),
+        .rx_data     (uart_rx_data),
+        .rx_ready    (uart_rx_ready),
+        .rx_ready_clr(uart_rx_ready_clr),
+        .sensor_data (sensor_data),
+        .frame_valid (sensor_frame_valid),
+        .frame_error (sensor_frame_error)
     );
 
-    // Non-vibration sensors go straight to the MLP feature collector, which
-    // samples them once per FFT frame. aux index 0..2 = current, 3..4 = temp.
+    // ------------------------------------------------------------------------
+    // Non-vibration sensors -> MLP extras
+    // ------------------------------------------------------------------------
+    // MUDOU com N_CUR 3 -> 1: os indices de aux_features agora sao
+    //   0 = current 0        1..2 = temperature 0..1
+    // (antes eram 0..2 = current, 3..4 = temperature).
+    //
+    // EXTRA_SEL resolvido pelo mlp_tb_dpi: o modelo espera os agregados na
+    // ordem (Temperature_housing_A, Temperature_housing_B, U-phase_pow), logo
+    // EXTRA_SEL = '{1, 2, 0} com o mapa acima. O quarto agregado (mdc_k0) nao
+    // sai daqui -- ver MDC_K0_NOTE no bloco do MLP.
     logic signed [DATA_WIDTH-1:0] aux_features [0:N_AUX-1];
     genvar a;
     generate
@@ -110,9 +128,9 @@ module top_system #(
     // ------------------------------------------------------------------------
     // Vibration quad -> shared FFT handshake
     // ------------------------------------------------------------------------
-    // SPI cannot be back-pressured, so the four vibration samples are held in
+    // UART cannot be back-pressured, so the four vibration samples are held in
     // a one-deep register until the pipeline accepts them atomically. The FIR
-    // front-end is decimate-by-32, so it drains far faster than SPI fills;
+    // front-end is decimate-by-32, so it drains far faster than UART fills;
     // `vib_overrun` latches if that ever stops holding.
     logic signed [DATA_WIDTH-1:0] vib_hold [0:N_VIB-1];
     logic vib_valid;
@@ -193,9 +211,26 @@ module top_system #(
     );
 
     // ------------------------------------------------------------------------
-    // Path A: MLP, time-multiplexed over the four sensors
+    // Path A: MLP -- uma inferencia por RODADA dos quatro sensores
     // ------------------------------------------------------------------------
-    logic signed [DATA_WIDTH-1:0] mlp_features [132];
+    // O mapa de features saiu do mlp_tb_dpi.sv:
+    //   features[0   .. 127] = |FFT| dos 32 bins uteis x 4 sensores
+    //   features[128]        = Temperature_housing_A
+    //   features[129]        = Temperature_housing_B
+    //   features[130]        = U-phase_pow
+    //   features[131]        = mdc_k0
+    //
+    // >>> MDC_K0_NOTE <<<
+    // O quarto agregado nao vem de nenhum dos sensores auxiliares -- e um
+    // agregado do proprio frame (faixa 0..64 no TB; pelo nome, a componente
+    // DC / media do bloco). O pipeline de FFT tem um estagio de remocao de
+    // media, mas NAO exporta esse valor na lista de portas, entao nao tenho de
+    // onde puxa-lo. Fica amarrado em zero ate a fonte existir; enquanto isso a
+    // quarta feature agregada vai constante para o modelo.
+    logic signed [DATA_WIDTH-1:0] mdc_k0;
+    assign mdc_k0 = '0;   // TODO: ligar na saida de media/DC do front-end da FFT
+
+    logic signed [ACC_WIDTH-1:0] mlp_features [N_IN];
     logic mlp_start;
     logic [1:0] mlp_sensor_id;
     logic mlp_busy_internal;
@@ -203,7 +238,13 @@ module top_system #(
 
     fft_to_mlp_collector #(
         .DATA_WIDTH(DATA_WIDTH),
-        .N_AUX(N_AUX)
+        .N_VIB     (N_VIB),
+        .BINS_USED (SPEC_BINS),      // 32 bins uteis por sensor
+        .N_AUX     (N_AUX),
+        // aux 0 = current, 1 = temp A, 2 = temp B; a ordem do modelo e
+        // (TempA, TempB, U-phase_pow) -> '{1, 2, 0}
+        .EXTRA_SEL ('{1, 2, 0}),
+        .USE_MAGNITUDE(1)            // ver MAGNITUDE_NOTE no collector
     ) u_feature_collector (
         .clk(clk),
         .reset(reset),
@@ -215,6 +256,7 @@ module top_system #(
         .fft_done(fft_done),
         .fft_sensor_id(fft_sensor_id),
         .aux_features(aux_features),
+        .mdc_k0(mdc_k0),
         .mlp_features(mlp_features),
         .mlp_start(mlp_start),
         .mlp_sensor_id(mlp_sensor_id),
@@ -222,13 +264,13 @@ module top_system #(
         .frame_dropped(mlp_frame_dropped)
     );
 
-    logic signed [DATA_WIDTH-1:0] mlp_logits [4];
+    logic signed [ACC_WIDTH-1:0] mlp_logits [N_OUT];
     logic [1:0] mlp_class_idx;
     logic mlp_done;
 
     mlp u_mlp (
         .clk(clk),
-        .reset(reset),
+        .reset(reset),        // ver RESET_CONVERSION_NOTE (era rst_n)
         .start(mlp_start),
         .features(mlp_features),
         .logits(mlp_logits),
@@ -237,12 +279,22 @@ module top_system #(
         .done(mlp_done)
     );
 
-    // The MLP result belongs to the frame that was being collected, so tag it
-    // with the sensor id captured at that frame's first bin.
+    // >>> SENSOR_FAULT_MASK_NOTE <<<
+    // Este registrador existia para atribuir o resultado do MLP ao sensor que
+    // estava sendo coletado. Com o modelo olhando os QUATRO sensores no mesmo
+    // vetor, essa atribuicao nao existe mais: a saida e uma classe para a
+    // maquina inteira. mlp_sensor_id vem zerado do collector, entao este
+    // registrador fica constante em 0 e o inference_arbiter perde a
+    // informacao por-sensor vinda do MLP.
+    //
+    // O arbiter precisa ser revisto: ou sensor_fault_mask passa a vir so do
+    // caminho da CNN, ou vira um flag global, ou se treina um modelo por
+    // sensor. Nao decidi por voce -- mantive o caminho ligado para nao quebrar
+    // a interface.
     logic [1:0] mlp_result_sensor_id;
     always_ff @(posedge clk) begin
-        if (reset)             mlp_result_sensor_id <= 2'd0;
-        else if (mlp_start)    mlp_result_sensor_id <= mlp_sensor_id;
+        if (reset)          mlp_result_sensor_id <= 2'd0;
+        else if (mlp_start) mlp_result_sensor_id <= mlp_sensor_id;
     end
 
     // ------------------------------------------------------------------------
@@ -335,11 +387,15 @@ module top_system #(
     logic signed [DATA_WIDTH-1:0] cnn_bearing;
     logic cnn_valid;
 
-    smma_cnn_top #(
+    cnn_top #(
         .DATA_WIDTH(DATA_WIDTH),
         .IMG_WIDTH(SPEC_BINS),
         .IMG_HEIGHT(SPEC_FRAMES),
-        .IN_CHANNELS(N_VIB)
+        .IN_CHANNELS(N_VIB),
+        .CONV2_WEIGHTS_FILE(CONV2_WEIGHTS_FILE),
+        .CONV2_BIASES_FILE(CONV2_BIASES_FILE),
+        .DENSE_WEIGHTS_FILE(DENSE_WEIGHTS_FILE),
+        .DENSE_BIASES_FILE(DENSE_BIASES_FILE)
     ) u_cnn (
         .clk(clk),
         .reset(reset),
@@ -378,10 +434,19 @@ module top_system #(
         .alert_flag(alert_flag)
     );
 
-    // Sticky health flag: SPI framing fault, dropped vibration sample, MLP
-    // frame skipped because an inference was still running, or the four
-    // spectrograms losing lockstep.
-    assign sys_error = sensor_frame_error | vib_overrun |
-                       mlp_frame_dropped  | spec_desync_error;
+    // Sticky health flag: UART framing/checksum fault, dropped vibration
+    // sample, MLP frame skipped because an inference was still running, or the
+    // four spectrograms losing lockstep.
+    //
+    // sys_error e latcheado: o sensor_frame_error da UART e um PULSO de um
+    // ciclo (erro de checksum ou ressincronizacao por timeout), e um OR
+    // puramente combinacional deixaria esse pulso passar despercebido por
+    // qualquer coisa que amostrasse sys_error alguns ciclos depois.
+    always_ff @(posedge clk) begin
+        if (reset) sys_error <= 1'b0;
+        else if (sensor_frame_error | vib_overrun |
+                 mlp_frame_dropped  | spec_desync_error)
+            sys_error <= 1'b1;
+    end
 
 endmodule

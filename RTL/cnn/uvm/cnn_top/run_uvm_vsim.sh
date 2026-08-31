@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Runs the full SMMA CNN UVM testbench with Questa/ModelSim (vsim).
-# Same DUT config, top module (smma_cnn_top_uvm_top) and default test as run_uvm.sh,
+# Same DUT config, top module (cnn_top_uvm_top) and default test as run_uvm.sh,
 # which drives Xcelium instead.
 #
 #   ./run_uvm_vsim.sh                                # default test
 #   ./run_uvm_vsim.sh +UVM_VERBOSITY=UVM_HIGH        # per-item logging
-#   ./run_uvm_vsim.sh +UVM_TESTNAME=smma_cnn_top_directed_random_test
+#   ./run_uvm_vsim.sh +UVM_TESTNAME=cnn_top_directed_random_test
 #   ./run_uvm_vsim.sh --gui                          # interactive, waves kept
 #
 # All work happens in RTL/sim_vsim/ (log: RTL/sim_vsim/cnn_top.log).

@@ -12,7 +12,7 @@
 //  first two posedges, deasserted mid-cycle -- and m_axis_ready stays
 //  with the monitor, which drives it from time 0.
 //
-//  No cfg object is needed: like smma_cnn_top_uvm_top.sv, there's
+//  No cfg object is needed: like cnn_top_uvm_top.sv, there's
 //  exactly one valid geometry here (see spectrogram_generator_pkg.sv),
 //  so nothing about the DUT instance varies from run to run.
 // ---------------------------------------------------------------------

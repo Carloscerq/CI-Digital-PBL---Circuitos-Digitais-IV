@@ -2,7 +2,7 @@
 //  preprocess_lms_fft_base_test  --  builds the env. This testbench
 //  targets exactly one DUT configuration (USE_LMS=0, DATA_WIDTH=24/
 //  FRAC_BITS=15/NORMALIZE=1/HOP_SIZE=8 -- see
-//  tb/preprocess_lms_fft_uvm_top.sv), so, like smma_cnn_top_base_test,
+//  tb/preprocess_lms_fft_uvm_top.sv), so, like cnn_top_base_test,
 //  there's nothing to parameterize by inheritance.
 //
 //  preprocess_lms_fft_directed_test  --  runs the directed

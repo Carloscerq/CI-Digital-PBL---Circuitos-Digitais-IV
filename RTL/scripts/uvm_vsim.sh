@@ -44,7 +44,7 @@ BENCHES=(
   "cnn_maxpool|cnn/uvm/maxpool_2x2/maxpool_2x2_uvm.files|maxpool_2x2_uvm_top|maxpool_2x2_directed_random_test"
   "cnn_conv2d|cnn/uvm/conv2d_fsm/conv2d_fsm_uvm.files|conv2d_fsm_uvm_top|conv2d_fsm_directed_random_test"
   "cnn_dense|cnn/uvm/dense_layer_fsm/dense_layer_fsm_uvm.files|dense_layer_fsm_uvm_top|dense_layer_fsm_directed_random_test"
-  "cnn_top|cnn/uvm/smma_cnn_top/smma_cnn_top_uvm.files|smma_cnn_top_uvm_top|smma_cnn_top_directed_random_test"
+  "cnn_top|cnn/uvm/cnn_top/cnn_top_uvm.files|cnn_top_uvm_top|cnn_top_directed_random_test"
   "fft|FFT/model_sim_four_modes/uvm/preprocess_lms_fft_uvm.files|preprocess_lms_fft_uvm_top|preprocess_lms_fft_directed_test"
 )
 
