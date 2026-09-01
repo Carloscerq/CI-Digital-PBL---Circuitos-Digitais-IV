@@ -213,22 +213,32 @@ module top_system #(
     // ------------------------------------------------------------------------
     // Path A: MLP -- uma inferencia por RODADA dos quatro sensores
     // ------------------------------------------------------------------------
-    // O mapa de features saiu do mlp_tb_dpi.sv:
-    //   features[0   .. 127] = |FFT| dos 32 bins uteis x 4 sensores
-    //   features[128]        = Temperature_housing_A
-    //   features[129]        = Temperature_housing_B
-    //   features[130]        = U-phase_pow
-    //   features[131]        = mdc_k0
-    //
-    // >>> MDC_K0_NOTE <<<
-    // O quarto agregado nao vem de nenhum dos sensores auxiliares -- e um
-    // agregado do proprio frame (faixa 0..64 no TB; pelo nome, a componente
-    // DC / media do bloco). O pipeline de FFT tem um estagio de remocao de
-    // media, mas NAO exporta esse valor na lista de portas, entao nao tenho de
-    // onde puxa-lo. Fica amarrado em zero ate a fonte existir; enquanto isso a
-    // quarta feature agregada vai constante para o modelo.
     logic signed [DATA_WIDTH-1:0] mdc_k0;
-    assign mdc_k0 = '0;   // TODO: ligar na saida de media/DC do front-end da FFT
+    logic                         mdc_valid;
+    logic                         mdc_update;
+    logic                         mdc_overrun;
+
+    fft_peak_mdc #(
+        .DATA_WIDTH(DATA_WIDTH),
+        .N_VIB     (N_VIB),
+        .K_MAX     (26),          // MDC_K_MAX  do notebook
+        .K_MIN     (2),           // MDC_K_MIN  do notebook
+        .N_PEAKS   (3)            // MDC_N_PEAKS do notebook
+    ) u_peak_mdc (
+        .clk(clk),
+        .reset(reset),
+        .fft_valid(fft_valid),
+        .fft_ready(fft_ready),
+        .fft_bin(fft_bin),
+        .fft_real(fft_real),
+        .fft_imag(fft_imag),
+        .fft_sensor_id(fft_sensor_id),
+        .fft_done(fft_done),
+        .mdc_k0(mdc_k0),
+        .mdc_valid(mdc_valid),      // diagnostico: rolamento nao trava o MDC
+        .mdc_update(mdc_update),
+        .mdc_overrun(mdc_overrun)
+    );
 
     logic signed [ACC_WIDTH-1:0] mlp_features [N_IN];
     logic mlp_start;
@@ -437,15 +447,10 @@ module top_system #(
     // Sticky health flag: UART framing/checksum fault, dropped vibration
     // sample, MLP frame skipped because an inference was still running, or the
     // four spectrograms losing lockstep.
-    //
-    // sys_error e latcheado: o sensor_frame_error da UART e um PULSO de um
-    // ciclo (erro de checksum ou ressincronizacao por timeout), e um OR
-    // puramente combinacional deixaria esse pulso passar despercebido por
-    // qualquer coisa que amostrasse sys_error alguns ciclos depois.
     always_ff @(posedge clk) begin
         if (reset) sys_error <= 1'b0;
         else if (sensor_frame_error | vib_overrun |
-                 mlp_frame_dropped  | spec_desync_error)
+                 mlp_frame_dropped  | spec_desync_error | mdc_overrun)
             sys_error <= 1'b1;
     end
 

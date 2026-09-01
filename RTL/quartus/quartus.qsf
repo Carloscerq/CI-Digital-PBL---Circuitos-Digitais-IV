@@ -318,8 +318,6 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../mlp_model/mlp.sv
 
 # ---------------- spectrogram / uart / misc ----------------
 set_global_assignment -name SYSTEMVERILOG_FILE ../spectrogram/rtl/spectrogram_generator.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../uart/rtl/baudrate.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../uart/rtl/receiver.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../gcd/euclidian_gcd.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../gcd/gcd.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../mac/mac.sv
@@ -327,6 +325,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../perceptron/perceptron.sv
 
 # ---------------- top level ----------------
 set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/uart_sensor_frame_rx.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/fft_peak_mdc.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/fft_to_stream_adapter.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/fft_to_mlp_collector.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/spectrogram_4ch_join.sv

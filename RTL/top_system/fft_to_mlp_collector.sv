@@ -5,37 +5,6 @@ import mlp_weights_pkg::*;
 // ============================================================================
 // FFT to MLP Feature Collector  (reescrito)
 // ============================================================================
-// O MAPA DE FEATURES VEIO DO mlp_tb_dpi.sv
-// ----------------------------------------
-// O testbench do MLP define o contrato de forma inequivoca:
-//
-//   $display("MODEL %0d inputs (%0d bins + %0d aggregates) ...",
-//            N_IN, N_BINS, N_EXTRA);
-//
-//   features[0 .. N_BINS-1]      -> "|rFFT| bins"
-//   features[N_BINS+0]           -> Temperature_housing_A
-//   features[N_BINS+1]           -> Temperature_housing_B
-//   features[N_BINS+2]           -> U-phase_pow
-//   features[N_BINS+3]           -> mdc_k0
-//
-// Com N_IN = 132 e N_EXTRA = 4, sai N_BINS = 128. Uma FFT de 64 pontos com
-// entrada real da 64 saidas, das quais so 32 sao independentes (os bins 32..63
-// sao o espelho conjugado dos bins 0..31). Entao:
-//
-//     4 sensores de vibracao x 32 bins uteis = 128 = N_BINS
-//
-// A revisao anterior gravava fft_real em [0..63] e fft_imag em [64..127] de UM
-// sensor por inferencia. Estava errado em tres frentes ao mesmo tempo: metade
-// dos bins era redundante, a parte imaginaria nao e feature nenhuma, e o
-// modelo espera os QUATRO sensores no mesmo vetor.
-//
-// CONSEQUENCIA ARQUITETURAL
-// -------------------------
-// O collector deixa de ser time-multiplexado (uma inferencia por sensor) e
-// passa a juntar uma RODADA COMPLETA dos quatro sensores num unico vetor ->
-// uma inferencia a cada quatro frames de FFT. Isso muda o significado de
-// `mlp_sensor_id` -- ver MLP_SENSOR_ID_NOTE no fim do arquivo.
-// ============================================================================
 module fft_to_mlp_collector #(
     parameter int DATA_WIDTH = 24,
     parameter int N_VIB      = 4,    // sensores de vibracao no vetor
@@ -120,18 +89,16 @@ module fft_to_mlp_collector #(
         end
     end
 
-    // ------------------------------------------------------------------
-    // Extras: shift constante, um assign por slot. Fora do always_ff para
-    // que nenhum array de parametro seja indexado por variavel procedural
-    // (Quartus Lite transforma isso num cone de mux).
-    // ------------------------------------------------------------------
-    // EXTRA_SHIFT e negativo para deslocamento a direita, dai a negacao.
+    localparam int HW_GAIN_LOG2 = Q_FRAC - $clog2(2*BINS_USED);   // 15 - 6 = 9
+
     logic signed [ACC_WIDTH-1:0] extra_scaled [N_EXTRA];
 
     assign extra_scaled[0] = aux_features[EXTRA_SEL[0]] >>> (-EXTRA_SHIFT[0]); // Temp A
     assign extra_scaled[1] = aux_features[EXTRA_SEL[1]] >>> (-EXTRA_SHIFT[1]); // Temp B
     assign extra_scaled[2] = aux_features[EXTRA_SEL[2]] >>> (-EXTRA_SHIFT[2]); // U-phase_pow
-    assign extra_scaled[3] = mdc_k0                     >>> (-EXTRA_SHIFT[3]); // mdc_k0
+
+    localparam int MDC_NET_SHIFT = HW_GAIN_LOG2 + EXTRA_SHIFT[3];  // 9 - 6 = 3
+    assign extra_scaled[3] = mdc_k0 <<< MDC_NET_SHIFT;             // mdc_k0
 
     // ------------------------------------------------------------------
     // Admissao de frame e montagem da rodada
@@ -216,39 +183,5 @@ module fft_to_mlp_collector #(
                    N_EXTRA);
     end
     // synthesis translate_on
-
-    // ------------------------------------------------------------------
-    // MAGNITUDE_NOTE
-    // ------------------------------------------------------------------
-    // O comentario do mlp_tb_dpi diz "|rFFT| bins" -- MAGNITUDE, nao a parte
-    // real. Voce descreveu como "nao usar o valor imaginario", que pode
-    // significar duas coisas diferentes:
-    //
-    //   USE_MAGNITUDE = 1 (default) : |z| ~= max + 0.375*min. Casa com o texto
-    //       do TB. E uma APROXIMACAO: erra ate ~6.8% contra a magnitude exata.
-    //       Se o modelo foi treinado com np.abs(rfft(...)) exato, esse erro
-    //       entra como ruido de entrada. Da para trocar por CORDIC ou
-    //       sqrt(re^2+im^2) se a acuracia sofrer.
-    //
-    //   USE_MAGNITUDE = 0 : joga fft_real direto na feature. So esta correto
-    //       se o modelo tiver sido treinado com a parte real, o que o TB nao
-    //       sugere.
-    //
-    // Deixei em 1 por causa do TB. Se voce tiver o notebook de treino, vale
-    // confirmar o que exatamente alimentou as 128 primeiras colunas.
-    //
-    // ------------------------------------------------------------------
-    // MDC_K0_NOTE
-    // ------------------------------------------------------------------
-    // features[N_BINS+3] = mdc_k0, faixa 0..64 no TB. Nao e nenhum dos tres
-    // sensores auxiliares -- e um agregado do proprio frame (pelo nome e pela
-    // faixa, algo como a componente DC / media do bloco, k=0).
-    //
-    // O pipeline de FFT atual NAO exporta esse valor: o front-end tem um
-    // estagio de remocao de media, mas a media removida nao aparece na lista
-    // de portas. Por isso ele entra aqui como porta de entrada `mdc_k0`, para
-    // ser ligada quando a fonte existir. Enquanto estiver amarrada em zero, a
-    // quarta feature agregada vai constante para o modelo.
-    // ------------------------------------------------------------------
 
 endmodule
