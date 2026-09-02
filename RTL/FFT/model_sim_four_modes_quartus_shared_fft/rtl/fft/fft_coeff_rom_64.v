@@ -1,12 +1,7 @@
-// -----------------------------------------------------------------------------
 // fft_coeff_rom_64.v
 // ROMs combinacionais para FFT de 64 pontos.
 // Coeficientes em Q1.17.
-//
-// Correções:
-//   - Literais negativos escritos como -18'sdVALOR.
-//   - O valor -1.0 em Q1.17 usa 18'sh20000, que representa -131072.
-// -----------------------------------------------------------------------------
+
 
 module fft_twiddle_rom_64 (
     input  wire [4:0] address,
