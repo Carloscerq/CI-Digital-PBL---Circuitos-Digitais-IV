@@ -26,6 +26,10 @@ Scripts/dataset
 **/obj_dir
 **/*/obj_dir
 
+**/*/dataset_q915/*
+**/*/dataset_split/*
+**/*/data/*
+
 # Questa/ModelSim UVM build area (RTL/scripts/uvm_vsim.sh)
 RTL/sim_vsim/
 
