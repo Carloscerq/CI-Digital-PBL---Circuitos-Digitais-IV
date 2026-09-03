@@ -31,6 +31,9 @@ RTL/sim_vsim/
 # Verilator UVM build area (RTL/scripts/uvm_verilator.sh)
 RTL/sim_verilator/
 
+# Xcelium UVM regression area (RTL/scripts/uvm_report_xrun.sh)
+RTL/sim_xrun/
+
 
 waves.shm/
 xcelium.d/
