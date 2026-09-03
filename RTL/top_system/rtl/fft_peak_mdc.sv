@@ -1,24 +1,38 @@
 `timescale 1ns / 1ps
 
 // ============================================================================
-// fft_peak_mdc -- detector de picos espectrais + modulo MDC (Euclides)
+// fft_peak_mdc -- spectral peak detector + GCD module (Euclid)
+// ============================================================================
+// Implements the training notebook's "modulo MDC" (cells 38/39): sum the four
+// vibration channels bin by bin, take the three strongest LOCAL MAXIMA above a
+// relative threshold inside bins 1..K_MAX, and return their GCD as k0, the
+// fundamental rotation bin. f0 = k0 * fs'/N = k0 * 6.25 Hz.
+//
+// K_MAX = 26 is load-bearing and deliberately NARROWER than the 32-bin feature
+// band: the notebook measured lock rates of 89.8% at bins 1..26 against 31.9%
+// at 1..28 and 0.9% at 1..31. Widening it to match SPEC_BINS looks like an
+// obvious cleanup and silently destroys the module.
+//
+// An invalid result is itself a diagnostic: the notebook's bearing-fault runs
+// (*_BPFI_30) never lock at all, so mdc_valid staying low is information, not
+// just an error.
 // ============================================================================
 
 module fft_peak_mdc #(
     parameter int DATA_WIDTH = 24,
-    parameter int N_VIB      = 4,    // canais somados; POTENCIA DE 2
-    parameter int K_MAX      = 26,   // ultimo bin da busca (MDC_K_MAX)
-    parameter int K_MIN      = 2,    // k0 < K_MIN => invalido (MDC_K_MIN)
-    parameter int N_PEAKS    = 3,    // fixo em 3: o tracker e desenrolado
-    // Limiar relativo. O notebook usa 0,15; aqui vira (mx>>3) + (mx>>5) =
-    // 5/32 = 0,15625, que sai so em shifts
+    parameter int N_VIB      = 4,    // channels summed; MUST BE A POWER OF 2
+    parameter int K_MAX      = 26,   // last bin of the search (MDC_K_MAX)
+    parameter int K_MIN      = 2,    // k0 < K_MIN => invalid (MDC_K_MIN)
+    parameter int N_PEAKS    = 3,    // fixed at 3: the tracker is unrolled
+    // Relative threshold. The notebook uses 0.15; here it becomes
+    // (mx>>3) + (mx>>5) = 5/32 = 0.15625, which costs only shifts.
     parameter int THR_SH_A   = 3,
     parameter int THR_SH_B   = 5
 )(
     input  logic clk,
     input  logic reset,
 
-    // Stream de saida da FFT compartilhada
+    // Buffered shared-FFT output stream
     input  logic                         fft_valid,
     input  logic                         fft_ready,
     input  logic [5:0]                   fft_bin,
@@ -27,32 +41,32 @@ module fft_peak_mdc #(
     input  logic [1:0]                   fft_sensor_id,
     input  logic                         fft_done,
 
-    output logic signed [DATA_WIDTH-1:0] mdc_k0,      // ultimo k0 valido (hold)
-    output logic                         mdc_valid,   // nivel: rodada atual travou
-    output logic                         mdc_update,  // pulso: k0/valid atualizados
-    output logic                         mdc_overrun  // sticky: rodada nova cedo demais
+    output logic signed [DATA_WIDTH-1:0] mdc_k0,      // last valid k0 (held)
+    output logic                         mdc_valid,   // level: this round locked
+    output logic                         mdc_update,  // pulse: k0/valid updated
+    output logic                         mdc_overrun  // sticky: new round arrived too early
 );
 
-    // O maximo local em k precisa de mag[k-1] e mag[k+1], logo o acumulador
-    // guarda os bins 0 .. K_MAX+1. O bin 0 nunca e candidato a pico (a busca
-    // comeca em 1), mas e o vizinho esquerdo de k = 1.
+    // A local maximum at k needs mag[k-1] and mag[k+1], so the accumulator
+    // holds bins 0 .. K_MAX+1. Bin 0 is never a peak candidate (the search
+    // starts at 1) but it is the left neighbour of k = 1.
     localparam int ACC_N = K_MAX + 2;
     localparam int ACC_W = DATA_WIDTH + $clog2(N_VIB);   // 24 + 2 = 26
     localparam int K_W   = $clog2(ACC_N);                // 5
 
-    localparam logic [2:0] S_IDLE = 3'd0,   // esperando o fim de uma rodada
-                           S_MAX  = 3'd1,   // varredura 1: maior bin da banda
-                           S_SCAN = 3'd2,   // varredura 2: maximos locais + top-3
-                           S_GCD  = 3'd3,   // Euclides sobre k1, k2, k3
-                           S_UPD  = 3'd4;   // valida e segura o resultado
+    localparam logic [2:0] S_IDLE = 3'd0,   // waiting for a round to end
+                           S_MAX  = 3'd1,   // pass 1: largest bin in the band
+                           S_SCAN = 3'd2,   // pass 2: local maxima + top 3
+                           S_GCD  = 3'd3,   // Euclid over k1, k2, k3
+                           S_UPD  = 3'd4;   // validate and hold the result
 
     // ------------------------------------------------------------------
-    // Magnitude do bin -- MESMA aproximacao do fft_to_mlp_collector
+    // Bin magnitude -- the SAME approximation fft_to_mlp_collector uses
     // (alpha-max-beta-min, |z| ~= max + 0.375*min = max + (min>>1) - (min>>3)).
-    // Duplicada de proposito: o ranking dos picos tem que enxergar exatamente
-    // a mesma magnitude que vira feature. Se mudar la, mude aqui tambem.
-    // O limiar do MDC e RELATIVO, entao o erro de ~7 % da aproximacao se
-    // cancela entre o pico e o maximo da banda.
+    // Duplicated on purpose: the peak ranking has to see exactly the magnitude
+    // that becomes a feature. If you change it there, change it here too.
+    // The MDC threshold is RELATIVE, so the approximation's ~7% error cancels
+    // between the peak and the band maximum.
     // ------------------------------------------------------------------
     function automatic logic [DATA_WIDTH-1:0] abs_sat (input logic signed [DATA_WIDTH-1:0] v);
         if (!v[DATA_WIDTH-1])                         return v[DATA_WIDTH-1:0];
@@ -76,9 +90,10 @@ module fft_peak_mdc #(
     end
 
     // ------------------------------------------------------------------
-    // Acumulador por bin: soma das magnitudes dos N_VIB canais.
-    // A FFT compartilhada entrega um sensor por vez, em ordem crescente de
-    // bin, entao o sensor 0 ESCREVE e os demais SOMAM. Nao precisa de clear.
+    // Per-bin accumulator: the sum of the N_VIB channel magnitudes, which is
+    // what the notebook feeds the detector (mag_sum, not a per-sensor spectrum).
+    // The shared FFT delivers one sensor at a time in ascending bin order, so
+    // sensor 0 WRITES and the others ACCUMULATE. No clear pass is needed.
     // ------------------------------------------------------------------
     logic [ACC_W-1:0] mag_acc [ACC_N];
 
@@ -98,7 +113,7 @@ module fft_peak_mdc #(
     end
 
     // ------------------------------------------------------------------
-    // Varredura: maximo da banda, depois maximos locais acima do limiar
+    // Scan: band maximum first, then local maxima above the threshold
     // ------------------------------------------------------------------
     logic [2:0]       state;
     logic [K_W-1:0]   k;
@@ -107,8 +122,8 @@ module fft_peak_mdc #(
     logic [5:0]       pk1, pk2, pk3;
     logic [1:0]       n_peaks;
 
-    // Tres leituras simultaneas do banco de registradores: k-1, k, k+1.
-    // Em S_SCAN k anda de 1 ate K_MAX, logo os indices ficam em 0..K_MAX+1.
+    // Three simultaneous reads of the register bank: k-1, k, k+1.
+    // In S_SCAN, k runs 1..K_MAX, so the indices stay inside 0..K_MAX+1.
     logic [ACC_W-1:0] a_prev, a_cur, a_next;
     assign a_prev = mag_acc[k - K_W'(1)];
     assign a_cur  = mag_acc[k];
@@ -118,8 +133,8 @@ module fft_peak_mdc #(
     assign is_local_max = (a_cur > a_prev) && (a_cur >= a_next);
     assign is_peak      = is_local_max && (a_cur >= thr);
 
-    // Maximo da banda incluindo o bin corrente: usado no ultimo ciclo de S_MAX
-    // para fechar o limiar sem gastar um estado a mais.
+    // Band maximum including the current bin, used on the last cycle of S_MAX
+    // to close the threshold without spending an extra state.
     logic [ACC_W-1:0] band_max_next;
     assign band_max_next = (a_cur > band_max) ? a_cur : band_max;
 
@@ -150,7 +165,7 @@ module fft_peak_mdc #(
             k0_result   <= 6'd0;
             gcd_start   <= 1'b0;
             gcd_busy    <= 1'b0;
-            mdc_k0      <= '0;          // "zerado no reset de cada ensaio"
+            mdc_k0      <= '0;          // notebook: k0 initialises to 0
             mdc_valid   <= 1'b0;
             mdc_update  <= 1'b0;
             mdc_overrun <= 1'b0;
@@ -172,12 +187,12 @@ module fft_peak_mdc #(
                 end
 
                 // ----------------------------------------------------------
-                // mag[1:K_MAX+1].max() do notebook: referencia do limiar.
+                // The notebook's mag[1:K_MAX+1].max(): the threshold reference.
                 S_MAX: begin
                     if (a_cur > band_max) band_max <= a_cur;
 
                     if (k == K_W'(K_MAX)) begin
-                        // 0,15625 = 1/8 + 1/32, so shifts
+                        // 0.15625 = 1/8 + 1/32, shifts only
                         thr   <= (band_max_next >> THR_SH_A)
                                + (band_max_next >> THR_SH_B);
                         k     <= K_W'(1);
@@ -188,10 +203,10 @@ module fft_peak_mdc #(
                 end
 
                 // ----------------------------------------------------------
-                // Maximo local acima do limiar, mantendo os 3 maiores.
-                // Comparacao estrita (>) => em empate vence o bin de menor
-                // indice, o que enviesa para a fundamental e nao para a
-                // harmonica.
+                // Local maxima above the threshold, keeping the largest three.
+                // Strict comparison (>) means a tie is won by the LOWER bin
+                // index, which biases towards the fundamental rather than a
+                // harmonic.
                 S_SCAN: begin
                     if (is_peak) begin
                         if (n_peaks != 2'd3) n_peaks <= n_peaks + 2'd1;
@@ -216,8 +231,8 @@ module fft_peak_mdc #(
                 end
 
                 // ----------------------------------------------------------
-                // "Menos de MDC_N_PEAKS picos acima do limiar marca o
-                //  resultado como invalido" -- nesse caso nem roda Euclides.
+                // Fewer than MDC_N_PEAKS peaks above the threshold marks the
+                // result invalid -- Euclid is not run at all in that case.
                 S_GCD: begin
                     if (!gcd_busy && !gcd_start) begin
                         if (n_peaks == 2'd3) begin
@@ -227,13 +242,13 @@ module fft_peak_mdc #(
                             gcd_start <= 1'b1;
                             gcd_busy  <= 1'b1;
                         end else begin
-                            // invalido: segura o ultimo k0, so baixa o valid
+                            // invalid: hold the last k0, just drop valid
                             mdc_valid  <= 1'b0;
                             mdc_update <= 1'b1;
                             state      <= S_IDLE;
                         end
                     end else if (gcd_ready) begin
-                        // `out` do gcd so vale no ciclo em que `ready` esta alto
+                        // the gcd `out` is only meaningful while `ready` is high
                         gcd_busy  <= 1'b0;
                         k0_result <= gcd_out;
                         state     <= S_UPD;
@@ -241,8 +256,8 @@ module fft_peak_mdc #(
                 end
 
                 // ----------------------------------------------------------
-                // k0 < K_MIN => "MDC(...) = 1 e 'sem harmonicas'", invalido.
-                // Valido => registrador com enable segura o novo k0.
+                // k0 < K_MIN means GCD(...) = 1, i.e. no harmonic series:
+                // invalid. Valid => an enabled register holds the new k0.
                 S_UPD: begin
                     if (k0_result >= 6'(K_MIN)) begin
                         mdc_k0    <= DATA_WIDTH'(k0_result);
@@ -257,9 +272,9 @@ module fft_peak_mdc #(
                 default: state <= S_IDLE;
             endcase
 
-            // Uma rodada nova nao pode chegar com a varredura anterior em
-            // curso. Com HOP_SIZE = 64 as rodadas ficam a segundos uma da
-            // outra e a varredura gasta ~200 ciclos, entao isto e so trava.
+            // A new round must not arrive while the previous scan is running.
+            // With HOP_SIZE = 64 rounds are seconds apart and the scan takes
+            // ~200 cycles, so this is a guard, not an expected condition.
             if (round_end && (state != S_IDLE))
                 mdc_overrun <= 1'b1;
         end
@@ -268,13 +283,13 @@ module fft_peak_mdc #(
     // synthesis translate_off
     initial begin
         if (N_PEAKS != 3)
-            $fatal(1, "[fft_peak_mdc] N_PEAKS=%0d; o tracker top-3 e desenrolado.", N_PEAKS);
+            $fatal(1, "[fft_peak_mdc] N_PEAKS=%0d; the top-3 tracker is unrolled.", N_PEAKS);
         if (N_VIB != (1 << $clog2(N_VIB)))
-            $fatal(1, "[fft_peak_mdc] N_VIB=%0d nao e potencia de 2.", N_VIB);
+            $fatal(1, "[fft_peak_mdc] N_VIB=%0d is not a power of 2.", N_VIB);
         if (K_MAX + 1 > 63)
-            $fatal(1, "[fft_peak_mdc] K_MAX=%0d nao cabe nos 6 bits de fft_bin.", K_MAX);
+            $fatal(1, "[fft_peak_mdc] K_MAX=%0d does not fit the 6 bits of fft_bin.", K_MAX);
         if (K_MIN < 1)
-            $fatal(1, "[fft_peak_mdc] K_MIN=%0d invalido.", K_MIN);
+            $fatal(1, "[fft_peak_mdc] K_MIN=%0d is invalid.", K_MIN);
     end
     // synthesis translate_on
 

@@ -323,13 +323,29 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../gcd/gcd.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../mac/mac.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../perceptron/perceptron.sv
 
-# ---------------- top level ----------------
-set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/uart_sensor_frame_rx.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/fft_peak_mdc.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/fft_to_stream_adapter.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/fft_to_mlp_collector.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/spectrogram_4ch_join.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/inference_arbiter.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/top_system.sv
+# ---------------- top level: package first ----------------
+set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/rtl/system_types_pkg.sv
+
+# ---------------- decoupling primitives ----------------
+set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/rtl/skid_buffer.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/rtl/elastic_fifo.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/rtl/frame_pingpong_buffer.sv
+
+# ---------------- leaf blocks ----------------
+set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/rtl/uart_sensor_frame_rx.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/rtl/fft_peak_mdc.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/rtl/fft_to_stream_adapter.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/rtl/fft_to_mlp_collector.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/rtl/spectrogram_4ch_join.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/rtl/inference_arbiter.sv
+
+# ---------------- subsystems ----------------
+set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/rtl/sensor_ingestion_subsystem.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/rtl/dsp_preprocessing_subsystem.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/rtl/mlp_inference_path.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/rtl/cnn_inference_path.sv
+
+# ---------------- top ----------------
+set_global_assignment -name SYSTEMVERILOG_FILE ../top_system/rtl/top_system.sv
 set_global_assignment -name SDC_FILE top_system.sdc
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
