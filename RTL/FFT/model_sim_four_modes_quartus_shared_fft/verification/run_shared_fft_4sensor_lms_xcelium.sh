@@ -15,6 +15,7 @@ hop_size=${HOP_SIZE:-64}
 save_all_bins=${SAVE_ALL_BINS:-0}
 lms_adapt_enable=${ADAPT_ENABLE:-1}
 lms_mu_shift=${LMS_MU_SHIFT:-16}
+use_decimator=${USE_DECIMATOR:-1}
 
 fail() {
     printf 'ERRO: %s\n' "$*" >&2
@@ -30,6 +31,8 @@ command -v xrun >/dev/null 2>&1 || fail "xrun nao encontrado no PATH."
     fail "ADAPT_ENABLE deve ser 0 ou 1."
 [[ "$lms_mu_shift" =~ ^[0-9]+$ ]] && ((lms_mu_shift >= 1)) ||
     fail "LMS_MU_SHIFT deve ser inteiro positivo."
+[[ "$use_decimator" == 0 || "$use_decimator" == 1 ]] ||
+    fail "USE_DECIMATOR deve ser 0 ou 1."
 
 sources=(
     rtl/preprocessing/fir_coeff_rom_dualmode.v
@@ -86,7 +89,7 @@ find_sensor_file() {
 
 manifest=$output_dir/shared_fft_4sensor_lms_manifest.csv
 printf '%s\n' \
-    'case,hop_size,max_frames,adapt_enable,mu_shift,status,bins_csv,report' \
+    'case,use_decimator,hop_size,max_frames,adapt_enable,mu_shift,status,bins_csv,report' \
     > "$manifest"
 
 failed=0
@@ -108,14 +111,16 @@ for relative_case in "${selected_cases[@]}"; do
           -z "$sensor3_file" || -z "$sensor4_file" ]]; then
         status=MISSING_SENSOR
     else
-        printf '[XCELIUM][SHARED FFT LMS] caso=%s hop=%s adapt=%s mu_shift=%s\n' \
-            "$relative_case" "$hop_size" "$lms_adapt_enable" "$lms_mu_shift"
+        printf '[XCELIUM][SHARED FFT LMS] caso=%s decimator=%s hop=%s adapt=%s mu_shift=%s\n' \
+            "$relative_case" "$use_decimator" "$hop_size" \
+            "$lms_adapt_enable" "$lms_mu_shift"
 
         xrun -64bit -sv +define+RTL_SIM -timescale 1ns/1ps -access +rwc \
             -xmlibdirname "$build_dir" \
             -top tb_shared_fft_4sensor_lms_dataset \
             -defparam "tb_shared_fft_4sensor_lms_dataset.HOP_SIZE=$hop_size" \
             -defparam "tb_shared_fft_4sensor_lms_dataset.LMS_MU_SHIFT=$lms_mu_shift" \
+            -defparam "tb_shared_fft_4sensor_lms_dataset.USE_DECIMATOR=$use_decimator" \
             "${sources[@]}" \
             "+SENSOR1_FILE=$sensor1_file" \
             "+SENSOR2_FILE=$sensor2_file" \
@@ -139,8 +144,8 @@ for relative_case in "${selected_cases[@]}"; do
         printf '[ERRO] %s: %s\n' "$relative_case" "$status" >&2
     fi
 
-    printf '%s,%s,%s,%s,%s,%s,%s,%s\n' \
-        "$relative_case" "$hop_size" "$max_frames" \
+    printf '%s,%s,%s,%s,%s,%s,%s,%s,%s\n' \
+        "$relative_case" "$use_decimator" "$hop_size" "$max_frames" \
         "$lms_adapt_enable" "$lms_mu_shift" "$status" \
         "$bins_csv" "$report_file" >> "$manifest"
 done

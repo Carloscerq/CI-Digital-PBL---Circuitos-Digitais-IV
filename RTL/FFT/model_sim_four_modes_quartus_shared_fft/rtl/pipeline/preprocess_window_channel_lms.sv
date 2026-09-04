@@ -1,7 +1,8 @@
 `timescale 1ns/1ps
 
-// Canal de pre-processamento com LMS temporal:
-// FIR/32 -> LMS -> frame64/hop -> remocao da media -> Hann.
+// Canal de pre-processamento com LMS temporal.
+// USE_DECIMATOR=1: FIR/32 -> LMS -> frame64/hop -> media -> Hann.
+// USE_DECIMATOR=0: entrada -> LMS -> frame64/hop -> media -> Hann.
 //
 // error_sample do LMS e encaminhado ao buffer. prediction_sample permanece
 // interno e representa a componente temporal prevista pelo filtro.
@@ -9,6 +10,7 @@ module preprocess_window_channel_lms #(
     parameter integer DATA_WIDTH      = 24,
     parameter integer HOP_SIZE        = 64,
     parameter integer LMS_MU_SHIFT    = 16,
+    parameter integer USE_DECIMATOR   = 1,
 `ifdef RTL_SIM
     parameter FIR_STAGE1_FILE = "coefficients/fir/stage1_decim4_q117.bin",
     parameter FIR_STAGE2_FILE = "coefficients/fir/stage2_decim4_q117.bin",
@@ -53,33 +55,52 @@ module preprocess_window_channel_lms #(
     localparam integer CORRECTED_WIDTH = DATA_WIDTH + 1;
 
     // ------------------------------------------------------------------------
-    // Decimacao total /32.
+    // Entrada do LMS. No modo normal vem do decimador /32. No modo bypass,
+    // a interface ready/valid da entrada e ligada diretamente ao LMS.
     // ------------------------------------------------------------------------
-    wire signed [DATA_WIDTH-1:0] decimated_sample;
-    wire decimated_valid;
-    wire decimated_ready;
+    wire signed [DATA_WIDTH-1:0] lms_input_sample;
+    wire                         lms_input_valid;
+    wire                         lms_input_ready;
 
-    fir_decimator_32_dualmode #(
-        .SAMPLE_WIDTH       (DATA_WIDTH),
-        .COEFF_WIDTH        (18),
-        .ACC_WIDTH          (64),
-        .COEFF_FRAC_BITS    (17),
-        .STAGE1_INIT_FILE   (FIR_STAGE1_FILE),
-        .STAGE2_INIT_FILE   (FIR_STAGE2_FILE),
-        .STAGE3_INIT_FILE   (FIR_STAGE3_FILE)
-    ) decimator (
-        .clk                     (clk),
-        .reset                   (reset),
-        .sample_in               (sample_in),
-        .sample_valid            (sample_valid),
-        .sample_ready            (sample_ready),
-        .sample_out              (decimated_sample),
-        .sample_out_valid        (decimated_valid),
-        .sample_out_ready        (decimated_ready),
-        .stage1_saturation_event (fir_stage1_saturation_event),
-        .stage2_saturation_event (fir_stage2_saturation_event),
-        .stage3_saturation_event (fir_stage3_saturation_event)
-    );
+    generate
+        if (USE_DECIMATOR != 0) begin : generate_decimator
+            fir_decimator_32_dualmode #(
+                .SAMPLE_WIDTH       (DATA_WIDTH),
+                .COEFF_WIDTH        (18),
+                .ACC_WIDTH          (64),
+                .COEFF_FRAC_BITS    (17),
+                .STAGE1_INIT_FILE   (FIR_STAGE1_FILE),
+                .STAGE2_INIT_FILE   (FIR_STAGE2_FILE),
+                .STAGE3_INIT_FILE   (FIR_STAGE3_FILE)
+            ) decimator (
+                .clk                     (clk),
+                .reset                   (reset),
+                .sample_in               (sample_in),
+                .sample_valid            (sample_valid),
+                .sample_ready            (sample_ready),
+                .sample_out              (lms_input_sample),
+                .sample_out_valid        (lms_input_valid),
+                .sample_out_ready        (lms_input_ready),
+                .stage1_saturation_event (fir_stage1_saturation_event),
+                .stage2_saturation_event (fir_stage2_saturation_event),
+                .stage3_saturation_event (fir_stage3_saturation_event)
+            );
+
+            assign decimated_event = lms_input_valid && lms_input_ready;
+        end
+        else begin : generate_decimator_bypass
+            assign lms_input_sample = sample_in;
+            assign lms_input_valid  = sample_valid;
+            assign sample_ready     = lms_input_ready;
+
+            // Mantem a interface e os contadores compativeis. Neste modo,
+            // decimated_event significa "amostra aceita no bypass".
+            assign decimated_event = sample_valid && sample_ready;
+            assign fir_stage1_saturation_event = 1'b0;
+            assign fir_stage2_saturation_event = 1'b0;
+            assign fir_stage3_saturation_event = 1'b0;
+        end
+    endgenerate
 
     // ------------------------------------------------------------------------
     // LMS temporal de 8 taps. Um operador de multiplicacao e reutilizado.
@@ -102,9 +123,9 @@ module preprocess_window_channel_lms #(
     ) lms_filter (
         .clk                    (clk),
         .reset                  (reset),
-        .sample_in              (decimated_sample),
-        .sample_valid           (decimated_valid),
-        .sample_ready           (decimated_ready),
+        .sample_in              (lms_input_sample),
+        .sample_valid           (lms_input_valid),
+        .sample_ready           (lms_input_ready),
         .adapt_enable           (lms_adapt_enable),
         .clear_coefficients     (lms_clear_coefficients),
         .error_sample           (lms_error_sample),
@@ -204,7 +225,6 @@ module preprocess_window_channel_lms #(
         .windowed_sample_saturated (windowed_saturated)
     );
 
-    assign decimated_event = decimated_valid && decimated_ready;
     assign lms_output_event = lms_valid && lms_ready;
     assign lms_error_saturation_event =
         lms_valid && lms_ready && lms_error_saturated;
@@ -224,6 +244,8 @@ module preprocess_window_channel_lms #(
             $fatal(1, "[preprocess_window_channel_lms] HOP_SIZE invalido.");
         if (LMS_MU_SHIFT < 1)
             $fatal(1, "[preprocess_window_channel_lms] LMS_MU_SHIFT invalido.");
+        if (USE_DECIMATOR != 0 && USE_DECIMATOR != 1)
+            $fatal(1, "[preprocess_window_channel_lms] USE_DECIMATOR deve ser 0 ou 1.");
     end
     // synthesis translate_on
 
