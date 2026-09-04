@@ -8,10 +8,13 @@ module tb_shared_fft_4sensor_lms_dataset #(
     parameter integer NORMALIZE            = 1,
     parameter integer HOP_SIZE             = 64,
     parameter integer LMS_MU_SHIFT         = 16,
+    parameter integer USE_DECIMATOR        = 1,
     parameter integer INPUT_SAMPLE_RATE_HZ = 25600
 );
 
     localparam integer DECIMATION_FACTOR = 32;
+    localparam integer EFFECTIVE_DECIMATION_FACTOR =
+        (USE_DECIMATOR != 0) ? DECIMATION_FACTOR : 1;
     localparam integer FRAME_SIZE = 64;
 
     reg clk;
@@ -49,7 +52,8 @@ module tb_shared_fft_4sensor_lms_dataset #(
         .DATA_WIDTH   (DATA_WIDTH),
         .NORMALIZE    (NORMALIZE),
         .HOP_SIZE     (HOP_SIZE),
-        .LMS_MU_SHIFT (LMS_MU_SHIFT)
+        .LMS_MU_SHIFT (LMS_MU_SHIFT),
+        .USE_DECIMATOR(USE_DECIMATOR)
     ) dut (
         .clk                                  (clk),
         .reset                                (reset),
@@ -273,7 +277,7 @@ module tb_shared_fft_4sensor_lms_dataset #(
         reset = 1'b0;
 
         if (max_frames > 0)
-            raw_target = DECIMATION_FACTOR *
+            raw_target = EFFECTIVE_DECIMATION_FACTOR *
                 (FRAME_SIZE + ((max_frames - 1) * HOP_SIZE));
         else
             raw_target = 0;
@@ -292,7 +296,8 @@ module tb_shared_fft_4sensor_lms_dataset #(
             input_samples = input_samples + 1;
         end
 
-        expected_decimated_samples = input_samples / DECIMATION_FACTOR;
+        expected_decimated_samples =
+            input_samples / EFFECTIVE_DECIMATION_FACTOR;
         if (expected_decimated_samples >= FRAME_SIZE)
             expected_frames = 1 +
                 ((expected_decimated_samples - FRAME_SIZE) / HOP_SIZE);
@@ -325,7 +330,7 @@ module tb_shared_fft_4sensor_lms_dataset #(
         for (i = 0; i < 4; i = i + 1) begin
             if (decimated_count[i] != expected_decimated_samples)
                 $fatal(1,
-                    "Contagem do decimador invalida: sensor=%0d obtido=%0d esperado=%0d",
+                    "Contagem pos-decimador/bypass invalida: sensor=%0d obtido=%0d esperado=%0d",
                     i + 1, decimated_count[i], expected_decimated_samples);
             if (lms_output_count[i] != expected_decimated_samples)
                 $fatal(1,
@@ -337,14 +342,29 @@ module tb_shared_fft_4sensor_lms_dataset #(
         $fwrite(report_fd, "fractional_bits=%0d\n", FRAC_BITS);
         $fwrite(report_fd, "normalize=%0d\n", NORMALIZE);
         $fwrite(report_fd, "hop_size=%0d\n", HOP_SIZE);
+        $fwrite(report_fd, "use_decimator=%0d\n", USE_DECIMATOR);
+        $fwrite(report_fd, "effective_decimation_factor=%0d\n",
+                EFFECTIVE_DECIMATION_FACTOR);
+        $fwrite(report_fd, "input_sample_rate_hz=%0d\n",
+                INPUT_SAMPLE_RATE_HZ);
+        $fwrite(report_fd, "fft_input_sample_rate_hz=%.6f\n",
+                $itor(INPUT_SAMPLE_RATE_HZ) /
+                EFFECTIVE_DECIMATION_FACTOR);
+        $fwrite(report_fd, "fft_bin_spacing_hz=%.6f\n",
+                $itor(INPUT_SAMPLE_RATE_HZ) /
+                EFFECTIVE_DECIMATION_FACTOR / FRAME_SIZE);
         $fwrite(report_fd, "lms_adapt_enable=%0d\n", lms_adapt_enable);
         $fwrite(report_fd, "lms_mu_shift=%0d\n", LMS_MU_SHIFT);
         $fwrite(report_fd, "input_samples=%0d\n", input_samples);
         $fwrite(report_fd, "expected_decimated_samples=%0d\n",
                 expected_decimated_samples);
+        $fwrite(report_fd, "expected_frontend_samples=%0d\n",
+                expected_decimated_samples);
 
         for (i = 0; i < 4; i = i + 1) begin
             $fwrite(report_fd, "decimated_sensor%0d=%0d\n",
+                    i + 1, decimated_count[i]);
+            $fwrite(report_fd, "frontend_samples_sensor%0d=%0d\n",
                     i + 1, decimated_count[i]);
             $fwrite(report_fd, "lms_outputs_sensor%0d=%0d\n",
                     i + 1, lms_output_count[i]);
@@ -362,8 +382,9 @@ module tb_shared_fft_4sensor_lms_dataset #(
         $fwrite(report_fd, "status=PASS\n");
 
         $display(
-            "[SHARED_FFT_LMS] PASS: entradas=%0d decimadas=%0d frames_por_sensor=%0d",
-            input_samples, expected_decimated_samples, expected_frames);
+            "[SHARED_FFT_LMS] PASS: entradas=%0d pos_decimador_bypass=%0d frames_por_sensor=%0d use_decimator=%0d",
+            input_samples, expected_decimated_samples, expected_frames,
+            USE_DECIMATOR);
 
         $fclose(sensor1_fd);
         $fclose(sensor2_fd);
@@ -382,6 +403,8 @@ module tb_shared_fft_4sensor_lms_dataset #(
             $fatal(1, "HOP_SIZE deve estar entre 1 e 64.");
         if (LMS_MU_SHIFT < 1)
             $fatal(1, "LMS_MU_SHIFT invalido.");
+        if (USE_DECIMATOR != 0 && USE_DECIMATOR != 1)
+            $fatal(1, "USE_DECIMATOR deve ser 0 ou 1.");
     end
     // synthesis translate_on
 

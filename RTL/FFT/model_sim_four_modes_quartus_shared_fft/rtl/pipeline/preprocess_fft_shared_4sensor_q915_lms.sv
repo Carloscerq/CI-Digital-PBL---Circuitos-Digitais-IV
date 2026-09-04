@@ -2,12 +2,14 @@
 
 // Quatro canais Q9.15 com LMS temporal independente e uma FFT64 compartilhada.
 // As quatro entradas sao aceitas atomicamente. Cada canal executa:
-// FIR/32 -> LMS -> frame64 -> media -> Hann.
+// USE_DECIMATOR=1: FIR/32 -> LMS -> frame64 -> media -> Hann.
+// USE_DECIMATOR=0: entrada -> LMS -> frame64 -> media -> Hann.
 module preprocess_fft_shared_4sensor_q915_lms #(
     parameter integer DATA_WIDTH    = 24,
     parameter integer NORMALIZE     = 1,
     parameter integer HOP_SIZE      = 64,
     parameter integer LMS_MU_SHIFT  = 16,
+    parameter integer USE_DECIMATOR = 1,
 `ifdef RTL_SIM
     parameter FIR_STAGE1_FILE = "coefficients/fir/stage1_decim4_q117.bin",
     parameter FIR_STAGE2_FILE = "coefficients/fir/stage2_decim4_q117.bin",
@@ -82,6 +84,7 @@ module preprocess_fft_shared_4sensor_q915_lms #(
         .DATA_WIDTH      (DATA_WIDTH),
         .HOP_SIZE        (HOP_SIZE),
         .LMS_MU_SHIFT    (LMS_MU_SHIFT),
+        .USE_DECIMATOR   (USE_DECIMATOR),
         .FIR_STAGE1_FILE (FIR_STAGE1_FILE),
         .FIR_STAGE2_FILE (FIR_STAGE2_FILE),
         .FIR_STAGE3_FILE (FIR_STAGE3_FILE),
@@ -116,6 +119,7 @@ module preprocess_fft_shared_4sensor_q915_lms #(
         .DATA_WIDTH      (DATA_WIDTH),
         .HOP_SIZE        (HOP_SIZE),
         .LMS_MU_SHIFT    (LMS_MU_SHIFT),
+        .USE_DECIMATOR   (USE_DECIMATOR),
         .FIR_STAGE1_FILE (FIR_STAGE1_FILE),
         .FIR_STAGE2_FILE (FIR_STAGE2_FILE),
         .FIR_STAGE3_FILE (FIR_STAGE3_FILE),
@@ -150,6 +154,7 @@ module preprocess_fft_shared_4sensor_q915_lms #(
         .DATA_WIDTH      (DATA_WIDTH),
         .HOP_SIZE        (HOP_SIZE),
         .LMS_MU_SHIFT    (LMS_MU_SHIFT),
+        .USE_DECIMATOR   (USE_DECIMATOR),
         .FIR_STAGE1_FILE (FIR_STAGE1_FILE),
         .FIR_STAGE2_FILE (FIR_STAGE2_FILE),
         .FIR_STAGE3_FILE (FIR_STAGE3_FILE),
@@ -184,6 +189,7 @@ module preprocess_fft_shared_4sensor_q915_lms #(
         .DATA_WIDTH      (DATA_WIDTH),
         .HOP_SIZE        (HOP_SIZE),
         .LMS_MU_SHIFT    (LMS_MU_SHIFT),
+        .USE_DECIMATOR   (USE_DECIMATOR),
         .FIR_STAGE1_FILE (FIR_STAGE1_FILE),
         .FIR_STAGE2_FILE (FIR_STAGE2_FILE),
         .FIR_STAGE3_FILE (FIR_STAGE3_FILE),
