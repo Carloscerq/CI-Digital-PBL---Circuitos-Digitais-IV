@@ -12,7 +12,7 @@ interface mlp_if (
 
     import mlp_weights_pkg::*;
 
-    logic rst_n;
+    logic reset;
     logic start;
 
     logic signed [ACC_WIDTH-1:0] features [N_IN];

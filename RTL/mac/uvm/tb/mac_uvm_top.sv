@@ -4,9 +4,15 @@
 //                    DATA_WIDTH=24, WEIGHT_WIDTH=8, SUM_WIDTH=40 (see
 //                    RTL/mlp_model/mlp.sv's
 //                    `mac #(.DATA_WIDTH(ACT_WIDTH), .WEIGHT_WIDTH(W_WIDTH),
-//                    .SUM_WIDTH(SUM_WIDTH))`). clk period and the reset
-//                    sequencing mirror mac_tb.sv exactly (2ns period,
-//                    two idle cycles held low before release).
+//                    .SUM_WIDTH(SUM_WIDTH))`). The clk period mirrors
+//                    mac_tb.sv exactly (2ns).
+//
+//  Reset is NOT sequenced here: mac_driver drives it from its UVM
+//  reset_phase, so all interface timing lives inside the phase schedule
+//  and each test's stimulus sits in main_phase, which cannot start
+//  before reset_phase has finished. The sequence itself is unchanged
+//  from mac_tb.sv -- two cycles asserted, then one settled idle cycle
+//  before stimulus.
 //
 //  No cfg object is needed: unlike perceptron, mac has no elaboration-
 //  time parameters for the scoreboard to mirror.
@@ -35,7 +41,7 @@ module mac_uvm_top;
         .SUM_WIDTH   (SUM_WIDTH)
     ) dut (
         .clk    (vif.clk),
-        .rst_n  (vif.rst_n),
+        .reset  (vif.reset),
         .load   (vif.load),
         .en     (vif.en),
         .data   (vif.data),
@@ -44,16 +50,6 @@ module mac_uvm_top;
     );
 
     initial begin
-        vif.rst_n  = 1'b0;
-        vif.load   = 1'b0;
-        vif.en     = 1'b0;
-        vif.data   = '0;
-        vif.weight = '0;
-
-        repeat (2) @(negedge clk);
-        vif.rst_n = 1'b1;
-        @(negedge clk);
-
         uvm_config_db #(virtual mac_if #(DATA_WIDTH, WEIGHT_WIDTH, SUM_WIDTH))::set(
             null, "uvm_test_top.env.agent.*", "vif", vif);
         uvm_config_db #(virtual mac_if #(DATA_WIDTH, WEIGHT_WIDTH, SUM_WIDTH))::set(

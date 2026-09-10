@@ -5,13 +5,13 @@
 //  outside packages, so it's compiled as its own top-level unit (see
 //  the .files list) before this package and before the module that
 //  instantiates both it and the DUT -- same layout
-//  smma_cnn_top_pkg.sv/mac_pkg.sv use.
+//  cnn_top_pkg.sv/mac_pkg.sv use.
 //
 //  Geometry is fixed at DATA_WIDTH=24/BINS_PER_FRAME=32/
 //  FRAMES_PER_SPECTROGRAM=32 (MEM_DEPTH=1024), matching
 //  tb_spectrogram_generator.sv's/spectrogram_generator.sv's default
 //  instance parameters exactly -- not worth class-parameterizing, same
-//  reasoning smma_cnn_top_pkg.sv/line_buffer_3x3_pkg.sv give.
+//  reasoning cnn_top_pkg.sv/line_buffer_3x3_pkg.sv give.
 // ---------------------------------------------------------------------
 `timescale 1ns/1ps
 

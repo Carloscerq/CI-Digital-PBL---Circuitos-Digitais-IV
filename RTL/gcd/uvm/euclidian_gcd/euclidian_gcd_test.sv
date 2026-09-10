@@ -11,6 +11,12 @@
 //                                  using SIZE=32): runs the directed
 //                                  corner cases, then a bounded-magnitude
 //                                  random sweep.
+//
+//  Stimulus runs in main_phase, not run_phase: reset is applied in
+//  euclidian_gcd_driver's UVM reset_phase, and main_phase is the first
+//  run-time phase guaranteed to start only after reset_phase has
+//  dropped its objection -- run_phase spans the whole run-time
+//  schedule, so it would have overlapped reset.
 // ---------------------------------------------------------------------
 class euclidian_gcd_base_test #(
     int SIZE = 32
@@ -39,7 +45,7 @@ class euclidian_gcd_random_test extends euclidian_gcd_base_test #(32);
         super.new(name, parent);
     endfunction
 
-    task run_phase(uvm_phase phase);
+    task main_phase(uvm_phase phase);
         euclidian_gcd_directed_seq #(32) dseq;
         euclidian_gcd_random_seq #(32)   rseq;
 

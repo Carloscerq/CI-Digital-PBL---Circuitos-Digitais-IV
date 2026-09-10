@@ -3,7 +3,7 @@ module gcd #(
   parameter SIZE = 8
 ) (
   input logic clk,
-  input logic reset_n,
+  input logic reset,
   input logic start,
   input logic  [SIZE-1: 0] in [AMOUNT_OF_NUMBERS],
   output logic [SIZE-1: 0] out,
@@ -36,7 +36,7 @@ module gcd #(
 
   euclidian_gcd #(.SIZE(SIZE)) pair_gcd (
     .clk(clk),
-    .reset_n(reset_n),
+    .reset(reset),
     .start(sub_start),
     .in_a(acc),
     .in_b(in[idx]),
@@ -44,8 +44,8 @@ module gcd #(
     .ready(sub_ready)
   );
 
-  always_ff @(posedge clk or negedge reset_n) begin
-    if (!reset_n) current_state <= STATE_IDLE;
+  always_ff @(posedge clk) begin
+    if (reset) current_state <= STATE_IDLE;
     else current_state <= next_state;
   end
 
@@ -70,8 +70,8 @@ module gcd #(
     endcase
   end
 
-  always_ff @(posedge clk or negedge reset_n) begin
-    if (!reset_n) begin
+  always_ff @(posedge clk) begin
+    if (reset) begin
       acc <= 0;
       idx <= FIRST_IDX;
       out <= 0;

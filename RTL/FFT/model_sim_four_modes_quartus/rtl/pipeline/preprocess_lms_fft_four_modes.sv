@@ -10,13 +10,13 @@ module preprocess_lms_fft_four_modes #(
     parameter integer MU_SHIFT        = 16,
     parameter integer HOP_SIZE        = 8,
     parameter FIR_STAGE1_FILE =
-        "../coefficients/fir/stage1_decim4_q117.hex",
+        "../FFT/model_sim_four_modes/coefficients/fir/stage1_decim4_q117.hex",
     parameter FIR_STAGE2_FILE =
-        "../coefficients/fir/stage2_decim4_q117.hex",
+        "../FFT/model_sim_four_modes/coefficients/fir/stage2_decim4_q117.hex",
     parameter FIR_STAGE3_FILE =
-        "../coefficients/fir/stage3_decim2_q117.hex",
+        "../FFT/model_sim_four_modes/coefficients/fir/stage3_decim2_q117.hex",
     parameter HANN_FILE =
-        "../coefficients/windowing/hann_64_q117.hex"
+        "../FFT/model_sim_four_modes/coefficients/windowing/hann_64_q117.hex"
 )(
     input  wire                           clk,
     input  wire                           reset,

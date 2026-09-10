@@ -52,7 +52,7 @@ class spi_monitor #(
         active_slave = 0;
         has_active   = 1'b0;
 
-        wait (vif.reset_n === 1'b1);
+        wait (vif.reset === 1'b0);
 
         fork
             // 1. per-slave receive words and word counters

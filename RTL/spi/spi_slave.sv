@@ -4,7 +4,7 @@ module spi_slave #(
   parameter bit CPHA = 1'b0
 ) (
   input logic clk,
-  input logic reset_n,
+  input logic reset,
   // fabric side
   input logic [SIZE-1:0] data_in,   // word to send on the next transfer
   output logic [SIZE-1:0] data_out, // word received
@@ -52,8 +52,8 @@ module spi_slave #(
   // only the selected slave drives the shared line
   assign controller_in_slave_out = selected ? miso : 1'b0;
 
-  always_ff @(posedge clk or negedge reset_n) begin
-    if (!reset_n) begin
+  always_ff @(posedge clk) begin
+    if (reset) begin
       sclk_sync   <= {3{CPOL}};
       select_sync <= '1;
       mosi_sync   <= '0;

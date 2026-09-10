@@ -91,8 +91,8 @@ module lms #(
     assign dw2 = mug2 >>> FRAC;
     assign dw3 = mug3 >>> FRAC;
 
-    always @(posedge clk or negedge reset) begin
-        if (!reset) begin
+    always @(posedge clk) begin
+        if (reset) begin
             x0 <= {WIDTH{1'b0}};
             x1 <= {WIDTH{1'b0}};
             x2 <= {WIDTH{1'b0}};

@@ -3,7 +3,7 @@
 module tb_conv2d_fsm();
 
     logic clk;
-    logic rst;
+    logic reset;
     logic s_valid;
     logic s_ready;
     logic signed [23:0] s_window [0:3][0:2][0:2];
@@ -17,12 +17,12 @@ module tb_conv2d_fsm();
     // Instantiate Conv2D FSM
     conv2d_fsm #(
         .DATA_WIDTH(24),
-        .FRAC_BITS(16),
+        .FRAC_BITS(15),
         .CHANNELS(8),
         .IN_CHANNELS(4)
     ) dut (
         .clk(clk),
-        .rst(rst),
+        .reset(reset),
         .s_valid(s_valid),
         .s_ready(s_ready),
         .s_window(s_window),
@@ -50,7 +50,8 @@ module tb_conv2d_fsm();
                 for (int ch = 0; ch < 4; ch++) begin
                     for (int r = 0; r < 3; r++) begin
                         for (int c = 0; c < 3; c++) begin
-                            s_window[ch][r][c] = positive ? 24'h01_0000 : 24'hFF_0000;
+                            // +1.0 / -1.0 as Q9.15 codes (FRAC_BITS = 15)
+                            s_window[ch][r][c] = positive ? 24'h00_8000 : 24'hFF_8000;
                         end
                     end
                 end
@@ -101,12 +102,12 @@ module tb_conv2d_fsm();
     endtask
 
     initial begin
-        rst = 1'b1;
+        reset = 1'b1;
         s_valid = 1'b0;
         m_ready = 1'b0;
         s_last = 1'b0;
         
-        #22 rst = 1'b0;
+        #22 reset = 1'b0;
         
         $display("--- Starting Liveness Test ---");
         fork

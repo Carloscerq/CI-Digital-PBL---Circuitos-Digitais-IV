@@ -7,7 +7,7 @@ module fir_coeff_rom_dualmode #(
     parameter integer ADDR_WIDTH  = 7,
     parameter integer NUM_TAPS    = 47,
 		parameter INIT_FILE =
-    "../coefficients/fir/stage1_decim4_q117.hex"
+    "../FFT/model_sim_four_modes/coefficients/fir/stage1_decim4_q117.hex"
 )(
     input  wire                          clk,
     input  wire                          reset,

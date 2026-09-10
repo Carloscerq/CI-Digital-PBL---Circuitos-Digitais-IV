@@ -6,7 +6,7 @@
 //  before the module that instantiates both it and the DUT -- same
 //  layout conv2d_fsm_pkg.sv/mlp_pkg.sv/line_buffer_3x3_pkg.sv use.
 //
-//  Geometry is fixed at DATA_WIDTH=24/FRAC_BITS=16/IN_CHANNELS=8/
+//  Geometry is fixed at DATA_WIDTH=24/FRAC_BITS=15/IN_CHANNELS=8/
 //  OUT_CLASSES=4/IN_FEATURES=2048, matching dense_layer_fsm.sv's default
 //  parameterization exactly (the same values tb_dense_layer_fsm.sv
 //  exercises) -- this DUT's geometry is tied to its trained weight ROM
@@ -25,7 +25,7 @@ package dense_layer_fsm_pkg;
     `include "uvm_macros.svh"
 
     parameter int DATA_WIDTH  = 24;
-    parameter int FRAC_BITS   = 16;
+    parameter int FRAC_BITS   = 15;
     parameter int IN_CHANNELS = 8;
     parameter int OUT_CLASSES = 4;
     parameter int IN_FEATURES = 2048;

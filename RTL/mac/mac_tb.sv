@@ -12,7 +12,7 @@ module mac_tb ();
   logic clk = 1'b0;
   always #1 clk = ~clk;
 
-  logic rst_n = 1'b0;
+  logic reset = 1'b1;
   logic load  = 1'b0;
   logic en    = 1'b0;
 
@@ -22,7 +22,7 @@ module mac_tb ();
 
   mac #(.DATA_WIDTH(DW), .WEIGHT_WIDTH(WW), .SUM_WIDTH(SW)) dut (
     .clk    (clk),
-    .rst_n  (rst_n),
+    .reset  (reset),
     .load   (load),
     .en     (en),
     .data   (data),
@@ -39,7 +39,7 @@ module mac_tb ();
 
   mac #(.DATA_WIDTH(NDW), .WEIGHT_WIDTH(NWW), .SUM_WIDTH(NSW)) dut_narrow (
     .clk    (clk),
-    .rst_n  (rst_n),
+    .reset  (reset),
     .load   (n_load),
     .en     (n_en),
     .data   (n_data),
@@ -95,7 +95,7 @@ module mac_tb ();
     // ---- reset ----------------------------------------------------------
     repeat (2) @(negedge clk);
     check("RESET", longint'(acc), 0);
-    rst_n = 1'b1;
+    reset = 1'b0;
     @(negedge clk);
 
     // ---- directed: a hand-checkable dot product -------------------------
@@ -172,19 +172,19 @@ module mac_tb ();
     n_en   = 1'b0;
     check("NARROW_8x4", longint'(n_acc), exp2);
 
-    // ---- async reset during an accumulation ------------------------------
-    // the pulse lives entirely between two posedges, so only a reset that is
-    // really asynchronous can clear the accumulator here
+    // ---- synchronous reset during an accumulation ------------------------
+    // reset is sampled on the rising edge like every other input, so it has to
+    // be held across a posedge to clear the accumulator, and it outranks the
+    // load/en that run_dot is still driving
     fill_random(MAX_TAPS);
     fork
       run_dot(MAX_TAPS, exp);
       begin
         repeat (20) @(negedge clk);
-        #0.5;                 // partway to the next posedge
-        rst_n = 1'b0;
-        #0.1;
-        check("ASYNC_RESET", longint'(acc), 0);
-        rst_n = 1'b1;         // released before that posedge ever arrives
+        reset = 1'b1;
+        @(negedge clk);       // the posedge in between clears the accumulator
+        check("SYNC_RESET", longint'(acc), 0);
+        reset = 1'b0;
       end
     join
 

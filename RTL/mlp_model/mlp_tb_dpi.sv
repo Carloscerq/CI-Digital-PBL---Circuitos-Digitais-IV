@@ -15,7 +15,7 @@ module mlp_tb_dpi ();
   logic clk = 1'b0;
   always #1 clk = ~clk;
 
-  logic rst_n = 1'b0;
+  logic reset = 1'b1;
   logic start = 1'b0;
 
   logic signed [23:0] features  [N_IN];
@@ -25,7 +25,7 @@ module mlp_tb_dpi ();
 
   mlp dut (
     .clk       (clk),
-    .rst_n     (rst_n),
+    .reset     (reset),
     .start     (start),
     .features  (features),
     .logits    (logits),
@@ -129,7 +129,7 @@ module mlp_tb_dpi ();
     void'($value$plusargs("n_vectors=%d", n_vectors));
 
     repeat (4) @(negedge clk);
-    rst_n = 1'b1;
+    reset = 1'b0;
     repeat (2) @(negedge clk);
 
     $display("=== mlp_tb_dpi : %0d vectors against mlp_ref.cpp ===", n_vectors);

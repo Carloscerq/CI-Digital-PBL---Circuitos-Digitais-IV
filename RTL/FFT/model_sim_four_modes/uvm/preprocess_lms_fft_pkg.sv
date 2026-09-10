@@ -6,7 +6,7 @@
 //  outside packages, so it's compiled as its own top-level unit (see
 //  preprocess_lms_fft_uvm.files) before this package and before the tb
 //  top module that instantiates both it and the DUT -- same layout
-//  smma_cnn_top_pkg.sv/line_buffer_3x3_pkg.sv/mlp_pkg.sv use.
+//  cnn_top_pkg.sv/line_buffer_3x3_pkg.sv/mlp_pkg.sv use.
 //
 //  Fixed at DATA_WIDTH=24/FRAC_BITS=15/NORMALIZE=1/USE_LMS=0/
 //  HOP_SIZE=8, matching preprocess_lms_fft_four_modes's own default

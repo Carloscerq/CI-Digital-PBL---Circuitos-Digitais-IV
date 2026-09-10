@@ -2,14 +2,14 @@
 //  spectrogram_generator_base_test  --  builds the env. The DUT's
 //  geometry is fixed (DATA_WIDTH=24/BINS_PER_FRAME=32/
 //  FRAMES_PER_SPECTROGRAM=32, see spectrogram_generator_pkg.sv), so like
-//  smma_cnn_top_base_test/mlp_base_test there's nothing to parameterize
+//  cnn_top_base_test/mlp_base_test there's nothing to parameterize
 //  by inheritance.
 //
 //  spectrogram_generator_directed_random_test  --  runs the one directed
 //  closed-form-pattern frame (spectrogram_generator_directed_seq) first,
 //  then num_frames randomized-content frames
 //  (spectrogram_generator_random_seq), same shape as
-//  smma_cnn_top_directed_random_test / line_buffer_3x3_directed_random_test.
+//  cnn_top_directed_random_test / line_buffer_3x3_directed_random_test.
 //  start_item()/finish_item() returning only means the driver finished
 //  STREAMING a frame's words in -- the ping-pong buffer's own drain
 //  latency (plus randomized bursty input gaps and output backpressure)
@@ -19,6 +19,12 @@
 //  dropping its objection, with a generous real-time bound as a safety
 //  net against hanging forever if a real bug ever stops output from
 //  arriving.
+//
+//  Stimulus runs in main_phase, not run_phase: reset is applied in
+//  spectrogram_generator_driver's UVM reset_phase, and main_phase is the first
+//  run-time phase guaranteed to start only after reset_phase has
+//  dropped its objection -- run_phase spans the whole run-time
+//  schedule, so it would have overlapped reset.
 // ---------------------------------------------------------------------
 class spectrogram_generator_base_test extends uvm_test;
 
@@ -45,7 +51,7 @@ class spectrogram_generator_directed_random_test extends spectrogram_generator_b
         super.new(name, parent);
     endfunction
 
-    task run_phase(uvm_phase phase);
+    task main_phase(uvm_phase phase);
         spectrogram_generator_directed_seq dseq;
         spectrogram_generator_random_seq   rseq;
         int unsigned total_frames;

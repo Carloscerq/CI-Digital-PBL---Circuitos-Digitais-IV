@@ -6,6 +6,12 @@
 //                        the top module: the six directed single-word
 //                        exchanges, then 4 back-to-back random words,
 //                        then a held 3-word transaction to slave 0.
+//
+//  Stimulus runs in main_phase, not run_phase: reset is applied in
+//  spi_driver's UVM reset_phase, and main_phase is the first
+//  run-time phase guaranteed to start only after reset_phase has
+//  dropped its objection -- run_phase spans the whole run-time
+//  schedule, so it would have overlapped reset.
 // ---------------------------------------------------------------------
 class spi_base_test #(
     int SIZE     = 8,
@@ -35,7 +41,7 @@ class spi_directed_test extends spi_base_test #(8, 2);
         super.new(name, parent);
     endfunction
 
-    task run_phase(uvm_phase phase);
+    task main_phase(uvm_phase phase);
         spi_directed_seq #(8, 2) dseq;
         spi_random_seq #(8, 2)   rseq;
         spi_hold_seq #(8, 2)     hseq;

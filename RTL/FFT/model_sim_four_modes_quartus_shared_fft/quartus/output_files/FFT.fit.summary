@@ -1,0 +1,20 @@
+Fitter Status : Successful - Fri Aug 28 08:56:37 2026
+Quartus Prime Version : 25.1std.0 Build 1129 10/21/2025 SC Lite Edition
+Revision Name : FFT
+Top-level Entity Name : quartus_pipeline_q915_no_lms_4sensor_shared_top
+Family : Cyclone V
+Device : 5CEBA4F23C7
+Timing Models : Final
+Logic utilization (in ALMs) : 3,703 / 18,480 ( 20 % )
+Total registers : 2581
+Total pins : 169 / 224 ( 75 % )
+Total virtual pins : 0
+Total block memory bits : 46,080 / 3,153,920 ( 1 % )
+Total RAM Blocks : 43 / 308 ( 14 % )
+Total DSP Blocks : 20 / 66 ( 30 % )
+Total HSSI RX PCSs : 0
+Total HSSI PMA RX Deserializers : 0
+Total HSSI TX PCSs : 0
+Total HSSI PMA TX Serializers : 0
+Total PLLs : 0 / 4 ( 0 % )
+Total DLLs : 0 / 4 ( 0 % )

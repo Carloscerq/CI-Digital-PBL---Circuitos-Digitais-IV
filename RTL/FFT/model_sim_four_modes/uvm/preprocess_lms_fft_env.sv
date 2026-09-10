@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------
 //  preprocess_lms_fft_env  --  wires the agent's monitor analysis port
 //  into the scoreboard's uvm_subscriber export, same shape
-//  smma_cnn_top_env/mlp_env use.
+//  cnn_top_env/mlp_env use.
 // ---------------------------------------------------------------------
 class preprocess_lms_fft_env extends uvm_env;
 

@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------
 //  spectrogram_generator_agent  --  standard sequencer/driver/monitor
-//  bundle. Always active, mirroring mac_agent/smma_cnn_top_agent --
+//  bundle. Always active, mirroring mac_agent/cnn_top_agent --
 //  this testbench only needs one active agent driving/observing the
 //  spectrogram_generator DUT.
 // ---------------------------------------------------------------------

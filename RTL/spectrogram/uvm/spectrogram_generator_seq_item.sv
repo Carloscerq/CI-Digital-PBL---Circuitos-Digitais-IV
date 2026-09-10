@@ -5,7 +5,7 @@
 //  a ping-pong buffer fills/drains exactly MEM_DEPTH words per frame
 //  before swapping sides (see spectrogram_generator.sv's wr_addr/
 //  rd_count wraparound) -- the same "one item = one frame" granularity
-//  smma_cnn_top_seq_item / line_buffer_3x3_seq_item use.
+//  cnn_top_seq_item / line_buffer_3x3_seq_item use.
 //
 //  `words` is the randomized/directed stimulus the driver streams onto
 //  s_axis_data, one element per cycle, in order (see

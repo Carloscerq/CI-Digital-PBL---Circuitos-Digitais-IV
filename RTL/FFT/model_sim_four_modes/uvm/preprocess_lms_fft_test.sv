@@ -2,7 +2,7 @@
 //  preprocess_lms_fft_base_test  --  builds the env. This testbench
 //  targets exactly one DUT configuration (USE_LMS=0, DATA_WIDTH=24/
 //  FRAC_BITS=15/NORMALIZE=1/HOP_SIZE=8 -- see
-//  tb/preprocess_lms_fft_uvm_top.sv), so, like smma_cnn_top_base_test,
+//  tb/preprocess_lms_fft_uvm_top.sv), so, like cnn_top_base_test,
 //  there's nothing to parameterize by inheritance.
 //
 //  preprocess_lms_fft_directed_test  --  runs the directed
@@ -17,6 +17,12 @@
 //  instead of running forever; 50,000,000ns at the tb's 10ns clock
 //  period is 5,000,000 cycles, a huge multiple of what streaming ~7200
 //  beats plus pipeline drain should ever need.
+//
+//  Stimulus runs in main_phase, not run_phase: reset is applied in
+//  preprocess_lms_fft_driver's UVM reset_phase, and main_phase is the first
+//  run-time phase guaranteed to start only after reset_phase has
+//  dropped its objection -- run_phase spans the whole run-time
+//  schedule, so it would have overlapped reset.
 // ---------------------------------------------------------------------
 class preprocess_lms_fft_base_test extends uvm_test;
 
@@ -43,7 +49,7 @@ class preprocess_lms_fft_directed_test extends preprocess_lms_fft_base_test;
         super.new(name, parent);
     endfunction
 
-    task run_phase(uvm_phase phase);
+    task main_phase(uvm_phase phase);
         preprocess_lms_fft_directed_seq dseq;
         preprocess_lms_fft_random_seq   rseq;
 

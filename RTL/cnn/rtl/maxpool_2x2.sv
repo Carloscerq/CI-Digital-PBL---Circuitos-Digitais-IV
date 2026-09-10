@@ -6,15 +6,15 @@ module maxpool_2x2 #(
     parameter int CHANNELS = 8
 )(
     input  logic               clk,
-    input  logic               rst,
+    input  logic               reset,
     
-    // AXI4-Stream Slave (from Conv2D)
+    // Stream Slave (from Conv2D)
     input  logic               s_valid,
     output logic               s_ready,
     input  logic signed [DATA_WIDTH-1:0] s_data [0:CHANNELS-1],
     input  logic               s_last,
     
-    // AXI4-Stream Master (to Flatten/Dense)
+    // Stream Master (to Flatten/Dense)
     output logic               m_valid,
     input  logic               m_ready,
     output logic signed [DATA_WIDTH-1:0] m_data [0:CHANNELS-1],
@@ -34,7 +34,7 @@ module maxpool_2x2 #(
     logic [$clog2(IMG_WIDTH)-1:0] row;
     
     always_ff @(posedge clk) begin
-        if (rst) begin
+        if (reset) begin
             col <= '0;
             row <= '0;
         end else if (s_valid && s_ready) begin
@@ -69,7 +69,7 @@ module maxpool_2x2 #(
     logic               m_last_reg;
 
     always_ff @(posedge clk) begin
-        if (rst) begin
+        if (reset) begin
             m_valid_reg <= 1'b0;
             m_last_reg  <= 1'b0;
         end else if (s_ready) begin

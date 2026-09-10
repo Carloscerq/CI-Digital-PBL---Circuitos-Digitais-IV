@@ -10,6 +10,10 @@
 **/*/work
 **/transcript
 **/*.ini
+**/db/*
+**/incremental_db/*
+**/simulation/*
+**/*.vcd
 *.bak
 *.env
 *.ipynb_checkpoints
@@ -21,3 +25,19 @@ Scripts/.env
 Scripts/dataset
 **/obj_dir
 **/*/obj_dir
+
+**/*/dataset_q915/*
+**/*/dataset_split/*
+**/*/data/*
+
+# Questa/ModelSim UVM build area (RTL/scripts/uvm_vsim.sh)
+RTL/sim_vsim/
+
+# Verilator UVM build area (RTL/scripts/uvm_verilator.sh)
+RTL/sim_verilator/
+
+
+waves.shm/
+xcelium.d/
+xrun.history
+xrun.log

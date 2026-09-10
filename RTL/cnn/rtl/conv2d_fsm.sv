@@ -2,20 +2,22 @@
 
 module conv2d_fsm #(
     parameter int DATA_WIDTH = 24,
-    parameter int FRAC_BITS = 16,
+    parameter int FRAC_BITS = 15,   // see FRAC_BITS_NOTE in mac_q8_16.sv
     parameter int CHANNELS = 8,
-    parameter int IN_CHANNELS = 4
+    parameter int IN_CHANNELS = 4,
+    parameter CONV2_WEIGHTS_FILE = "./mem/cnn/conv2d_weights.mem",
+    parameter CONV2_BIASES_FILE = "./mem/cnn/conv2d_biases.mem"
 )(
     input  logic               clk,
-    input  logic               rst,
+    input  logic               reset,
     
-    // AXI4-Stream Slave Interface (from line_buffer)
+    // Stream Slave Interface (from line_buffer)
     input  logic               s_valid,
     output logic               s_ready,
     input  logic signed [DATA_WIDTH-1:0] s_window [0:IN_CHANNELS-1][0:2][0:2],
     input  logic               s_last,
     
-    // AXI4-Stream Master Interface (to maxpool)
+    // Stream Master Interface (to maxpool)
     output logic               m_valid,
     input  logic               m_ready,
     output logic signed [DATA_WIDTH-1:0] m_data [0:CHANNELS-1],
@@ -41,7 +43,7 @@ module conv2d_fsm #(
     assign capture = s_valid && s_ready;
     
     always_ff @(posedge clk) begin
-        if (rst) begin
+        if (reset) begin
             state <= ST_IDLE;
             cnt   <= '0;
         end else begin
@@ -76,11 +78,11 @@ module conv2d_fsm #(
 
     initial begin
         // Load the kernel weights
-        $readmemh("mem/cnn/conv2d_weights.mem", weights_flat);
-        
+        $readmemh(CONV2_WEIGHTS_FILE, weights_flat);
+
         // Load the 8 bias values
-        $readmemh("mem/cnn/conv2d_biases.mem", biases);
-        
+        $readmemh(CONV2_BIASES_FILE, biases);
+
         $display("[INIT] Conv2D ROM and Biases successfully loaded from files.");
     end
 
@@ -174,7 +176,7 @@ module conv2d_fsm #(
                 .FRAC_BITS(FRAC_BITS)
             ) mac_inst (
                 .clk(clk),
-                .rst(rst),
+                .reset(reset),
                 .en(mac_en),
                 .clr(mac_clr),
                 .a(mac_a[i]),

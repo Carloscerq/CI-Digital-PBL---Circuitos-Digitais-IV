@@ -16,7 +16,7 @@
 //  toggling under feed/drain timing that isn't tied to any predictable
 //  pattern) -- kept to a small handful of frames since each one is
 //  already 1024 words of simulated activity, same "small handful, not
-//  more" reasoning smma_cnn_top_random_seq/line_buffer_3x3_random_seq
+//  more" reasoning cnn_top_random_seq/line_buffer_3x3_random_seq
 //  use.
 // ---------------------------------------------------------------------
 class spectrogram_generator_directed_seq extends uvm_sequence #(spectrogram_generator_seq_item);

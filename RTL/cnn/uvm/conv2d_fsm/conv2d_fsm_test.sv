@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------
 //  conv2d_fsm_base_test  --  builds the env. conv2d_fsm's geometry is
-//  fixed (DATA_WIDTH=24/FRAC_BITS=16/CHANNELS=8/IN_CHANNELS=4, see
+//  fixed (DATA_WIDTH=24/FRAC_BITS=15/CHANNELS=8/IN_CHANNELS=4, see
 //  conv2d_fsm_pkg.sv), so like mlp_base_test/line_buffer_3x3_base_test
 //  there's nothing to parameterize by inheritance.
 //
@@ -8,6 +8,12 @@
 //  directed batch first (see conv2d_fsm_directed_seq: all-zero, +1.0,
 //  -1.0 windows), then a randomized batch (see conv2d_fsm_random_seq),
 //  same shape as mlp_directed_random_test/line_buffer_3x3_directed_random_test.
+//
+//  Stimulus runs in main_phase, not run_phase: reset is applied in
+//  conv2d_fsm_driver's UVM reset_phase, and main_phase is the first
+//  run-time phase guaranteed to start only after reset_phase has
+//  dropped its objection -- run_phase spans the whole run-time
+//  schedule, so it would have overlapped reset.
 // ---------------------------------------------------------------------
 class conv2d_fsm_base_test extends uvm_test;
 
@@ -34,7 +40,7 @@ class conv2d_fsm_directed_random_test extends conv2d_fsm_base_test;
         super.new(name, parent);
     endfunction
 
-    task run_phase(uvm_phase phase);
+    task main_phase(uvm_phase phase);
         conv2d_fsm_directed_seq dseq;
         conv2d_fsm_random_seq   rseq;
 

@@ -26,7 +26,7 @@
 //  beats with fully randomized (but still amplitude-bounded, see
 //  preprocess_lms_fft_seq_item's c_modest_amplitude) desired_sample
 //  content, mirroring the "one directed + a bit of random" shape used
-//  by smma_cnn_top_random_seq/line_buffer_3x3_random_seq. Kept small:
+//  by cnn_top_random_seq/line_buffer_3x3_random_seq. Kept small:
 //  a handful of extra beats appended after a full directed run is
 //  already plenty of additional coverage without materially extending
 //  run time.

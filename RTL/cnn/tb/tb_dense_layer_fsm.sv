@@ -3,7 +3,7 @@
 module tb_dense_layer_fsm();
 
     logic clk;
-    logic rst;
+    logic reset;
     logic s_valid;
     logic s_ready;
     logic signed [23:0] s_data [0:7];
@@ -17,13 +17,13 @@ module tb_dense_layer_fsm();
     // Instantiate Dense Layer
     dense_layer_fsm #(
         .DATA_WIDTH(24),
-        .FRAC_BITS(16),
+        .FRAC_BITS(15),
         .IN_CHANNELS(8),
         .OUT_CLASSES(4),
         .IN_FEATURES(2048)
     ) dut (
         .clk(clk),
-        .rst(rst),
+        .reset(reset),
         .s_valid(s_valid),
         .s_ready(s_ready),
         .s_data(s_data),
@@ -54,7 +54,7 @@ module tb_dense_layer_fsm();
                 s_last = (i == 255);
                 
                 for (int ch = 0; ch < 8; ch++) begin
-                    s_data[ch] = 24'h01_0000; // 1.0 in Q8.16
+                    s_data[ch] = 24'h00_8000; // 1.0 in Q9.15
                 end
                 
                 @(posedge clk);
@@ -97,11 +97,11 @@ module tb_dense_layer_fsm();
     endtask
 
     initial begin
-        rst = 1'b1;
+        reset = 1'b1;
         s_valid = 1'b0;
         m_ready = 1'b0;
         
-        #22 rst = 1'b0;
+        #22 reset = 1'b0;
         
         fork
             feed_dense();

@@ -24,7 +24,7 @@ interface maxpool_2x2_if (
     localparam int DATA_WIDTH = 24;
     localparam int CHANNELS   = 8;
 
-    logic rst;
+    logic reset;
 
     // AXI4-Stream slave side: input pixels, one per cycle, raster order
     logic                          s_valid;

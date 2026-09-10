@@ -3,7 +3,7 @@
 //
 //  Unlike perceptron_if.sv, `clk` here is the DUT's real clock, not just
 //  a pacing signal: mac.sv is a synchronous accumulator that latches on
-//  posedge clk and resets asynchronously on rst_n. All other signals are
+//  posedge clk and takes its active-high reset there too. All other signals are
 //  plain (non-clocking-block) logic, driven/sampled directly by the
 //  driver/monitor/top on negedge clk, mirroring mac_tb.sv's own style.
 // ---------------------------------------------------------------------
@@ -15,7 +15,7 @@ interface mac_if #(
     input logic clk
 );
 
-    logic rst_n;
+    logic reset;
     logic load;
     logic en;
 

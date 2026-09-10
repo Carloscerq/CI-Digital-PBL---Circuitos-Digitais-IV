@@ -54,7 +54,7 @@ module tb_lms_top;
 
     initial begin
         clk = 1'b0;
-        reset = 1'b0;
+        reset = 1'b1;
         data_in = 0;
         data_valid = 1'b0;
         fft_begin = 1'b0;
@@ -66,7 +66,7 @@ module tb_lms_top;
         outfile = $fopen("fft_input_samples.txt", "w");
 
         #30;
-        reset = 1'b1;
+        reset = 1'b0;
 
         for (i = 0; i < 256; i = i + 1) begin
             signal_r = 0.60 * $sin(2.0 * pi * 5.0 * i / 64.0);

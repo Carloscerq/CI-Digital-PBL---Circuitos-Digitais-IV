@@ -7,7 +7,7 @@
 //  output, like RTL/mlp_model's mlp.sv (start-in/done-out), NOT
 //  per-beat output like conv2d_fsm/line_buffer_3x3.
 //
-//  Fixed at DATA_WIDTH=24/FRAC_BITS=16/IN_CHANNELS=8/OUT_CLASSES=4/
+//  Fixed at DATA_WIDTH=24/FRAC_BITS=15/IN_CHANNELS=8/OUT_CLASSES=4/
 //  IN_FEATURES=2048 -- the same configuration tb_dense_layer_fsm.sv
 //  exercises and the only one this testbench targets, since (like MLP)
 //  this DUT's geometry is tied to a real trained weight ROM
@@ -27,7 +27,7 @@ interface dense_layer_fsm_if (
     localparam int IN_CHANNELS = 8;
     localparam int OUT_CLASSES = 4;
 
-    logic rst;
+    logic reset;
 
     // AXI4-Stream slave side: input pixels, one IN_CHANNELS-wide beat
     // per cycle, pixel-major/channel-minor stream order

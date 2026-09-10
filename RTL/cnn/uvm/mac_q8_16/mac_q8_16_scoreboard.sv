@@ -22,13 +22,13 @@ typedef enum { RESULT_NORMAL, RESULT_OVERFLOW, RESULT_UNDERFLOW } mac_q8_16_resu
 
 class mac_q8_16_scoreboard #(
     int DATA_WIDTH = 24,
-    int FRAC_BITS  = 16,
+    int FRAC_BITS  = 15,
     int MAX_TAPS   = 64
 ) extends uvm_subscriber #(mac_q8_16_seq_item #(DATA_WIDTH, FRAC_BITS, MAX_TAPS));
 
     `uvm_component_param_utils(mac_q8_16_scoreboard #(DATA_WIDTH, FRAC_BITS, MAX_TAPS))
 
-    localparam int ACC_W = 2 * DATA_WIDTH;
+    localparam int ACC_W = (DATA_WIDTH * 2) + 12;  // mac_q8_16 ACC_GUARD
 
     int unsigned match_count    = 0;
     int unsigned mismatch_count = 0;

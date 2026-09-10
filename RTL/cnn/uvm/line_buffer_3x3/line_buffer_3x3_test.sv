@@ -9,6 +9,12 @@
 //  reproduction of tb_line_buffer_3x3.sv's pixel pattern), then a small
 //  randomized-content sweep (see line_buffer_3x3_random_seq), same
 //  shape as mlp_directed_random_test.
+//
+//  Stimulus runs in main_phase, not run_phase: reset is applied in
+//  line_buffer_3x3_driver's UVM reset_phase, and main_phase is the first
+//  run-time phase guaranteed to start only after reset_phase has
+//  dropped its objection -- run_phase spans the whole run-time
+//  schedule, so it would have overlapped reset.
 // ---------------------------------------------------------------------
 class line_buffer_3x3_base_test extends uvm_test;
 
@@ -35,7 +41,7 @@ class line_buffer_3x3_directed_random_test extends line_buffer_3x3_base_test;
         super.new(name, parent);
     endfunction
 
-    task run_phase(uvm_phase phase);
+    task main_phase(uvm_phase phase);
         line_buffer_3x3_directed_seq dseq;
         line_buffer_3x3_random_seq   rseq;
 
@@ -43,6 +49,8 @@ class line_buffer_3x3_directed_random_test extends line_buffer_3x3_base_test;
 
         dseq = line_buffer_3x3_directed_seq::type_id::create("dseq");
         dseq.start(env.agent.sequencer);
+
+        phase.get_objection().set_drain_time(this, 100_000);
 
         rseq = line_buffer_3x3_random_seq::type_id::create("rseq");
         rseq.num_frames = 2;

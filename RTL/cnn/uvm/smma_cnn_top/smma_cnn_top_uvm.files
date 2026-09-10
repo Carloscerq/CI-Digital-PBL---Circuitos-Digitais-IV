@@ -1,9 +1,0 @@
-cnn/rtl/mac_q8_16.sv
-cnn/rtl/line_buffer_3x3.sv
-cnn/rtl/conv2d_fsm.sv
-cnn/rtl/maxpool_2x2.sv
-cnn/rtl/dense_layer_fsm.sv
-cnn/rtl/smma_cnn_top.sv
-cnn/uvm/smma_cnn_top/smma_cnn_top_if.sv
-cnn/uvm/smma_cnn_top/smma_cnn_top_pkg.sv
-cnn/uvm/smma_cnn_top/tb/smma_cnn_top_uvm_top.sv

@@ -10,7 +10,7 @@
 //  (MEM_DEPTH=1024) -- the same default geometry
 //  tb_spectrogram_generator.sv exercises and the only configuration
 //  this testbench targets, for the same "tied to one fixed pipeline
-//  shape, not worth class-parameterizing" reason smma_cnn_top_if.sv /
+//  shape, not worth class-parameterizing" reason cnn_top_if.sv /
 //  line_buffer_3x3_if.sv give. DATA_WIDTH is duplicated here as a
 //  localparam (rather than imported from spectrogram_generator_pkg)
 //  because this interface, like every interface in this repo, is
@@ -24,7 +24,7 @@ interface spectrogram_generator_if (
 
     localparam int DATA_WIDTH = 24;
 
-    logic rst;
+    logic reset;
 
     // AXI4-Stream slave side: one FFT bin per cycle, s_axis_last on the
     // MEM_DEPTH-th (1024th) word of each frame.

@@ -39,7 +39,9 @@ class euclidian_gcd_monitor #(
                 item.in_a = vif.in_a;
                 item.in_b = vif.in_b;
 
-                while (vif.ready !== 1'b1) @(negedge vif.clk);
+                do begin
+                    @(negedge vif.clk);
+                end while (vif.ready !== 1'b1);
 
                 item.out = vif.out;
                 ap.write(item);

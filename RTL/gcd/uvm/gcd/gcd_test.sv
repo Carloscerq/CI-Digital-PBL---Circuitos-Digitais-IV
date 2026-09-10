@@ -11,6 +11,12 @@
 //                             constrained-random sweep (see
 //                             gcd_random_seq), matching gcd_tb.sv's
 //                             RANDOM_TRIALS.
+//
+//  Stimulus runs in main_phase, not run_phase: reset is applied in
+//  gcd_driver's UVM reset_phase, and main_phase is the first
+//  run-time phase guaranteed to start only after reset_phase has
+//  dropped its objection -- run_phase spans the whole run-time
+//  schedule, so it would have overlapped reset.
 // ---------------------------------------------------------------------
 class gcd_base_test #(
     int AMOUNT_OF_NUMBERS = 33,
@@ -40,7 +46,7 @@ class gcd_full_random_test extends gcd_base_test #(33, 32);
         super.new(name, parent);
     endfunction
 
-    task run_phase(uvm_phase phase);
+    task main_phase(uvm_phase phase);
         gcd_directed_seq #(33, 32) dseq;
         gcd_random_seq   #(33, 32) rseq;
 

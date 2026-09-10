@@ -7,9 +7,13 @@
 //                              with the top-level's own testbench using
 //                              SIZE=32).
 //
-//  clk period and the reset sequencing mirror euclidian_gcd_tb.sv exactly
-//  (10ns period; reset_n starts high, then one negedge low, one negedge
-//  high).
+//  The clk period mirrors euclidian_gcd_tb.sv exactly (10ns). Reset is
+//  NOT sequenced here: euclidian_gcd_driver drives it from its UVM
+//  reset_phase, so all interface timing lives inside the phase schedule
+//  and the test's stimulus sits in main_phase, which cannot start
+//  before reset_phase has finished. The pulse itself is unchanged --
+//  euclidian_gcd_tb.sv's reset starts low, then one negedge high, one
+//  negedge low.
 //
 //  No cfg object is needed: like mac, euclidian_gcd has no elaboration-
 //  time parameters for the scoreboard to mirror.
@@ -31,7 +35,7 @@ module euclidian_gcd_uvm_top;
 
     euclidian_gcd #(.SIZE(SIZE)) dut (
         .clk     (vif.clk),
-        .reset_n (vif.reset_n),
+        .reset (vif.reset),
         .start   (vif.start),
         .in_a    (vif.in_a),
         .in_b    (vif.in_b),
@@ -40,14 +44,6 @@ module euclidian_gcd_uvm_top;
     );
 
     initial begin
-        vif.start   = 1'b0;
-        vif.in_a    = '0;
-        vif.in_b    = '0;
-        vif.reset_n = 1'b1;
-
-        @(negedge clk) vif.reset_n = 1'b0;
-        @(negedge clk) vif.reset_n = 1'b1;
-
         uvm_config_db #(virtual euclidian_gcd_if #(SIZE))::set(
             null, "uvm_test_top.env.agent.*", "vif", vif);
 

@@ -98,10 +98,10 @@ assign out_valid = (estado_atual == ENVIA);
 
 
 
-always @(posedge clk or negedge reset)
+always @(posedge clk)
 begin
 
-    if (!reset)
+    if (reset)
     begin
 
         estado_atual <= IDLE;
@@ -261,11 +261,11 @@ end
 
 
 
-always @(posedge clk or negedge reset)
+always @(posedge clk)
 begin
 
 
-    if (!reset)
+    if (reset)
     begin
 
         primeira_amostra <= 1'b1;

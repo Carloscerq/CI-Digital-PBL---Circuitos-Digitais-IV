@@ -4,7 +4,7 @@ module tb_filtro_lms;
 
 
 reg clk;
-reg rst_n;
+reg reset;
 
 reg in_valid;
 
@@ -26,7 +26,7 @@ filtro_lms
 dut
 (
     .clk        (clk),
-    .reset      (rst_n),
+    .reset      (reset),
 
     .in_valid   (in_valid),
 
@@ -72,7 +72,7 @@ end
 initial
 begin
 
-    rst_n = 1'b0;
+    reset = 1'b1;
 
     in_valid = 1'b0;
 
@@ -82,7 +82,7 @@ begin
 
     #30;
 
-    rst_n = 1'b1;
+    reset = 1'b0;
 
     #20;
 

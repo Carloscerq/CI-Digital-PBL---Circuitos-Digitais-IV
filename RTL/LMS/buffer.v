@@ -32,8 +32,8 @@ module buffer #(
         (((read_bank == 1'b0) && bank0_full) ||
          ((read_bank == 1'b1) && bank1_full));
 
-    always @(posedge clk or negedge reset) begin
-        if (!reset) begin
+    always @(posedge clk) begin
+        if (reset) begin
             write_bank <= 1'b0;
             write_addr <= 6'd0;
             bank0_full <= 1'b0;
