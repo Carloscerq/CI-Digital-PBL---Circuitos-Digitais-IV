@@ -10,7 +10,7 @@
 // ---------------------------------------------------------------------
 interface mac_q8_16_if #(
     int DATA_WIDTH = 24,
-    int FRAC_BITS  = 16
+    int FRAC_BITS  = 15
 ) (
     input logic clk
 );

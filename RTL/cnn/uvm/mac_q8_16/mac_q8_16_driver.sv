@@ -25,7 +25,7 @@
 // ---------------------------------------------------------------------
 class mac_q8_16_driver #(
     int DATA_WIDTH = 24,
-    int FRAC_BITS  = 16,
+    int FRAC_BITS  = 15,
     int MAX_TAPS   = 64
 ) extends uvm_driver #(mac_q8_16_seq_item #(DATA_WIDTH, FRAC_BITS, MAX_TAPS));
 

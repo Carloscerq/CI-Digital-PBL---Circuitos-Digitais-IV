@@ -61,7 +61,7 @@ module cnn_top_uvm_top;
 
     cnn_top #(
         .DATA_WIDTH  (24),
-        .FRAC_BITS   (16),
+        .FRAC_BITS   (15),
         .IMG_WIDTH   (32),
         .IMG_HEIGHT  (32),
         .IN_CHANNELS (4),

@@ -46,11 +46,11 @@
 //  computed in a 64-bit longint (comfortably wide: |acc| bounded by
 //  roughly NUM_PIXELS*IN_CHANNELS * 2^(2*(DATA_WIDTH-1)) ~ 2^57, well
 //  under the 64-bit signed range), then reduced to mac_q8_16's real
-//  48-bit (ACC_W = 2*DATA_WIDTH) accumulator width via truncating
+//  ACC_W-bit accumulator width via truncating
 //  part-select -- this reproduces two's-complement wraparound exactly
 //  as the physical acc_reg register would experience it even if an
-//  intermediate partial sum momentarily overflowed 48 bits (modular
-//  arithmetic is associative, so only the FINAL 48-bit residue matters).
+//  intermediate partial sum momentarily overflowed ACC_W bits (modular
+//  arithmetic is associative, so only the FINAL residue matters).
 //  apply_mac_saturate() then reimplements mac_q8_16.sv's truncate +
 //  overflow/underflow + saturate logic bit-for-bit. No ReLU is applied
 //  at the dense output (unlike conv2d_fsm) -- the saturated mac_out IS
@@ -88,6 +88,10 @@ class dense_layer_fsm_scoreboard extends uvm_component;
 
     uvm_analysis_imp_frame  #(dense_layer_fsm_seq_item,    dense_layer_fsm_scoreboard) frame_export;
     uvm_analysis_imp_result #(dense_layer_fsm_result_item, dense_layer_fsm_scoreboard) result_export;
+
+    // mac_q8_16.sv's accumulator width: PROD_WIDTH + ACC_GUARD. It was
+    // 2*DATA_WIDTH, which could not hold this layer's 2049-term worst case.
+    localparam int ACC_W = (DATA_WIDTH * 2) + 12;
 
     // Weight ROM / bias memory, loaded from the same .mem files the DUT
     // reads, independently of the DUT's own copies.
@@ -136,10 +140,9 @@ class dense_layer_fsm_scoreboard extends uvm_component;
     endfunction
 
     // Reimplements mac_q8_16.sv's combinational truncate + saturate
-    // logic bit-for-bit against a 48-bit (ACC_W = 2*DATA_WIDTH)
-    // accumulator value.
+    // logic bit-for-bit against an ACC_W-bit accumulator value.
     function automatic logic signed [DATA_WIDTH-1:0] apply_mac_saturate(
-        input logic signed [(2*DATA_WIDTH)-1:0] acc_w,
+        input logic signed [ACC_W-1:0] acc_w,
         output bit saturated
     );
         logic signed [DATA_WIDTH-1:0] truncated_out;
@@ -147,10 +150,10 @@ class dense_layer_fsm_scoreboard extends uvm_component;
 
         truncated_out = acc_w[FRAC_BITS + DATA_WIDTH - 1 : FRAC_BITS];
 
-        if (!acc_w[(2*DATA_WIDTH)-1] && (|acc_w[(2*DATA_WIDTH)-2 : FRAC_BITS + DATA_WIDTH - 1])) begin
+        if (!acc_w[ACC_W-1] && (|acc_w[ACC_W-2 : FRAC_BITS + DATA_WIDTH - 1])) begin
             overflow  = 1'b1;
             underflow = 1'b0;
-        end else if (acc_w[(2*DATA_WIDTH)-1] && (!(&acc_w[(2*DATA_WIDTH)-2 : FRAC_BITS + DATA_WIDTH - 1]))) begin
+        end else if (acc_w[ACC_W-1] && (!(&acc_w[ACC_W-2 : FRAC_BITS + DATA_WIDTH - 1]))) begin
             overflow  = 1'b0;
             underflow = 1'b1;
         end else begin
@@ -192,10 +195,10 @@ class dense_layer_fsm_scoreboard extends uvm_component;
         frame_sat = 1'b0;
         for (int neuron = 0; neuron < OUT_CLASSES; neuron++) begin
             longint signed acc_full;
-            logic signed [(2*DATA_WIDTH)-1:0] acc_w;
+            logic signed [ACC_W-1:0] acc_w;
 
             acc_full = compute_acc(t, neuron);
-            acc_w    = acc_full[(2*DATA_WIDTH)-1:0]; // wrap to the real 48-bit accumulator width
+            acc_w    = acc_full[ACC_W-1:0];   // wrap to the real accumulator width
 
             exp.logits[neuron] = apply_mac_saturate(acc_w, sat);
             if (sat) frame_sat = 1'b1;

@@ -6,7 +6,7 @@
 //  before this package and before the module that instantiates both it
 //  and the DUT -- same layout line_buffer_3x3_pkg.sv/mlp_pkg.sv use.
 //
-//  Geometry is fixed at DATA_WIDTH=24/FRAC_BITS=16/IMG_WIDTH=32/
+//  Geometry is fixed at DATA_WIDTH=24/FRAC_BITS=15/IMG_WIDTH=32/
 //  IMG_HEIGHT=32/IN_CHANNELS=4/CHANNELS=8/OUT_CLASSES=4/IN_FEATURES=2048,
 //  matching tb_cnn_top.sv's/cnn_top.sv's default instance
 //  parameters exactly -- this DUT's geometry is tied to a real trained
@@ -21,7 +21,7 @@ package cnn_top_pkg;
     `include "uvm_macros.svh"
 
     parameter int DATA_WIDTH  = 24;
-    parameter int FRAC_BITS   = 16;
+    parameter int FRAC_BITS   = 15;
     parameter int IMG_WIDTH   = 32;
     parameter int IMG_HEIGHT  = 32;
     parameter int IN_CHANNELS = 4;

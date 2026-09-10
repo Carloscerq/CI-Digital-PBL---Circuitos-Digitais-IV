@@ -14,7 +14,7 @@
 //  posedges, deasserted mid-cycle -- and m_ready stays with the
 //  monitor, which drives it from time 0.
 //
-//  There's exactly one valid geometry here (DATA_WIDTH=24/FRAC_BITS=16/
+//  There's exactly one valid geometry here (DATA_WIDTH=24/FRAC_BITS=15/
 //  CHANNELS=8/IN_CHANNELS=4, tied to the trained weights in
 //  mem/cnn/conv2d_*.mem, see conv2d_fsm_pkg.sv), so no elaboration-time
 //  cfg object is needed -- unlike perceptron_uvm_top, nothing about the
@@ -39,7 +39,7 @@ module conv2d_fsm_uvm_top;
 
     conv2d_fsm #(
         .DATA_WIDTH (24),
-        .FRAC_BITS  (16),
+        .FRAC_BITS  (15),
         .CHANNELS   (8),
         .IN_CHANNELS(4)
     ) dut (

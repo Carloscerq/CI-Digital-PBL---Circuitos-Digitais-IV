@@ -2,7 +2,7 @@
 //  conv2d_fsm_if  --  connects the UVM agent to the conv2d_fsm DUT.
 //
 //  Fixed to the DUT's default parameterization (DATA_WIDTH=24,
-//  FRAC_BITS=16, CHANNELS=8, IN_CHANNELS=4), matching the values
+//  FRAC_BITS=15, CHANNELS=8, IN_CHANNELS=4), matching the values
 //  conv2d_fsm.sv is instantiated with everywhere else in this repo
 //  (see cnn/tb/tb_conv2d_fsm.sv and sim_cnn.do). `clk` is the DUT's
 //  real clock; `reset` is the DUT's synchronous reset (see
@@ -13,7 +13,7 @@ interface conv2d_fsm_if (
 );
 
     localparam int DATA_WIDTH  = 24;
-    localparam int FRAC_BITS   = 16;
+    localparam int FRAC_BITS   = 15;
     localparam int CHANNELS    = 8;
     localparam int IN_CHANNELS = 4;
 

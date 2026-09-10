@@ -16,7 +16,7 @@
 //  across the first two posedges, deasserted mid-cycle -- and m_ready
 //  stays with the monitor, which drives it from time 0.
 //
-//  There's exactly one valid geometry here (DATA_WIDTH=24/FRAC_BITS=16/
+//  There's exactly one valid geometry here (DATA_WIDTH=24/FRAC_BITS=15/
 //  IN_CHANNELS=8/OUT_CLASSES=4/IN_FEATURES=2048, tied to the trained
 //  weights in mem/cnn/dense_*.mem, see dense_layer_fsm_pkg.sv), so no
 //  elaboration-time cfg object is needed -- unlike perceptron_uvm_top,
@@ -42,7 +42,7 @@ module dense_layer_fsm_uvm_top;
 
     dense_layer_fsm #(
         .DATA_WIDTH (24),
-        .FRAC_BITS  (16),
+        .FRAC_BITS  (15),
         .IN_CHANNELS(8),
         .OUT_CLASSES(4),
         .IN_FEATURES(2048)

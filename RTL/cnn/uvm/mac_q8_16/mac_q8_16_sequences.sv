@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------
 //  mac_q8_16_directed_seq  --  the four hand-checkable jobs from
 //                     tb_mac_q8_16.sv, reproduced with the exact same
-//                     Q8.16 hex literals so the expected results are
+//                     Q9.15 hex literals so the expected results are
 //                     traceable back to that reference testbench:
 //                       1) 1.5 * 2.0        =  3.0   (pos * pos)
 //                       2) 2.0 * -0.5       = -1.0   (pos * neg)
@@ -11,7 +11,10 @@
 //
 //  mac_q8_16_sat_seq  --  MAX_TAPS taps at the widest DATA_WIDTH
 //                     magnitude, both signs, to drive the accumulator
-//                     into overflow and underflow saturation -- the
+//                     into overflow and underflow saturation. 64 products
+//                     of 2^46 reach 2^52, which the old 48-bit accumulator
+//                     wrapped rather than saturated; with ACC_GUARD it now
+//                     exercises the path this sequence names -- the
 //                     behavior mac_q8_16.sv's always_comb block exists
 //                     to handle and tb_mac_q8_16.sv does not itself
 //                     cover.
@@ -24,7 +27,7 @@
 // ---------------------------------------------------------------------
 class mac_q8_16_directed_seq #(
     int DATA_WIDTH = 24,
-    int FRAC_BITS  = 16,
+    int FRAC_BITS  = 15,
     int MAX_TAPS   = 64
 ) extends uvm_sequence #(mac_q8_16_seq_item #(DATA_WIDTH, FRAC_BITS, MAX_TAPS));
 
@@ -42,24 +45,24 @@ class mac_q8_16_directed_seq #(
 
         // 1) Pos * Pos: 1.5 * 2.0 = 3.0
         a1 = new[1]; b1 = new[1];
-        a1[0] = 24'h01_8000; b1[0] = 24'h02_0000;
+        a1[0] = 24'h00_C000; b1[0] = 24'h01_0000;
         send_job(a1, b1);
 
         // 2) Pos * Neg: 2.0 * -0.5 = -1.0
         a2 = new[1]; b2 = new[1];
-        a2[0] = 24'h02_0000; b2[0] = 24'hFF_8000;
+        a2[0] = 24'h01_0000; b2[0] = 24'hFF_C000;
         send_job(a2, b2);
 
         // 3) Neg * Neg: -1.5 * -2.0 = 3.0
         a3 = new[1]; b3 = new[1];
-        a3[0] = 24'hFE_8000; b3[0] = 24'hFE_0000;
+        a3[0] = 24'hFF_4000; b3[0] = 24'hFF_0000;
         send_job(a3, b3);
 
         // 4) 3-tap pipelined accumulation: 1.0 - 1.5 + 0.25 = -0.25
         a4 = new[3]; b4 = new[3];
-        a4[0] = 24'h00_8000; b4[0] = 24'h02_0000;
-        a4[1] = 24'h01_8000; b4[1] = 24'hFF_0000;
-        a4[2] = 24'h00_8000; b4[2] = 24'h00_8000;
+        a4[0] = 24'h00_4000; b4[0] = 24'h01_0000;
+        a4[1] = 24'h00_C000; b4[1] = 24'hFF_8000;
+        a4[2] = 24'h00_4000; b4[2] = 24'h00_4000;
         send_job(a4, b4);
     endtask
 
@@ -77,7 +80,7 @@ endclass
 
 class mac_q8_16_sat_seq #(
     int DATA_WIDTH = 24,
-    int FRAC_BITS  = 16,
+    int FRAC_BITS  = 15,
     int MAX_TAPS   = 64
 ) extends uvm_sequence #(mac_q8_16_seq_item #(DATA_WIDTH, FRAC_BITS, MAX_TAPS));
 
@@ -113,7 +116,7 @@ endclass
 
 class mac_q8_16_random_seq #(
     int DATA_WIDTH = 24,
-    int FRAC_BITS  = 16,
+    int FRAC_BITS  = 15,
     int MAX_TAPS   = 64
 ) extends uvm_sequence #(mac_q8_16_seq_item #(DATA_WIDTH, FRAC_BITS, MAX_TAPS));
 

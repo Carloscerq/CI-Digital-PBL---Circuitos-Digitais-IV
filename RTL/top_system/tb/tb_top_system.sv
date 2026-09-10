@@ -8,16 +8,20 @@
 // outputs and the sticky error bus.
 //
 // >>> SIM_BAUD_NOTE <<<
-// One CNN verdict costs 65_536 UART frames:
+// One CNN verdict costs SPEC_FRAMES spectrogram rows, and one row costs
+// FRAMES_PER_ROUND = DECIM_RATE * FFT_HOP UART frames per channel. Both come
+// from system_types_pkg (FRONT_END_NOTE), so this scales with the build:
 //
-//   32 (FIR decimation) x 64 (HOP_SIZE) = 2_048 frames per FFT round
-//   32 rounds (SPEC_FRAMES)             = 65_536 frames per spectrogram
+//   DECIM_RATE = 32, FFT_HOP = 64 -> 2_048 frames/row -> 65_536 per verdict
+//   DECIM_RATE =  1, FFT_HOP = 64 ->    64 frames/row ->  2_048 per verdict
 //
-// At the production 115_200 baud a frame is 24 bytes x 10 bits x 434 clocks =
-// 104_167 clocks, so a single classification would take 6.8e9 clocks. That is
-// not simulatable. BAUD_RATE is therefore raised for simulation, which shrinks
-// the frame to 7_680 clocks and the run to ~5.0e8 clocks (~10 s of simulated
-// time at 50 MHz).
+// Numbers below are for the decimating build, the expensive case. At the
+// production 115_200 baud a frame is 24 bytes x 10 bits x 434 clocks =
+// 104_160 clocks, so one classification is 6.8e9 clocks. That is only 136 s of
+// SIMULATED time; the obstacle is wall-clock, since Questa turns over roughly
+// 1e5 clocks a second and the run would take about a day. BAUD_RATE is
+// therefore raised for simulation, which shrinks the frame to 7_680 clocks and
+// the run to ~5.0e8 clocks (~10 s of simulated time at 50 MHz).
 //
 // The floor is set by baudrate.sv: RX_ACC_MAX = CLK_FREQ_HZ/(BAUD_RATE*16)
 // must stay >= 2, because RX_ACC_WIDTH = $clog2(RX_ACC_MAX) and a value of 1
@@ -86,10 +90,10 @@ module tb_top_system #(
     localparam int BIT_CLOCKS    = CLK_FREQ_HZ / BAUD_RATE;
     localparam int FRAME_CLOCKS  = FRAME_BYTES * 10 * BIT_CLOCKS;
 
-    // Frames the pipeline needs before each milestone
-    localparam int FRAMES_PER_DECIM = 32;                     // FIR 4*4*2
-    localparam int FRAMES_PER_ROUND = FRAMES_PER_DECIM * 64;  // HOP_SIZE = 64
-    localparam int FRAMES_PER_SPEC  = FRAMES_PER_ROUND * SPEC_FRAMES;
+    // Frames the pipeline needs before each milestone. FRAMES_PER_ROUND comes
+    // from system_types_pkg (= DECIM_RATE * FFT_HOP) so this testbench tracks
+    // whatever front end top_system was built with -- decimating or bypassed.
+    localparam int FRAMES_PER_SPEC = FRAMES_PER_ROUND * SPEC_FRAMES;
 
     // How long to keep clocking after the last frame, waiting for a CNN verdict
     // that is still working its way through the frame buffer and cnn_top.
@@ -193,16 +197,17 @@ module tb_top_system #(
     //
     // The block is AGG_SPAN = one FFT round, so exactly one fresh aggregate is
     // published per MLP inference, and it is held for the whole block the way a
-    // host with one accumulator per channel would. (The training notebook used
-    // a 4096-sample span with a 1024-sample hop; the RTL's decimate-by-32 and
-    // HOP_SIZE = 64 give 2048. The aggregates are near-constant within a run --
-    // temperature varies ~0.2 degC, current power is stationary -- so the span
-    // difference does not move the MLP inputs.)
+    // host with one accumulator per channel would. The span therefore follows
+    // the build: DECIM_RATE * FFT_HOP, which is 2048 frames when decimating and
+    // 64 when the decimator is bypassed. (The training notebook used a
+    // 4096-sample span with a 1024-sample hop.) Either way the aggregates are
+    // near-constant within a run -- temperature varies ~0.2 degC and current
+    // power is stationary -- so the span does not move the MLP inputs.
     localparam int Q_FRAC        = mlp_weights_pkg::Q_FRAC;    // 15
     localparam int AUX_GAIN_LOG2 = 9;                          // host-applied gain
     localparam int TEMP_SHIFT    = Q_FRAC - AUX_GAIN_LOG2;     // 15 - 9  =  6
     localparam int POW_SHIFT     = 2*Q_FRAC - AUX_GAIN_LOG2;   // 30 - 9  = 21
-    localparam int AGG_SPAN      = FRAMES_PER_ROUND;           // 2048 frames
+    localparam int AGG_SPAN      = FRAMES_PER_ROUND;           // one FFT round
 
     localparam longint SAT_HI =  (64'sd1 <<< (DATA_WIDTH-1)) - 1;
     localparam longint SAT_LO = -(64'sd1 <<< (DATA_WIDTH-1));

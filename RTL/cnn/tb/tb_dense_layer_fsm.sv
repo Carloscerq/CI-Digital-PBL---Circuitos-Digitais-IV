@@ -17,7 +17,7 @@ module tb_dense_layer_fsm();
     // Instantiate Dense Layer
     dense_layer_fsm #(
         .DATA_WIDTH(24),
-        .FRAC_BITS(16),
+        .FRAC_BITS(15),
         .IN_CHANNELS(8),
         .OUT_CLASSES(4),
         .IN_FEATURES(2048)
@@ -54,7 +54,7 @@ module tb_dense_layer_fsm();
                 s_last = (i == 255);
                 
                 for (int ch = 0; ch < 8; ch++) begin
-                    s_data[ch] = 24'h01_0000; // 1.0 in Q8.16
+                    s_data[ch] = 24'h00_8000; // 1.0 in Q9.15
                 end
                 
                 @(posedge clk);

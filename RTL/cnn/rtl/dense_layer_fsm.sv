@@ -2,7 +2,7 @@
 
 module dense_layer_fsm #(
     parameter int DATA_WIDTH = 24,
-    parameter int FRAC_BITS = 16,
+    parameter int FRAC_BITS = 15,   // see FRAC_BITS_NOTE in mac_q8_16.sv
     parameter int IN_CHANNELS = 8,
     parameter int OUT_CLASSES = 4,
     parameter int IN_FEATURES = 2048, // Total flattened features

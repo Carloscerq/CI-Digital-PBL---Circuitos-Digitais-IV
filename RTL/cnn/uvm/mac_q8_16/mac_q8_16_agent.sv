@@ -4,7 +4,7 @@
 // ---------------------------------------------------------------------
 class mac_q8_16_agent #(
     int DATA_WIDTH = 24,
-    int FRAC_BITS  = 16,
+    int FRAC_BITS  = 15,
     int MAX_TAPS   = 64
 ) extends uvm_agent;
 

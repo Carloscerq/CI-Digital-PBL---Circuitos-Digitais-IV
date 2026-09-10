@@ -6,7 +6,7 @@
 //  logit-out master side (exactly ONE beat per whole frame, carrying
 //  the 4 named dense-layer logits broken out as separate ports).
 //
-//  Fixed at DATA_WIDTH=24/FRAC_BITS=16/IMG_WIDTH=32/IMG_HEIGHT=32/
+//  Fixed at DATA_WIDTH=24/FRAC_BITS=15/IMG_WIDTH=32/IMG_HEIGHT=32/
 //  IN_CHANNELS=4/CHANNELS=8/OUT_CLASSES=4/IN_FEATURES=2048 -- the same
 //  default geometry tb_cnn_top.sv exercises, and the only
 //  configuration this testbench targets, for the same reason

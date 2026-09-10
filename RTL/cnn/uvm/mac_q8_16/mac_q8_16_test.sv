@@ -4,7 +4,7 @@
 //                     inheritance.
 //
 //  mac_q8_16_default_test  --  the config every CNN block instantiates
-//                     mac_q8_16 with (DATA_WIDTH=24, FRAC_BITS=16): runs
+//                     mac_q8_16 with (DATA_WIDTH=24, FRAC_BITS=15): runs
 //                     the directed corner cases ported from
 //                     tb_mac_q8_16.sv, then the saturation-magnitude
 //                     sweep, then the tap-count-swept random sequence.
@@ -17,7 +17,7 @@
 // ---------------------------------------------------------------------
 class mac_q8_16_base_test #(
     int DATA_WIDTH = 24,
-    int FRAC_BITS  = 16,
+    int FRAC_BITS  = 15,
     int MAX_TAPS   = 64
 ) extends uvm_test;
 
@@ -36,7 +36,7 @@ class mac_q8_16_base_test #(
 
 endclass
 
-class mac_q8_16_default_test extends mac_q8_16_base_test #(24, 16, 64);
+class mac_q8_16_default_test extends mac_q8_16_base_test #(24, 15, 64);
 
     `uvm_component_utils(mac_q8_16_default_test)
 
@@ -45,19 +45,19 @@ class mac_q8_16_default_test extends mac_q8_16_base_test #(24, 16, 64);
     endfunction
 
     task main_phase(uvm_phase phase);
-        mac_q8_16_directed_seq #(24, 16, 64) dseq;
-        mac_q8_16_sat_seq #(24, 16, 64)      sseq;
-        mac_q8_16_random_seq #(24, 16, 64)   rseq;
+        mac_q8_16_directed_seq #(24, 15, 64) dseq;
+        mac_q8_16_sat_seq #(24, 15, 64)      sseq;
+        mac_q8_16_random_seq #(24, 15, 64)   rseq;
 
         phase.raise_objection(this);
 
-        dseq = mac_q8_16_directed_seq #(24, 16, 64)::type_id::create("dseq");
+        dseq = mac_q8_16_directed_seq #(24, 15, 64)::type_id::create("dseq");
         dseq.start(env.agent.sequencer);
 
-        sseq = mac_q8_16_sat_seq #(24, 16, 64)::type_id::create("sseq");
+        sseq = mac_q8_16_sat_seq #(24, 15, 64)::type_id::create("sseq");
         sseq.start(env.agent.sequencer);
 
-        rseq = mac_q8_16_random_seq #(24, 16, 64)::type_id::create("rseq");
+        rseq = mac_q8_16_random_seq #(24, 15, 64)::type_id::create("rseq");
         rseq.num_trials = 40;
         rseq.start(env.agent.sequencer);
 

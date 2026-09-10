@@ -305,6 +305,9 @@ set_global_assignment -name VERILOG_FILE ../FFT/model_sim_four_modes_quartus_sha
 set_global_assignment -name VERILOG_FILE ../FFT/model_sim_four_modes_quartus_shared_fft/rtl/windowing/mean_remover_64_dualmode.v
 set_global_assignment -name SYSTEMVERILOG_FILE ../FFT/model_sim_four_modes_quartus_shared_fft/rtl/pipeline/preprocess_window_channel_no_lms.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../FFT/model_sim_four_modes_quartus_shared_fft/rtl/pipeline/preprocess_fft_shared_4sensor_q915_no_lms.sv
+set_global_assignment -name VERILOG_FILE ../FFT/model_sim_four_modes_quartus_shared_fft/rtl/lms/lms_filter_time_serial.v
+set_global_assignment -name SYSTEMVERILOG_FILE ../FFT/model_sim_four_modes_quartus_shared_fft/rtl/pipeline/preprocess_window_channel_lms.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../FFT/model_sim_four_modes_quartus_shared_fft/rtl/pipeline/preprocess_fft_shared_4sensor_q915_lms.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../cnn/rtl/mac_q8_16.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../cnn/rtl/line_buffer_3x3.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../cnn/rtl/conv2d_fsm.sv

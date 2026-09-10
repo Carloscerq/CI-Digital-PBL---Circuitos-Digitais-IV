@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------
 //  cnn_top_base_test  --  builds the env. cnn_top's geometry
-//  is fixed (DATA_WIDTH=24/FRAC_BITS=16/IMG_WIDTH=32/IMG_HEIGHT=32/
+//  is fixed (DATA_WIDTH=24/FRAC_BITS=15/IMG_WIDTH=32/IMG_HEIGHT=32/
 //  IN_CHANNELS=4/CHANNELS=8/OUT_CLASSES=4/IN_FEATURES=2048, see
 //  cnn_top_pkg.sv), so like mlp_base_test/line_buffer_3x3_base_test
 //  there's nothing to parameterize by inheritance.

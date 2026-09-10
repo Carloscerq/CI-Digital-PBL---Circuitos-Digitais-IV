@@ -16,6 +16,12 @@
 // FFT is registered inside dsp_preprocessing_subsystem's skid buffer, so this
 // mux no longer sits on the FFT's own flow-control path.
 //
+// >>> SPECTROGRAM_VALUE_NOTE <<<
+// The adapter now needs both halves of the beat because it computes |X[k]|
+// rather than forwarding Re(X[k]) -- see MAGNITUDE_NOTE in
+// fft_to_stream_adapter.sv. Everything downstream of it is unchanged: the
+// value is still one signed 24-bit word per bin, only now it is non-negative.
+//
 // >>> FRAME_BUFFER_NOTE <<<
 // frame_pingpong_buffer holds two complete 32 x 32 x 4 frames between the join
 // and the CNN. The CNN needs thousands of cycles per frame, which a depth-2
@@ -79,6 +85,7 @@ module cnn_inference_path #(
                 .fft_bin      (s_beat.bin),
                 .fft_sensor_id(s_beat.sensor_id),
                 .fft_real     (s_beat.re),
+                .fft_imag     (s_beat.im),
                 .s_valid      (spec_s_valid[s]),
                 .s_ready      (spec_s_ready[s]),
                 .s_data       (spec_s_data[s]),

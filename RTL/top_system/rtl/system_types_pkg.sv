@@ -43,6 +43,41 @@ package system_types_pkg;
     localparam int FFT_BIN_W = 6;            // $clog2(FFT_N)
     localparam int SID_W     = 2;            // $clog2(N_VIB)
 
+    // ---- vibration front-end build options ---------------------------------
+    // >>> FRONT_END_NOTE <<<
+    // Single definition point for the three choices that set the vibration
+    // front end's shape. top_system passes them down to
+    // dsp_preprocessing_subsystem, and tb_top_system derives its frame budget
+    // from FRAMES_PER_ROUND, so changing them here changes both together.
+    //
+    // USE_LMS      1 -> preprocess_fft_shared_4sensor_q915_lms (8-tap time-
+    //                   domain LMS per channel, the prediction residual is
+    //                   what reaches the framer)
+    //              0 -> preprocess_fft_shared_4sensor_q915_no_lms
+    //
+    // DECIM_RATE  32 -> fir_decimator_32_dualmode, 25.6 kHz -> 800 Hz, so a
+    //                   64-point FFT resolves 12.5 Hz per bin
+    //              1 -> the decimator is bypassed and the FFT sees the raw
+    //                   25.6 kHz stream, which is 400 Hz per bin
+    //
+    // >>> BIN_SPACING_NOTE <<<
+    // Bin spacing is fs/(DECIM_RATE*FFT_N). At the live DECIM_RATE = 32 that is
+    // 12.5 Hz and the 32 CNN bins cover 0..400 Hz, which is where the
+    // diagnostic content lives. Measured end to end, that build classifies at
+    // 87.9% against 75.0% for the bypass -- ten of eleven held-out captures
+    // exactly right. At DECIM_RATE = 1 the spacing is 400 Hz,
+    // so the whole sub-200 Hz diagnostic band -- shaft rotation, its
+    // harmonics, the bearing fault frequencies -- lands inside bin 0. The
+    // bypass is a build option, not a free one; fft_peak_mdc.sv:9 and
+    // fft_to_mlp_collector.sv:121 both still assume 6.25 Hz per bin, which
+    // needs DECIM_RATE = 64.
+    localparam bit USE_LMS    = 1'b1;
+    localparam int DECIM_RATE = 32;
+    localparam int FFT_HOP    = 64;          // sample_buffer hop, 64 = no overlap
+
+    // Sensor frames consumed per FFT frame, per channel.
+    localparam int FRAMES_PER_ROUND = DECIM_RATE * FFT_HOP;
+
     // ---- UART link ---------------------------------------------------------
     localparam int BYTES_PER_WORD = DATA_WIDTH / 8;                    // 3
     localparam int FRAME_BYTES    = 2 + N_SENSORS*BYTES_PER_WORD + 1;  // 24

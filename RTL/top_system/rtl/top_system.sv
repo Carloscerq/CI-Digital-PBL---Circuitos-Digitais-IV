@@ -87,9 +87,14 @@ module top_system #(
     // ------------------------------------------------------------------------
     // Signal processing
     // ------------------------------------------------------------------------
+    // USE_LMS, DECIM_RATE and FFT_HOP live in system_types_pkg so the RTL and
+    // tb_top_system cannot drift apart. See FRONT_END_NOTE there.
     dsp_preprocessing_subsystem #(
-        .NORMALIZE(1),
-        .HOP_SIZE (64),
+        .NORMALIZE    (1),
+        .HOP_SIZE     (FFT_HOP),
+        .USE_LMS      (USE_LMS),
+        .USE_DECIMATOR(DECIM_RATE != 1),
+        .LMS_MU_SHIFT (16),
         .FIR_STAGE1_FILE("../FFT/model_sim_four_modes_quartus_shared_fft/coefficients/fir/stage1_decim4_q117.bin"),
         .FIR_STAGE2_FILE("../FFT/model_sim_four_modes_quartus_shared_fft/coefficients/fir/stage2_decim4_q117.bin"),
         .FIR_STAGE3_FILE("../FFT/model_sim_four_modes_quartus_shared_fft/coefficients/fir/stage3_decim2_q117.bin"),

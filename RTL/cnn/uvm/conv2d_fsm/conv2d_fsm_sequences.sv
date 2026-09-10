@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------
 //  conv2d_fsm_directed_seq  --  a small hand-computable batch: an
-//  all-zero window, a constant +1.0 (Q8.16) window, and a constant
-//  -1.0 (Q8.16) window -- the same constant patterns tb_conv2d_fsm.sv's
+//  all-zero window, a constant +1.0 (Q9.15) window, and a constant
+//  -1.0 (Q9.15) window -- the same constant patterns tb_conv2d_fsm.sv's
 //  feed_windows(count, positive) drives (24'h01_0000 / 24'hFF_0000),
 //  just now split into two separate directed items instead of one
 //  repeated value, plus the all-zero case tb_conv2d_fsm.sv never tried.
@@ -15,7 +15,7 @@
 //  Full-range 24-bit taps summed over IN_CHANNELS*9+1 = 37 MAC terms
 //  saturate the 48-bit accumulator almost unconditionally, so roughly
 //  1-in-4 windows are constrained to a small magnitude (+-0.125 in
-//  Q8.16) to keep the scoreboard's "not saturated" coverage bin
+//  Q9.15) to keep the scoreboard's "not saturated" coverage bin
 //  reachable alongside the (dominant) saturating case.
 // ---------------------------------------------------------------------
 class conv2d_fsm_directed_seq extends uvm_sequence #(conv2d_fsm_seq_item);
@@ -30,8 +30,8 @@ class conv2d_fsm_directed_seq extends uvm_sequence #(conv2d_fsm_seq_item);
         conv2d_fsm_seq_item item;
         logic signed [23:0] plus_one, minus_one;
 
-        plus_one  = 24'h01_0000; // +1.0 in Q8.16
-        minus_one = 24'hFF_0000; // -1.0 in Q8.16
+        plus_one  = 24'h00_8000; // +1.0 in Q9.15
+        minus_one = 24'hFF_8000; // -1.0 in Q9.15
 
         // 0: all-zero window
         item = conv2d_fsm_seq_item::type_id::create("item");

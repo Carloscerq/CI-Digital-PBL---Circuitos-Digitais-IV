@@ -2,7 +2,7 @@
 
 module conv2d_fsm #(
     parameter int DATA_WIDTH = 24,
-    parameter int FRAC_BITS = 16,
+    parameter int FRAC_BITS = 15,   // see FRAC_BITS_NOTE in mac_q8_16.sv
     parameter int CHANNELS = 8,
     parameter int IN_CHANNELS = 4,
     parameter CONV2_WEIGHTS_FILE = "./mem/cnn/conv2d_weights.mem",

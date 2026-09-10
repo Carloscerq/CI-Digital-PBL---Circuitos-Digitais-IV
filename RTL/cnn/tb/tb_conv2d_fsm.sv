@@ -17,7 +17,7 @@ module tb_conv2d_fsm();
     // Instantiate Conv2D FSM
     conv2d_fsm #(
         .DATA_WIDTH(24),
-        .FRAC_BITS(16),
+        .FRAC_BITS(15),
         .CHANNELS(8),
         .IN_CHANNELS(4)
     ) dut (
@@ -50,7 +50,8 @@ module tb_conv2d_fsm();
                 for (int ch = 0; ch < 4; ch++) begin
                     for (int r = 0; r < 3; r++) begin
                         for (int c = 0; c < 3; c++) begin
-                            s_window[ch][r][c] = positive ? 24'h01_0000 : 24'hFF_0000;
+                            // +1.0 / -1.0 as Q9.15 codes (FRAC_BITS = 15)
+                            s_window[ch][r][c] = positive ? 24'h00_8000 : 24'hFF_8000;
                         end
                     end
                 end

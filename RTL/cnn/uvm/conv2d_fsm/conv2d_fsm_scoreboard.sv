@@ -47,7 +47,7 @@ class conv2d_fsm_scoreboard extends uvm_subscriber #(conv2d_fsm_seq_item);
 
     `uvm_component_utils(conv2d_fsm_scoreboard)
 
-    localparam int ACC_W = DATA_WIDTH * 2; // 48
+    localparam int ACC_W = (DATA_WIDTH * 2) + 12;  // mac_q8_16 ACC_GUARD
 
     // Real trained weights/biases, loaded the same way conv2d_fsm.sv
     // loads them -- same CWD=RTL/ requirement (see run_uvm.sh).

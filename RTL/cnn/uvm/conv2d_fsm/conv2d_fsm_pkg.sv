@@ -6,7 +6,7 @@
 //  the module that instantiates both it and the DUT -- same layout
 //  mlp_pkg.sv/line_buffer_3x3_pkg.sv use.
 //
-//  Geometry is fixed at DATA_WIDTH=24/FRAC_BITS=16/CHANNELS=8/
+//  Geometry is fixed at DATA_WIDTH=24/FRAC_BITS=15/CHANNELS=8/
 //  IN_CHANNELS=4, matching conv2d_fsm.sv's default parameterization
 //  exactly (the same values tb_conv2d_fsm.sv and sim_cnn.do use) -- this
 //  DUT's geometry is tied to its trained weights the same way MLP's is,
@@ -20,7 +20,7 @@ package conv2d_fsm_pkg;
     `include "uvm_macros.svh"
 
     parameter int DATA_WIDTH  = 24;
-    parameter int FRAC_BITS   = 16;
+    parameter int FRAC_BITS   = 15;
     parameter int CHANNELS    = 8;
     parameter int IN_CHANNELS = 4;
 

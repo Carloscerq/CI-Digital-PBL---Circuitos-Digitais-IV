@@ -11,7 +11,7 @@
 // ============================================================================
 module cnn_top #(
     parameter int DATA_WIDTH  = 24,
-    parameter int FRAC_BITS   = 16,
+    parameter int FRAC_BITS   = 15,   // see FRAC_BITS_NOTE in mac_q8_16.sv
     parameter int IMG_WIDTH   = 32,
     parameter int IMG_HEIGHT  = 32,
     parameter int IN_CHANNELS = 4,   // 4 physical sensors
@@ -146,6 +146,23 @@ module cnn_top #(
         .m_data(dense_data),
         .m_last(m_last)
     );
+
+    // ==========================================
+    // Elaboration-time consistency check
+    // ==========================================
+    // IN_FEATURES is a parameter the testbenches override, but it is not free:
+    // the dense layer walks whatever the maxpool actually produces, which is
+    // CHANNELS pooled channels over a (IMG_HEIGHT/2) x (IMG_WIDTH/2) map. If
+    // the image geometry ever changes and IN_FEATURES does not follow, the ROM
+    // address walk silently runs off the end of the feature map instead of
+    // failing, so check it here rather than discovering it in a waveform.
+    localparam int POOLED_FEATURES = CHANNELS * (IMG_HEIGHT / 2) * (IMG_WIDTH / 2);
+
+    initial begin
+        if (IN_FEATURES != POOLED_FEATURES)
+            $fatal(1, "[cnn_top] IN_FEATURES (%0d) != CHANNELS*(IMG_HEIGHT/2)*(IMG_WIDTH/2) (%0d).",
+                   IN_FEATURES, POOLED_FEATURES);
+    end
 
     // Breakout the dense logits to the output ports
     assign m_data_normal    = dense_data[0];

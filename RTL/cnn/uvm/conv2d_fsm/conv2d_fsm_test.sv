@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------
 //  conv2d_fsm_base_test  --  builds the env. conv2d_fsm's geometry is
-//  fixed (DATA_WIDTH=24/FRAC_BITS=16/CHANNELS=8/IN_CHANNELS=4, see
+//  fixed (DATA_WIDTH=24/FRAC_BITS=15/CHANNELS=8/IN_CHANNELS=4, see
 //  conv2d_fsm_pkg.sv), so like mlp_base_test/line_buffer_3x3_base_test
 //  there's nothing to parameterize by inheritance.
 //

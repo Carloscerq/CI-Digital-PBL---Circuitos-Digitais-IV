@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------
 //  dense_layer_fsm_directed_seq  --  reproduces tb_dense_layer_fsm.sv's
 //  exact constant-1.0-input frame: every pixel/channel of the 256x8
-//  frame is Q8.16 24'h01_0000. This is a useful cross-check even though
+//  frame is Q9.15 24'h00_8000. This is a useful cross-check even though
 //  it has no hand-derivable expected value baked into the original tb
 //  (the old hardcoded numeric check was removed once real trained
 //  weights replaced placeholder ones, see tb_dense_layer_fsm.sv's
@@ -32,7 +32,7 @@ class dense_layer_fsm_directed_seq extends uvm_sequence #(dense_layer_fsm_seq_it
 
         for (int p = 0; p < NUM_PIXELS; p++)
             for (int ch = 0; ch < IN_CHANNELS; ch++)
-                item.pixels[p][ch] = 24'h01_0000; // 1.0 in Q8.16
+                item.pixels[p][ch] = 24'h00_8000; // 1.0 in Q9.15
 
         start_item(item);
         finish_item(item);

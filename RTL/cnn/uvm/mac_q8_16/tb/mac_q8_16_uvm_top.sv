@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------
 //  mac_q8_16_uvm_top  --  DUT + interface + UVM entry point for the
 //                    default configuration every CNN block instantiates
-//                    mac_q8_16 with: DATA_WIDTH=24, FRAC_BITS=16. The
+//                    mac_q8_16 with: DATA_WIDTH=24, FRAC_BITS=15. The
 //                    clock period mirrors tb_mac_q8_16.sv exactly
 //                    (100MHz / 10ns period).
 //
@@ -25,7 +25,7 @@ module mac_q8_16_uvm_top;
     import mac_q8_16_pkg::*;
 
     localparam int DATA_WIDTH = 24;
-    localparam int FRAC_BITS  = 16;
+    localparam int FRAC_BITS  = 15;
     localparam int MAX_TAPS   = 64;
 
     logic clk = 1'b0;
