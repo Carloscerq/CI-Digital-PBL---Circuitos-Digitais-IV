@@ -114,10 +114,12 @@ module top_system #(
     // ------------------------------------------------------------------------
     // Path A: MLP
     // ------------------------------------------------------------------------
+    // MDC_K_MAX is derived from DECIM_RATE in system_types_pkg -- it is a
+    // 162.5 Hz band, not a fixed bin index. See MDC_BAND_NOTE.
     mlp_inference_path #(
-        .MDC_K_MAX(26),
-        .MDC_K_MIN(2),
-        .MDC_PEAKS(3)
+        .MDC_K_MAX(MDC_K_MAX),
+        .MDC_K_MIN(MDC_K_MIN),
+        .MDC_PEAKS(MDC_PEAKS)
     ) u_mlp_path (
         .clk          (clk),
         .reset        (reset),

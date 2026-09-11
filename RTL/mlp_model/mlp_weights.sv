@@ -23,7 +23,7 @@ package mlp_weights_pkg;
     //                          (negativo = deslocamento a direita).
     localparam int N_BINS  = 128;
     localparam int N_EXTRA = 4;
-    localparam int EXTRA_SHIFT [4] = '{-6, -6, -5, -6};
+    localparam int EXTRA_SHIFT [4] = '{-4, -4, -4, -4};
 
     // ---------------------------------------------------------------
     // ROM layout (see build_roms() in the generator)

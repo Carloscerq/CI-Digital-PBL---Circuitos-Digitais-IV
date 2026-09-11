@@ -16,9 +16,13 @@
 // a whole round.
 // ============================================================================
 module mlp_inference_path #(
-    parameter int MDC_K_MAX = 26,      // notebook MDC_K_MAX
-    parameter int MDC_K_MIN = 2,       // notebook MDC_K_MIN
-    parameter int MDC_PEAKS = 3        // notebook MDC_N_PEAKS
+    // Overridden from system_types_pkg, where MDC_K_MAX is DERIVED from
+    // DECIM_RATE: it is a 162.5 Hz search band, not a fixed bin index. These
+    // defaults match the live DECIM_RATE = 32 build. See MDC_BAND_NOTE in
+    // system_types_pkg.sv and K_MAX_NOTE in fft_peak_mdc.sv.
+    parameter int MDC_K_MAX = 13,      // 162.5 Hz at 12.5 Hz/bin
+    parameter int MDC_K_MIN = 2,
+    parameter int MDC_PEAKS = 3
 )(
     input  logic clk,
     input  logic reset,                          // synchronous, active high
