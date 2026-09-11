@@ -3,25 +3,54 @@
 // ============================================================================
 // fft_peak_mdc -- spectral peak detector + GCD module (Euclid)
 // ============================================================================
-// Implements the training notebook's "modulo MDC" (cells 38/39): sum the four
-// vibration channels bin by bin, take the three strongest LOCAL MAXIMA above a
-// relative threshold inside bins 1..K_MAX, and return their GCD as k0, the
-// fundamental rotation bin. f0 = k0 * fs'/N = k0 * 6.25 Hz.
+// Sum the four vibration channels bin by bin, take the three strongest LOCAL
+// MAXIMA above a relative threshold inside bins 1..K_MAX, and return their GCD
+// as k0, the fundamental rotation bin. f0 = k0 * fs/(DECIM_RATE*FFT_N), which
+// at the live DECIM_RATE = 32 is k0 * 12.5 Hz.
 //
-// K_MAX = 26 is load-bearing and deliberately NARROWER than the 32-bin feature
-// band: the notebook measured lock rates of 89.8% at bins 1..26 against 31.9%
-// at 1..28 and 0.9% at 1..31. Widening it to match SPEC_BINS looks like an
-// obvious cleanup and silently destroys the module.
+// >>> K_MAX_NOTE <<<
+// K_MAX is a FREQUENCY limit wearing a bin index, so it tracks the decimation
+// rate. The band that works is ~162.5 Hz: one bin of headroom above the shaft
+// 3x (150 Hz), and below the 168.8/182.8/193.8/200.8 Hz machine lines, which
+// are NOT rotation harmonics and wreck the GCD when they reach the top three
+// (gcd(4,8,14) = 2). That is bin 26 at 6.25 Hz/bin and bin 13 at 12.5 Hz/bin,
+// so top_system derives K_MAX from DECIM_RATE instead of passing a constant
+// (MDC_BAND_NOTE in system_types_pkg.sv) and the two cannot drift apart again.
 //
-// An invalid result is itself a diagnostic: the notebook's bearing-fault runs
-// (*_BPFI_30) never lock at all, so mdc_valid staying low is information, not
-// just an error.
+// Measured over the 56 250 frames of all 45 captures at the live 12.5 Hz/bin,
+// with the hold register reset per capture, by replaying this module on the
+// real front end (Scripts/train_mlp.py --no-export):
+//
+//   K_MAX  band     locks   held k0 = 4   modal k0 when it locks
+//      12  150 Hz   11.8%   52.6%         4  = 50.0 Hz, correct
+//      13  162 Hz   11.8%   52.6%         4  = 50.0 Hz, correct   <-- live
+//      14  175 Hz   33.6%   13.5%         2  = 25.0 Hz, wrong (168.8 Hz line)
+//      26  325 Hz   26.7%    3.0%         3  = 37.5 Hz, wrong
+//
+// A wider band locks MORE OFTEN onto the WRONG thing. 26 was inherited from the
+// 6.25 Hz/bin build, where it meant the same 162.5 Hz; carried over unchanged
+// to 12.5 Hz/bin it reports 37.5 Hz for a shaft that turns at 50, which is why
+// K_MAX is now derived rather than pasted. Widening it to match SPEC_BINS looks
+// like an obvious cleanup and silently destroys the module.
+//
+// >>> HONEST_TRADEOFF_NOTE <<<
+// Correcting the band makes the ESTIMATOR right and the CLASSIFIER slightly
+// worse, and it is worth knowing why before someone "fixes" it back. In a
+// 13-bin band three local maxima are rare, so the module locks on only ~12% of
+// frames and 42% of frames sit at k0 = 0, never having locked yet within their
+// capture. That turns k0 into a "has this capture locked yet" flag, which
+// correlates with capture identity and does not survive a split by capture:
+// macro recall 0.755 against 0.805 for the old wrong-but-noisy k0, and 0.808
+// with no k0 information at all. Lowering THR_SH only reaches ~20% lock; the
+// binding constraint is N_PEAKS = 3, which is fixed because the tracker below
+// is unrolled. So k0 is carried because the fundamental frequency is a required
+// output, not because it earns its place in the feature vector.
 // ============================================================================
 
 module fft_peak_mdc #(
     parameter int DATA_WIDTH = 24,
     parameter int N_VIB      = 4,    // channels summed; MUST BE A POWER OF 2
-    parameter int K_MAX      = 26,   // last bin of the search (MDC_K_MAX)
+    parameter int K_MAX      = 13,   // last bin of the search -- see K_MAX_NOTE
     parameter int K_MIN      = 2,    // k0 < K_MIN => invalid (MDC_K_MIN)
     parameter int N_PEAKS    = 3,    // fixed at 3: the tracker is unrolled
     // Relative threshold. The notebook uses 0.15; here it becomes
@@ -52,7 +81,7 @@ module fft_peak_mdc #(
     // starts at 1) but it is the left neighbour of k = 1.
     localparam int ACC_N = K_MAX + 2;
     localparam int ACC_W = DATA_WIDTH + $clog2(N_VIB);   // 24 + 2 = 26
-    localparam int K_W   = $clog2(ACC_N);                // 5
+    localparam int K_W   = $clog2(ACC_N);                // 4 at K_MAX = 13
 
     localparam logic [2:0] S_IDLE = 3'd0,   // waiting for a round to end
                            S_MAX  = 3'd1,   // pass 1: largest bin in the band
@@ -212,14 +241,14 @@ module fft_peak_mdc #(
                         if (n_peaks != 2'd3) n_peaks <= n_peaks + 2'd1;
 
                         if (a_cur > pmag1) begin
-                            pmag1 <= a_cur;  pk1 <= {1'b0, k};
+                            pmag1 <= a_cur;  pk1 <= 6'(k);
                             pmag2 <= pmag1;  pk2 <= pk1;
                             pmag3 <= pmag2;  pk3 <= pk2;
                         end else if (a_cur > pmag2) begin
-                            pmag2 <= a_cur;  pk2 <= {1'b0, k};
+                            pmag2 <= a_cur;  pk2 <= 6'(k);
                             pmag3 <= pmag2;  pk3 <= pk2;
                         end else if (a_cur > pmag3) begin
-                            pmag3 <= a_cur;  pk3 <= {1'b0, k};
+                            pmag3 <= a_cur;  pk3 <= 6'(k);
                         end
                     end
 

@@ -116,10 +116,14 @@ module fft_to_mlp_collector #(
 
     // >>> MDC_K0_NOTE <<<
     // mdc_k0 is born INSIDE the FPGA as a plain bin index, so unlike the three
-    // UART aggregates it never picks up the 2^9 datapath gain. Net shift is
-    // therefore HW_GAIN_LOG2 + EXTRA_SHIFT[3] = 9 - 6 = +3.
-    // k0 = 8 (50 Hz) -> 64, exactly the top of the 0..64 range the model expects.
-    localparam int MDC_NET_SHIFT = HW_GAIN_LOG2 + EXTRA_SHIFT[3];  // 9 - 6 = 3
+    // UART aggregates it never picks up the 2^9 datapath gain. The shift here
+    // therefore carries BOTH: HW_GAIN_LOG2 + EXTRA_SHIFT[3], which at the
+    // current weights is 9 - 4 = +5. Whatever EXTRA_SHIFT[3] the training run
+    // lands on, the model sees k0 on the same 2^9 footing as the other three.
+    // The sum must stay >= 0 -- this is a left shift and has no right-shift
+    // counterpart; Scripts/train_mlp.py warns at export time if it goes
+    // negative. At 12.5 Hz/bin the shaft 1x is k0 = 4 (50 Hz) -> 128.
+    localparam int MDC_NET_SHIFT = HW_GAIN_LOG2 + EXTRA_SHIFT[3];  // 9 - 4 = 5
     assign extra_scaled[3] = mdc_k0 <<< MDC_NET_SHIFT;
 
     // ------------------------------------------------------------------

@@ -104,14 +104,28 @@ fixed-point images that the RTL reads directly:
 ```bash
 cd Scripts
 pip install -r requirements.txt
-jupyter lab                       # mlp_training.ipynb / cnn/SMMA_Pipeline.ipynb
 
-# then regenerate the MLP ROM images + dimension package
-python3 export/gen_mlp_weights_sv.py mlp_lowband_weights.h
+# MLP: retrain end to end and rewrite every weight artefact
+python3 train_mlp.py --cache feats.npz
+
+# CNN
+jupyter lab                       # cnn/SMMA_Pipeline.ipynb
 ```
 
-This rewrites `RTL/mem/mlp/*.mem` and `RTL/mlp_model/mlp_weights.sv`. Do not
-edit either by hand.
+`train_mlp.py` re-derives the features by **replaying the front end the RTL
+actually runs** — `FIR/32 → 8-tap time-domain LMS (residual) → frame → mean
+removal → Hann → FFT64 → |·|` — rather than the CIC-and-post-FFT-LMS path the
+old `mlp_training.ipynb` used, and then writes `Scripts/export/*`,
+`RTL/mem/mlp/*.mem` and `RTL/mlp_model/mlp_weights.sv`. It reads the FIR and
+Hann coefficient ROMs straight out of `RTL/FFT/`, so the model and the fabric
+cannot drift apart. Do not edit the generated files by hand.
+
+A full run from the raw captures takes about 90 s (roughly 75 s of that is the
+front-end pass over the 45 captures, ~2 s each); `--cache` saves the extracted
+features and brings a re-run down to ~14 s. Everything is seeded, so a re-run
+reproduces the committed `.mem` images byte for byte. Pass `--no-export` to get
+the accuracy report without touching any weights, and `--lms-mu-shift` /
+`--no-lms` to model a different front-end build.
 
 ## Status
 

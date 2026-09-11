@@ -68,12 +68,32 @@ package system_types_pkg;
     // exactly right. At DECIM_RATE = 1 the spacing is 400 Hz,
     // so the whole sub-200 Hz diagnostic band -- shaft rotation, its
     // harmonics, the bearing fault frequencies -- lands inside bin 0. The
-    // bypass is a build option, not a free one; fft_peak_mdc.sv:9 and
-    // fft_to_mlp_collector.sv:121 both still assume 6.25 Hz per bin, which
-    // needs DECIM_RATE = 64.
+    // bypass is a build option, not a free one.
+    //
+    // Everything downstream that thinks in HERTZ now derives its bin indices
+    // from DECIM_RATE rather than hardcoding them (see MDC_K_MAX below), and
+    // the MLP weights are trained against this exact spacing by
+    // Scripts/train_mlp.py. Change DECIM_RATE and you must retrain: the bins
+    // move, so the weights no longer mean what they meant.
     localparam bit USE_LMS    = 1'b1;
     localparam int DECIM_RATE = 32;
     localparam int FFT_HOP    = 64;          // sample_buffer hop, 64 = no overlap
+
+    // ---- MDC search band ---------------------------------------------------
+    // >>> MDC_BAND_NOTE <<<
+    // The peak search that feeds the GCD module is limited to a FREQUENCY
+    // band, not a bin count: ~162.5 Hz, which clears the shaft 3x (150 Hz) by
+    // one bin and stops below the 168.8 Hz machine line that is not a rotation
+    // harmonic and destroys the GCD. Hardcoding the bin index is what let this
+    // drift when DECIM_RATE went 64 -> 32; deriving it keeps the two locked.
+    // Tenths of a hertz keep the division exact at both rates:
+    //   DECIM_RATE 32 -> 12.5 Hz/bin -> 13     DECIM_RATE 64 -> 6.25 -> 26
+    // See K_MAX_NOTE in fft_peak_mdc.sv for the measurements behind 162.5 Hz.
+    localparam int SAMPLE_RATE_DHZ = 256_000;   // 25.6 kHz in tenths of a hertz
+    localparam int MDC_BAND_DHZ    = 1_625;     // 162.5 Hz
+    localparam int MDC_K_MAX = (MDC_BAND_DHZ * DECIM_RATE * FFT_N) / SAMPLE_RATE_DHZ;
+    localparam int MDC_K_MIN = 2;               // k0 < 2 => no harmonic series
+    localparam int MDC_PEAKS = 3;               // the top-3 tracker is unrolled
 
     // Sensor frames consumed per FFT frame, per channel.
     localparam int FRAMES_PER_ROUND = DECIM_RATE * FFT_HOP;
