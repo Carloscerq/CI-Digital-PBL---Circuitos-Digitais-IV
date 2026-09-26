@@ -1,5 +1,5 @@
 EDA Netlist Writer report for quartus
-Thu Sep 10 11:05:31 2026
+Sat Sep 26 10:30:35 2026
 Quartus Prime Version 25.1std.0 Build 1129 10/21/2025 SC Lite Edition
 
 
@@ -37,9 +37,9 @@ on the Quartus Prime software download page.
 +-------------------------------------------------------------------+
 ; EDA Netlist Writer Summary                                        ;
 +---------------------------+---------------------------------------+
-; EDA Netlist Writer Status ; Successful - Thu Sep 10 11:05:31 2026 ;
+; EDA Netlist Writer Status ; Successful - Sat Sep 26 10:30:35 2026 ;
 ; Revision Name             ; quartus                               ;
-; Top-level Entity Name     ; top_system                            ;
+; Top-level Entity Name     ; top_system_de0cv                      ;
 ; Family                    ; Cyclone V                             ;
 ; Simulation Files Creation ; Successful                            ;
 +---------------------------+---------------------------------------+
@@ -66,13 +66,13 @@ on the Quartus Prime software download page.
 +---------------------------------------------------------------------------------------------------+---------------------------+
 
 
-+------------------------------------------------------------------------------------------------------------------+
-; Simulation Generated Files                                                                                       ;
-+------------------------------------------------------------------------------------------------------------------+
-; Generated Files                                                                                                  ;
-+------------------------------------------------------------------------------------------------------------------+
-; /home/felipe/Documents/Projects/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/simulation/questa/quartus.svo ;
-+------------------------------------------------------------------------------------------------------------------+
++----------------------------------------------------------------------------------------------------------+
+; Simulation Generated Files                                                                               ;
++----------------------------------------------------------------------------------------------------------+
+; Generated Files                                                                                          ;
++----------------------------------------------------------------------------------------------------------+
+; /home/carlos/CI_Digital/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/simulation/questa/quartus.svo ;
++----------------------------------------------------------------------------------------------------------+
 
 
 +-----------------------------+
@@ -81,14 +81,14 @@ on the Quartus Prime software download page.
 Info: *******************************************************************
 Info: Running Quartus Prime EDA Netlist Writer
     Info: Version 25.1std.0 Build 1129 10/21/2025 SC Lite Edition
-    Info: Processing started: Thu Sep 10 11:05:28 2026
+    Info: Processing started: Sat Sep 26 10:30:27 2026
 Info: Command: quartus_eda --read_settings_files=off --write_settings_files=off quartus -c quartus
 Warning (18236): Number of processors has not been specified which may cause overloading on shared machines.  Set the global assignment NUM_PARALLEL_PROCESSORS in your QSF to an appropriate value for best performance.
-Info (204019): Generated file quartus.svo in folder "/home/felipe/Documents/Projects/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/simulation/questa/" for EDA simulation tool
+Info (204019): Generated file quartus.svo in folder "/home/carlos/CI_Digital/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus/simulation/questa/" for EDA simulation tool
 Info: Quartus Prime EDA Netlist Writer was successful. 0 errors, 1 warning
-    Info: Peak virtual memory: 863 megabytes
-    Info: Processing ended: Thu Sep 10 11:05:31 2026
-    Info: Elapsed time: 00:00:03
-    Info: Total CPU time (on all processors): 00:00:03
+    Info: Peak virtual memory: 913 megabytes
+    Info: Processing ended: Sat Sep 26 10:30:35 2026
+    Info: Elapsed time: 00:00:08
+    Info: Total CPU time (on all processors): 00:00:08
 
 

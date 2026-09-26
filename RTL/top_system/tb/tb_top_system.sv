@@ -105,7 +105,7 @@ module tb_top_system #(
     // ------------------------------------------------------------------
     string mode      = "stream";                   // "stream" | "uart"
     string scenario  = "0Nm_Normal";
-    string data_root = "../../Scripts/process_dataset/dataset_q915";
+    string data_root = "../../Scripts/dataset_q915";
 
     int    max_frames  = 0;                        // 0 = derive from targets
     int    cnn_target  = 1;                        // stop after N CNN verdicts
@@ -429,6 +429,7 @@ module tb_top_system #(
             $display("[%0t] MLP  #%0d  class=%0d (%s)  after %0d frames",
                      $time, mlp_results, last_mlp_class,
                      class_name(last_mlp_class), frames_sent);
+            $display("status_led: %b", status_leds);
         end
     end
 
