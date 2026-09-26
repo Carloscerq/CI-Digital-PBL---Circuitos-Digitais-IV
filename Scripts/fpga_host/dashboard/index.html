@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bancada FPGA</title>
+<style>
+  /* Tokens by role; light is the base, dark redefines the same names. The
+     categorical pair (MLP / CNN, host / FPGA) is slots 1-2 of the reference
+     palette, validated for both modes. Status colours are reserved for state
+     and always travel with an icon and a word. */
+  :root {
+    color-scheme: light;
+    --surface-0: #f4f3ef;
+    --surface-1: #fcfcfb;
+    --border:    #e2e1dc;
+    --grid:      #ebeae5;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #7a7974;
+    --series-1: #2a78d6;
+    --series-2: #eb6834;
+    --good:     #0ca30c;
+    --warning:  #fab219;
+    --critical: #d03b3b;
+    --good-ink:     #006300;
+    --critical-ink: #b02a2a;
+    --warning-ink:  #8a5a00;
+    --seq-100: #cde2fb; --seq-200: #9ec5f4; --seq-300: #6da7ec; --seq-400: #3987e5;
+    --seq-500: #256abf; --seq-600: #184f95; --seq-700: #0d366b;
+    --empty-cell: #f0efec;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --surface-0: #121211; --surface-1: #1a1a19; --border: #2e2e2b; --grid: #2a2a27;
+      --text-primary: #ffffff; --text-secondary: #c3c2b7; --text-muted: #8f8e86;
+      --series-1: #3987e5; --series-2: #d95926;
+      --good-ink: #4fd24f; --critical-ink: #ff8a8a; --warning-ink: #fab219;
+      --empty-cell: #262624;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-0: #121211; --surface-1: #1a1a19; --border: #2e2e2b; --grid: #2a2a27;
+    --text-primary: #ffffff; --text-secondary: #c3c2b7; --text-muted: #8f8e86;
+    --series-1: #3987e5; --series-2: #d95926;
+    --good-ink: #4fd24f; --critical-ink: #ff8a8a; --warning-ink: #fab219;
+    --empty-cell: #262624;
+  }
+
+  * { box-sizing: border-box; }
+  /* Components set their own display; `hidden` must still win over them. */
+  [hidden] { display: none !important; }
+  body {
+    margin: 0; background: var(--surface-0); color: var(--text-primary);
+    font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 20px 16px 48px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; margin-bottom: 16px; }
+  h1 { font-size: 20px; margin: 0; font-weight: 650; }
+  h2 { font-size: 13px; margin: 0 0 12px; font-weight: 600; color: var(--text-secondary);
+       text-transform: uppercase; letter-spacing: .04em; }
+  .meta { color: var(--text-secondary); font-size: 13px; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 2px 10px;
+          border-radius: 999px; border: 1px solid var(--border); background: var(--surface-1); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+  .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .row { display: grid; gap: 12px; margin-bottom: 12px; }
+  .tiles { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+  .two   { grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); }
+  @media (max-width: 480px) { .two { grid-template-columns: 1fr; } }
+
+  /* controls: one row above everything, never inside a chart card */
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+  .controls label { font-size: 13px; color: var(--text-secondary); display: inline-flex; align-items: center; gap: 6px; }
+  select, input[type=number] {
+    font: inherit; color: var(--text-primary); background: var(--surface-0);
+    border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px;
+  }
+  select { max-width: 240px; }
+  input[type=number] { width: 84px; }
+  button {
+    font: inherit; font-size: 13px; padding: 6px 14px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--surface-0); color: var(--text-primary);
+  }
+  button.primary { background: var(--series-1); border-color: var(--series-1); color: #fff; font-weight: 600; }
+  button:disabled { opacity: .45; cursor: default; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .seg button { border: 0; border-radius: 0; }
+  .seg button[aria-pressed="true"] { background: var(--text-primary); color: var(--surface-1); }
+  .plan { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; }
+  .chip { font-size: 12px; padding: 3px 4px 3px 10px; border-radius: 999px; border: 1px solid var(--border);
+          display: inline-flex; align-items: center; gap: 4px; background: var(--surface-0); }
+  .chip.active { border-color: var(--series-1); }
+  .chip button { padding: 0 6px; border: 0; background: none; color: var(--text-muted); }
+  .hint { font-size: 12px; color: var(--text-muted); width: 100%; }
+
+  .tile .label { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
+  .tile .hero  { font-size: 32px; font-weight: 650; line-height: 1.1; }
+  .tile .sub   { font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+  .status { display: inline-flex; align-items: center; gap: 8px; }
+  .icon { font-size: .85em; }
+  .ok   { color: var(--good-ink); }
+  .bad  { color: var(--critical-ink); }
+  .warn { color: var(--warning-ink); }
+  .muted { color: var(--text-muted); }
+  .errs { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .errs span { font-size: 11px; padding: 1px 7px; border-radius: 4px; border: 1px solid var(--border); }
+  .errs span.on { border-color: var(--critical); color: var(--critical-ink); font-weight: 600; }
+
+  .banner { border-left: 4px solid var(--warning); padding: 10px 14px; margin-bottom: 12px; }
+  .banner[hidden] { display: none; }
+
+  .now { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px 20px; }
+  .now .k { font-size: 12px; color: var(--text-secondary); }
+  .now .v { font-size: 15px; font-weight: 600; }
+  .progress { height: 6px; border-radius: 3px; background: var(--grid); overflow: hidden; margin-top: 6px; }
+  .progress > i { display: block; height: 100%; background: var(--series-2); border-radius: 3px; }
+
+  /* charts */
+  .chart { width: 100%; }
+  .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .legend { display: flex; gap: 16px; font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
+  .legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; border-radius: 1px; }
+  .legend i.sq { width: 10px; height: 10px; border-radius: 2px; }
+  .axis text { fill: var(--text-muted); font-size: 11px; }
+  .gridline { stroke: var(--grid); stroke-width: 1; }
+  .empty { color: var(--text-muted); font-size: 13px; padding: 24px 0; text-align: center; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-weight: 600; color: var(--text-secondary); font-size: 12px;
+       padding: 6px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 6px 8px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+  .scroll { overflow-x: auto; }
+  .tall { max-height: 420px; overflow: auto; }
+  .barcell { display: flex; align-items: center; gap: 8px; min-width: 150px; }
+  .bar { flex: 1; min-width: 36px; height: 10px; background: var(--grid); border-radius: 0 4px 4px 0; overflow: hidden; }
+  #per td:first-child { word-break: break-word; min-width: 120px; }
+  #per td:first-child .tag { display: inline-block; margin: 2px 0 0; }
+  .bar > i { display: block; height: 100%; border-radius: 0 4px 4px 0; }
+  .barcell .n { font-size: 12px; color: var(--text-secondary); white-space: nowrap; text-align: right; }
+  .tag { font-size: 11px; color: var(--text-muted); border: 1px solid var(--border); border-radius: 4px; padding: 0 5px; margin-left: 6px; }
+
+  /* Grid items default to min-width:auto, which lets a wide table push the
+     whole column past the viewport; min-width:0 keeps it inside its card and
+     each matrix scrolls on its own instead. */
+  .row > .card, .cm > div { min-width: 0; }
+  .cm { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 16px; }
+  .cm > div { overflow-x: auto; }
+  .cm table { font-size: 12px; }
+  .cm td.cell { text-align: center; font-weight: 500; border: 2px solid var(--surface-1); border-radius: 4px; }
+  .cm td.diag { font-weight: 750; }
+  .cm th.rowh { color: var(--text-secondary); font-weight: 500; }
+  .cm caption { text-align: left; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .axis-note { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+
+  #tip { position: fixed; pointer-events: none; z-index: 10; background: var(--text-primary); color: var(--surface-1);
+         font-size: 12px; padding: 6px 9px; border-radius: 6px; max-width: 280px; line-height: 1.4; }
+  #tip[hidden] { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Bancada FPGA · top_system</h1>
+    <span class="pill" id="conn"><span class="dot"></span><span>—</span></span>
+    <span class="meta" id="portinfo"></span>
+  </header>
+
+  <div class="card banner" id="banner" hidden></div>
+
+  <!-- Controls: the only filter row, above every chart. -->
+  <div class="card row" style="margin-bottom:12px">
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Modo">
+        <button id="mode-single" aria-pressed="true">Cenário único</button>
+        <button id="mode-seq" aria-pressed="false">Sequência</button>
+      </div>
+      <label>Cenário <select id="scenario"></select></label>
+      <label>Duração (s) <input type="number" id="seconds" min="0" step="10" value="0"></label>
+      <button id="add" hidden>Adicionar</button>
+      <button id="preset" hidden>Todos os completos</button>
+      <label id="loop-wrap" hidden><input type="checkbox" id="loop"> repetir</label>
+      <button class="primary" id="start">Iniciar</button>
+      <button id="stop">Parar</button>
+      <button id="reset" title="Zera vereditos e contadores do painel; a placa não é resetada">Zerar estatísticas</button>
+      <a id="csv" href="/api/verdicts.csv"><button type="button">Exportar CSV</button></a>
+      <div class="plan" id="plan" hidden></div>
+      <div class="hint" id="hint"></div>
+    </div>
+  </div>
+
+  <!-- Headline tiles -->
+  <div class="row tiles">
+    <div class="card tile">
+      <div class="label">LEDs da placa (status_leds)</div>
+      <div class="hero" id="t-status">—</div>
+      <div class="sub" id="t-status-sub">&nbsp;</div>
+    </div>
+    <div class="card tile">
+      <div class="label">MLP · acurácia da classe</div>
+      <div class="hero" id="t-mlp">—</div>
+      <div class="sub" id="t-mlp-sub">&nbsp;</div>
+    </div>
+    <div class="card tile">
+      <div class="label">CNN · acurácia da classe</div>
+      <div class="hero" id="t-cnn">—</div>
+      <div class="sub" id="t-cnn-sub">&nbsp;</div>
+    </div>
+    <div class="card tile">
+      <div class="label">Link USB-UART</div>
+      <div class="hero" id="t-link">—</div>
+      <div class="sub" id="t-link-sub">&nbsp;</div>
+    </div>
+    <div class="card tile">
+      <div class="label">error_status (pegajoso)</div>
+      <div class="hero" id="t-err">—</div>
+      <div class="errs" id="t-err-bits"></div>
+    </div>
+  </div>
+
+  <!-- What is happening right now -->
+  <div class="card row">
+    <h2>Agora</h2>
+    <div class="now" id="now"></div>
+  </div>
+
+  <!-- Throughput -->
+  <div class="card row">
+    <h2>Vazão · quadros/s</h2>
+    <div class="legend">
+      <span><i style="background:var(--series-1)"></i>Enviado (host)</span>
+      <span><i style="background:var(--series-2)"></i>Recebido (contado pela FPGA)</span>
+    </div>
+    <div class="chart" id="thr"></div>
+    <div class="axis-note">Médias de 1 s. "Recebido" vem do contador de bytes que a própria FPGA reporta; defasa o enviado em até um período de telemetria (0,5 s).</div>
+  </div>
+
+  <div class="row two">
+    <div class="card">
+      <h2>Acurácia por cenário</h2>
+      <div class="legend">
+        <span><i class="sq" style="background:var(--series-1)"></i>MLP</span>
+        <span><i class="sq" style="background:var(--series-2)"></i>CNN</span>
+      </div>
+      <div class="scroll" id="per"></div>
+    </div>
+    <div class="card">
+      <h2>Matrizes de confusão</h2>
+      <div class="cm" id="cm"></div>
+      <div class="axis-note">Linhas: classe esperada · colunas: classe prevista · cor: fração da linha. Só vereditos pontuados.</div>
+    </div>
+  </div>
+
+  <div class="card row">
+    <h2>Log de vereditos</h2>
+    <div class="tall scroll" id="log"></div>
+  </div>
+</div>
+
+<div id="tip" hidden></div>
+
+<script>
+"use strict";
+const CLASSES = ["Bearing", "Misalign", "Normal", "Unbalance"];
+const ERR_NAMES = ["UART_FRAME", "VIB_OVERRUN", "MLP_DROP", "SPEC_DESYNC", "MDC_OVERRUN", "CNN_STALL"];
+const STATUS = {
+  1: { name: "Normal",   icon: "●", cls: "ok"   },
+  2: { name: "Warning",  icon: "▲", cls: "warn" },
+  4: { name: "Critical", icon: "■", cls: "bad"  },
+};
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const pct = (a, b) => b ? Math.round(100 * a / b) : null;
+const fmtInt = (n) => n == null ? "—" : n.toLocaleString("pt-BR");
+const fmtDur = (s) => {
+  s = Math.max(0, s);
+  if (s < 10) return `${s.toFixed(1).replace(".", ",")} s`;
+  s = Math.round(s);
+  const m = Math.floor(s / 60), r = s % 60;
+  return m ? `${m} min ${String(r).padStart(2, "0")} s` : `${r} s`;
+};
+
+let scenarios = [];
+let mode = "single";
+let plan = [];
+let last = null;
+
+// ------------------------------------------------------------------ tooltip
+// One tooltip for every mark carrying data-tip. Values are also always in a
+// table or label on the page; the tooltip is a convenience, never the only way.
+const tip = $("tip");
+document.addEventListener("mousemove", (e) => {
+  const el = e.target.closest && e.target.closest("[data-tip]");
+  if (!el) { if (!tip.dataset.pinned) tip.hidden = true; return; }
+  tip.innerHTML = el.getAttribute("data-tip");
+  tip.hidden = false;
+  placeTip(e.clientX, e.clientY);
+});
+function placeTip(x, y) {
+  const r = tip.getBoundingClientRect();
+  let left = x + 14, top = y + 14;
+  if (left + r.width > innerWidth - 8) left = x - r.width - 14;
+  if (top + r.height > innerHeight - 8) top = y - r.height - 14;
+  tip.style.left = left + "px";
+  tip.style.top = top + "px";
+}
+
+// ----------------------------------------------------------------- controls
+async function api(path, body) {
+  const res = await fetch(path, body === undefined ? {} : {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || res.statusText);
+  return data;
+}
+
+function setMode(m) {
+  mode = m;
+  $("mode-single").setAttribute("aria-pressed", m === "single");
+  $("mode-seq").setAttribute("aria-pressed", m === "seq");
+  $("add").hidden = $("preset").hidden = $("loop-wrap").hidden = $("plan").hidden = m !== "seq";
+  if (m === "seq" && Number($("seconds").value) === 0) $("seconds").value = 300;
+  if (m === "single") $("seconds").value = 0;
+  renderPlan();
+  renderHint();
+}
+$("mode-single").onclick = () => setMode("single");
+$("mode-seq").onclick = () => setMode("seq");
+
+$("add").onclick = () => {
+  plan.push({ name: $("scenario").value, seconds: Math.max(10, Number($("seconds").value) || 300) });
+  renderPlan();
+};
+$("preset").onclick = () => {
+  const secs = Math.max(10, Number($("seconds").value) || 300);
+  plan = scenarios.filter(s => s.complete && s.expected != null).map(s => ({ name: s.name, seconds: secs }));
+  renderPlan();
+};
+function renderPlan() {
+  const active = last && last.running && last.current ? last.current.plan_idx : -1;
+  $("plan").innerHTML = plan.length ? plan.map((p, i) =>
+    `<span class="chip ${i === active && mode === "seq" ? "active" : ""}">${i + 1}. ${esc(p.name)} · ${p.seconds}s` +
+    `<button aria-label="remover" data-i="${i}">×</button></span>`).join("")
+    : `<span class="hint">Sequência vazia — escolha um cenário e clique em Adicionar, ou use "Todos os completos".</span>`;
+  $("plan").querySelectorAll("button[data-i]").forEach(b => b.onclick = () => {
+    plan.splice(Number(b.dataset.i), 1); renderPlan();
+  });
+}
+
+$("start").onclick = async () => {
+  const p = mode === "single"
+    ? [{ name: $("scenario").value, seconds: Number($("seconds").value) || 0 }]
+    : plan;
+  if (!p.length) return alert("A sequência está vazia.");
+  $("start").disabled = true;
+  $("start").textContent = "Carregando…";
+  try { await api("/api/start", { plan: p, loop: $("loop").checked }); }
+  catch (e) { alert("Não foi possível iniciar: " + e.message); }
+  finally { $("start").textContent = "Iniciar"; refresh(); }
+};
+$("stop").onclick = async () => { await api("/api/stop", {}); refresh(); };
+$("reset").onclick = async () => {
+  if (confirm("Zerar vereditos, gráficos e contadores do painel?")) { await api("/api/reset", {}); refresh(); }
+};
+$("scenario").onchange = renderHint;
+$("seconds").oninput = renderHint;
+
+// How long a scenario must run to get a scored verdict of each kind. A CNN
+// verdict lands every frames_per_spec frames from pipeline start, not from the
+// switch, so the worst case is threshold + one full spectrogram.
+function renderHint() {
+  if (!last) return;
+  const fps = last.frames_per_second;
+  const mlpNeed = (last.frames_per_round * (1 + last.settle_rounds)) / fps;
+  const cnnWorst = (last.frames_per_spec + last.frames_per_round * last.settle_rounds + last.frames_per_spec) / fps;
+  const s = scenarios.find(x => x.name === $("scenario").value);
+  let t = `A taxa plena (${fps.toFixed(0)} quadros/s): 1º veredito MLP pontuado após ~${fmtDur(mlpNeed)}, depois um a cada ${fmtDur(last.frames_per_round / fps)}. ` +
+          `Para garantir ≥1 veredito CNN pontuado, rode ≥ ${fmtDur(cnnWorst)} por cenário.`;
+  if (s && !s.complete) t += " Este cenário não tem corrente/temperatura: as palavras aux usam FALLBACK e o veredito do MLP é provisório.";
+  if (s && s.expected == null) t += " Este cenário não tem classe esperada — seus vereditos não são pontuados.";
+  $("hint").textContent = t;
+}
+
+// ------------------------------------------------------------------ render
+function renderTiles(st) {
+  const t = st.telemetry;
+  // status LEDs vs what a correct system would show for this scenario
+  if (t && STATUS[t.status]) {
+    const s = STATUS[t.status];
+    $("t-status").innerHTML = `<span class="status ${s.cls}"><span class="icon">${s.icon}</span>${s.name}</span>`;
+    const exp = st.current && st.current.expected != null ? (st.current.expected === 2 ? 1 : 4) : null;
+    if (exp != null && st.running) {
+      const match = exp === t.status;
+      $("t-status-sub").innerHTML = `esperado ${STATUS[exp].name} · ` +
+        (match ? `<span class="ok">✓ confere</span>` : `<span class="bad">✗ diverge</span>`) +
+        (t.alert ? " · alert_flag" : "");
+    } else {
+      $("t-status-sub").textContent = t.alert ? "alert_flag aceso" : "sem cenário ativo";
+    }
+  } else {
+    $("t-status").textContent = t ? `0b${(t.status >>> 0).toString(2).padStart(3, "0")}` : "—";
+    $("t-status-sub").textContent = t ? "combinação inesperada de LEDs" : "sem telemetria";
+  }
+
+  for (const m of ["MLP", "CNN"]) {
+    const s = st.summary[m];
+    const p = pct(s.correct, s.scored);
+    const key = m.toLowerCase();
+    $(`t-${key}`).textContent = p == null ? "—" : `${p}%`;
+    const det = pct(s.detect_correct, s.scored);
+    $(`t-${key}-sub`).innerHTML = s.scored
+      ? `${s.correct} de ${s.scored} pontuados · falha×normal ${det}%` +
+        (s.total > s.scored ? ` · <span class="muted">${s.total - s.scored} em transição</span>` : "")
+      : (s.total ? `${s.total} veredito(s), nenhum pontuado ainda` : "nenhum veredito ainda");
+  }
+
+  const L = st.link;
+  if (L.rx == null) {
+    $("t-link").textContent = "—";
+    $("t-link-sub").textContent = t ? "aguardando baseline" : "sem telemetria da placa";
+  } else if (L.loss != null) {
+    $("t-link").innerHTML = L.loss === 0
+      ? `<span class="ok status"><span class="icon">✓</span>0</span>`
+      : `<span class="bad status"><span class="icon">✗</span>${fmtInt(L.loss)}</span>`;
+    $("t-link-sub").textContent = `bytes perdidos (medido em repouso): ${fmtInt(L.sent)} enviados, ${fmtInt(L.rx)} recebidos`;
+  } else {
+    $("t-link").textContent = fmtInt(L.rx);
+    $("t-link-sub").textContent = `bytes recebidos de ${fmtInt(L.sent)} enviados · perda medida ao parar`;
+  }
+
+  if (t) {
+    $("t-err").innerHTML = t.err
+      ? `<span class="bad status"><span class="icon">✗</span>0x${t.err.toString(16).toUpperCase().padStart(2, "0")}</span>`
+      : `<span class="ok status"><span class="icon">✓</span>00</span>`;
+    $("t-err-bits").innerHTML = ERR_NAMES.map((n, i) =>
+      `<span class="${(t.err >> i) & 1 ? "on" : ""}" data-tip="bit ${i} · ${n}">${n}</span>`).join("");
+  } else {
+    $("t-err").textContent = "—";
+    $("t-err-bits").innerHTML = "";
+  }
+}
+
+function verdictMark(v) {
+  if (v.correct === true)  return `<span class="ok">✓ correto</span>`;
+  if (v.correct === false) return `<span class="bad">✗ errado</span>`;
+  if (v.expected == null)  return `<span class="muted">— sem gabarito</span>`;
+  return `<span class="muted" data-tip="A janela que gerou este veredito não estava inteira dentro do cenário atual (início, troca ou parada). Fica fora da acurácia.">◌ transição</span>`;
+}
+
+function renderNow(st) {
+  const c = st.current;
+  const t = st.telemetry;
+  const lastOf = (m) => [...st.verdicts].reverse().find(v => v.model === m);
+  const cell = (k, v) => `<div><div class="k">${k}</div><div class="v">${v}</div></div>`;
+  if (!c) {
+    $("now").innerHTML = cell("Estado", st.running ? "iniciando…" : "parado") +
+      cell("Vereditos da placa", t && st.has_classes ? `MLP ${CLASSES[t.mlp_class]} · CNN ${CLASSES[t.cnn_class]}` : "—");
+    return;
+  }
+  const mlp = lastOf("MLP"), cnn = lastOf("CNN");
+  const fmtV = (v) => v ? `${esc(v.cls_name)} <span style="font-weight:400">${verdictMark(v)}</span>` : `<span class="muted">nenhum ainda</span>`;
+  const cnnDone = c.cnn_threshold - c.cnn_ready_in;
+  const cnnFrac = Math.min(1, cnnDone / c.cnn_threshold);
+  const fps = st.frames_per_second;
+  let planTxt = "";
+  if (c.plan.length > 1) planTxt = ` <span class="tag">${c.plan_idx + 1}/${c.plan.length}</span>`;
+  $("now").innerHTML =
+    cell("Cenário" + (st.running ? "" : " (parado)"), esc(c.scenario) + planTxt +
+         (c.complete ? "" : ` <span class="tag" data-tip="Sem captura de corrente/temperatura">aux FALLBACK</span>`) +
+         (c.pending ? `<div class="k">trocando para ${esc(c.pending)} na próxima fronteira de rodada</div>` : "")) +
+    cell("Classe esperada", c.expected_name ? esc(c.expected_name) : `<span class="muted">desconhecida</span>`) +
+    cell("Último MLP", fmtV(mlp)) +
+    cell("Último CNN", fmtV(cnn)) +
+    `<div><div class="k">Janela do CNN neste cenário</div>
+       <div class="v">${c.cnn_ready_in ? `pontuável em ${fmtDur(c.cnn_ready_in / fps)}` : `<span class="ok">✓ pontuável</span>`}</div>
+       <div class="progress" data-tip="${fmtInt(cnnDone)} de ${fmtInt(c.cnn_threshold)} quadros"><i style="width:${(100 * cnnFrac).toFixed(1)}%"></i></div></div>` +
+    cell("Quadros no cenário", fmtInt(c.frames_in_scenario));
+}
+
+// Throughput: one axis (both series are quadros/s), 2px lines, crosshair tooltip.
+function renderThroughput(st) {
+  const box = $("thr");
+  const s = st.series;
+  const fb = st.frame_bytes;
+  const pts = [];
+  for (let i = 1; i < s.length; i++) {
+    const dt = s[i].t - s[i - 1].t;
+    if (dt <= 0) continue;
+    const sent = (s[i].sent - s[i - 1].sent) / dt / fb;
+    const rx = s[i].rx != null && s[i - 1].rx != null ? (s[i].rx - s[i - 1].rx) / dt / fb : null;
+    pts.push({ t: s[i].t, sent, rx });
+  }
+  if (pts.length < 2) { box.innerHTML = `<div class="empty">Sem amostras ainda — inicie um cenário.</div>`; return; }
+
+  const W = Math.max(320, box.clientWidth), H = 220;
+  const m = { l: 44, r: W < 520 ? 92 : 118, t: 10, b: 26 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const t0 = pts[0].t, t1 = pts[pts.length - 1].t;
+  const ymax = Math.max(st.frames_per_second * 1.1, ...pts.map(p => Math.max(p.sent, p.rx ?? 0))) || 1;
+  const x = (t) => m.l + (t1 === t0 ? 0 : (t - t0) / (t1 - t0) * iw);
+  const y = (v) => m.t + ih - v / ymax * ih;
+  const step = niceStep(ymax, 4);
+  let g = "";
+  for (let v = 0; v <= ymax + 1e-9; v += step)
+    g += `<line class="gridline" x1="${m.l}" x2="${m.l + iw}" y1="${y(v)}" y2="${y(v)}"/>` +
+         `<text x="${m.l - 8}" y="${y(v) + 4}" text-anchor="end">${Math.round(v)}</text>`;
+  const span = t1 - t0;
+  const tStep = niceStep(span, Math.max(2, Math.floor(iw / 90))) || 1;   // ~90 px per label
+  for (let tt = Math.ceil(t0 / tStep) * tStep; tt <= t1; tt += tStep)
+    g += `<text x="${x(tt)}" y="${H - 6}" text-anchor="middle">${fmtClock(tt)}</text>`;
+
+  const path = (key) => {
+    let d = "", pen = false;
+    for (const p of pts) {
+      if (p[key] == null) { pen = false; continue; }
+      d += `${pen ? "L" : "M"}${x(p.t).toFixed(1)},${y(p[key]).toFixed(1)}`;
+      pen = true;
+    }
+    return d;
+  };
+  const lastSent = pts[pts.length - 1];
+  const lastRx = [...pts].reverse().find(p => p.rx != null);
+  // direct labels at the line ends, nudged apart when the lines coincide
+  let ys = y(lastSent.sent), yr = lastRx ? y(lastRx.rx) : null;
+  if (yr != null && Math.abs(ys - yr) < 14) { const mid = (ys + yr) / 2; ys = mid - 8; yr = mid + 8; }
+
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Vazão enviada e recebida, quadros por segundo">
+    <g class="axis">${g}</g>
+    <path d="${path("sent")}" fill="none" stroke="var(--series-1)" stroke-width="2" stroke-linejoin="round"/>
+    <path d="${path("rx")}" fill="none" stroke="var(--series-2)" stroke-width="2" stroke-linejoin="round"/>
+    <g class="axis">
+      <text x="${m.l + iw + 8}" y="${ys + 4}" style="fill:var(--text-secondary)">Enviado ${lastSent.sent.toFixed(0)}</text>
+      ${yr != null ? `<text x="${m.l + iw + 8}" y="${yr + 4}" style="fill:var(--text-secondary)">Recebido ${lastRx.rx.toFixed(0)}</text>` : ""}
+    </g>
+    <line id="xh" y1="${m.t}" y2="${m.t + ih}" stroke="var(--text-muted)" stroke-width="1" visibility="hidden"/>
+    <circle id="xh-s" r="4" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2" visibility="hidden"/>
+    <circle id="xh-r" r="4" fill="var(--series-2)" stroke="var(--surface-1)" stroke-width="2" visibility="hidden"/>
+    <rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="transparent" id="xh-hit"/>
+  </svg>`;
+
+  const svg = box.querySelector("svg");
+  const hit = svg.querySelector("#xh-hit");
+  const xh = svg.querySelector("#xh"), cs = svg.querySelector("#xh-s"), cr = svg.querySelector("#xh-r");
+  hit.onmousemove = (e) => {
+    const r = svg.getBoundingClientRect();
+    const sx = (e.clientX - r.left) * W / r.width;
+    const tt = t0 + (sx - m.l) / iw * (t1 - t0);
+    let best = pts[0];
+    for (const p of pts) if (Math.abs(p.t - tt) < Math.abs(best.t - tt)) best = p;
+    xh.setAttribute("x1", x(best.t)); xh.setAttribute("x2", x(best.t)); xh.setAttribute("visibility", "visible");
+    cs.setAttribute("cx", x(best.t)); cs.setAttribute("cy", y(best.sent)); cs.setAttribute("visibility", "visible");
+    if (best.rx != null) { cr.setAttribute("cx", x(best.t)); cr.setAttribute("cy", y(best.rx)); cr.setAttribute("visibility", "visible"); }
+    else cr.setAttribute("visibility", "hidden");
+    tip.innerHTML = `<b>${fmtClock(best.t)}</b><br>Enviado: ${best.sent.toFixed(1)} q/s<br>Recebido: ${best.rx == null ? "—" : best.rx.toFixed(1) + " q/s"}`;
+    tip.hidden = false; tip.dataset.pinned = "1";
+    placeTip(e.clientX, e.clientY);
+  };
+  hit.onmouseleave = () => {
+    [xh, cs, cr].forEach(el => el.setAttribute("visibility", "hidden"));
+    tip.hidden = true; delete tip.dataset.pinned;
+  };
+}
+function niceStep(range, target) {
+  if (!(range > 0)) return 0;
+  const raw = range / target, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = raw / mag;
+  return (n < 1.5 ? 1 : n < 3 ? 2 : n < 7 ? 5 : 10) * mag;
+}
+function fmtClock(t) {
+  t = Math.round(t);
+  return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`;
+}
+
+// Per-scenario accuracy as a table with inline bars: the table IS the chart, so
+// the numbers are always on the page, not only in a tooltip.
+function renderPer(st) {
+  const rows = st.summary.per_scenario;
+  if (!rows.length) { $("per").innerHTML = `<div class="empty">Nenhum veredito pontuado ainda.</div>`; return; }
+  const bar = (r, m, color) => {
+    const { n, correct } = r[m];
+    if (!n) return `<div class="barcell"><div class="bar"></div><span class="n muted">—</span></div>`;
+    const p = pct(correct, n);
+    return `<div class="barcell" data-tip="${m} em ${esc(r.scenario)}: ${correct} de ${n} corretos (${p}%)">
+      <div class="bar"><i style="width:${p}%;background:${color}"></i></div>
+      <span class="n">${correct}/${n} · ${p}%</span></div>`;
+  };
+  $("per").innerHTML = `<table><thead><tr><th>Cenário</th><th>Esperado</th><th>MLP</th><th>CNN</th></tr></thead><tbody>` +
+    rows.map(r => `<tr><td>${esc(r.scenario)}${r.complete ? "" : `<br><span class="tag">FALLBACK</span>`}</td>
+      <td>${esc(r.expected_name)}</td><td>${bar(r, "MLP", "var(--series-1)")}</td><td>${bar(r, "CNN", "var(--series-2)")}</td></tr>`).join("") +
+    `</tbody></table>`;
+}
+
+// Confusion matrices: sequential blue by share of the row, count printed in
+// every cell, diagonal in bold rather than outlined.
+const SEQ = ["--seq-100", "--seq-200", "--seq-300", "--seq-400", "--seq-500", "--seq-600", "--seq-700"];
+function renderCM(st) {
+  $("cm").innerHTML = ["MLP", "CNN"].map(mn => {
+    const cm = st.summary[mn].confusion;
+    const total = cm.flat().reduce((a, b) => a + b, 0);
+    const head = `<tr><th></th>${CLASSES.map(c => `<th style="text-align:center" data-tip="previsto ${c}">${c.slice(0, 3)}.</th>`).join("")}</tr>`;
+    const body = cm.map((row, i) => {
+      const rs = row.reduce((a, b) => a + b, 0);
+      return `<tr><th class="rowh">${CLASSES[i]}</th>` + row.map((v, j) => {
+        let bg = "var(--empty-cell)", ink = "var(--text-muted)";
+        if (v) {
+          const k = Math.min(SEQ.length - 1, Math.floor((v / rs) * SEQ.length));
+          bg = `var(${SEQ[k]})`;
+          ink = k >= 3 ? "#ffffff" : "#0b0b0b";
+        }
+        const tipTxt = `${mn}: esperado <b>${CLASSES[i]}</b> → previsto <b>${CLASSES[j]}</b><br>${v} veredito(s)` +
+                       (rs ? ` · ${pct(v, rs)}% da linha` : "");
+        return `<td class="cell ${i === j ? "diag" : ""}" style="background:${bg};color:${ink}" data-tip="${tipTxt}">${v}</td>`;
+      }).join("") + `</tr>`;
+    }).join("");
+    return `<div><table><caption>${mn} <span class="muted" style="font-weight:400">· ${total} pontuado(s)</span></caption>` +
+           `<thead>${head}</thead><tbody>${body}</tbody></table></div>`;
+  }).join("");
+}
+
+function renderLog(st) {
+  const v = [...st.verdicts].reverse().slice(0, 200);
+  if (!v.length) { $("log").innerHTML = `<div class="empty">Nenhum veredito recebido ainda. O MLP vota a cada ${fmtDur(st.frames_per_round / st.frames_per_second)} a taxa plena.</div>`; return; }
+  $("log").innerHTML = `<table><thead><tr><th>Hora</th><th>Modelo</th><th>Cenário</th><th>Esperado</th><th>Previsto</th><th>Resultado</th></tr></thead><tbody>` +
+    v.map(r => `<tr><td>${r.wall}</td><td>${r.model}</td><td>${esc(r.scenario ?? "—")}</td>
+      <td>${esc(r.expected_name ?? "—")}</td><td>${esc(r.cls_name)}</td><td>${verdictMark(r)}</td></tr>`).join("") +
+    `</tbody></table>`;
+}
+
+function renderConn(st) {
+  const t = st.telemetry;
+  const c = $("conn");
+  const [color, txt] = !t ? ["var(--critical)", "sem telemetria"]
+                    : st.running ? ["var(--good)", "transmitindo"] : ["var(--text-muted)", "ocioso"];
+  c.querySelector(".dot").style.background = color;
+  c.querySelector("span:last-child").textContent = txt;
+  $("portinfo").textContent = `${st.port} @ ${st.baud} · ${st.frame_bytes} B/quadro · painel há ${fmtDur(st.uptime)}`;
+  $("start").disabled = st.running;
+  $("stop").disabled = !st.running;
+
+  const b = $("banner");
+  if (st.simulated) {
+    b.innerHTML = "<b>Modo simulado.</b> Não há placa: os vereditos e contadores vêm de <code>SimSink</code> " +
+                  "(bench_server.py --simulate). Nada aqui descreve o hardware.";
+    b.hidden = false;
+  } else if (!t) {
+    b.innerHTML = "<b>Sem telemetria da placa.</b> Confira se <code>RTL/quartus/output_files/quartus.sof</code> está gravado e se nenhum outro script está com a porta aberta.";
+    b.hidden = false;
+  } else if (!st.has_classes) {
+    b.innerHTML = "<b>A placa não está enviando as classes.</b> A telemetria chega sem os campos <code>M/N/C/K</code> — é um bitstream anterior a eles. Recompile e grave <code>RTL/quartus/output_files/quartus.sof</code>; até lá o link aparece, mas nenhum veredito é pontuado.";
+    b.hidden = false;
+  } else if (st.missed.MLP || st.missed.CNN) {
+    b.innerHTML = `Vereditos perdidos entre relatórios: MLP ${st.missed.MLP}, CNN ${st.missed.CNN}. Não deveria acontecer a 0,5 s de período.`;
+    b.hidden = false;
+  } else {
+    b.hidden = true;
+  }
+}
+
+async function refresh() {
+  let st;
+  try { st = await api("/api/state"); }
+  catch (e) {
+    $("conn").querySelector(".dot").style.background = "var(--critical)";
+    $("conn").querySelector("span:last-child").textContent = "servidor fora do ar";
+    return;
+  }
+  const firstTime = !last;
+  last = st;
+  renderConn(st);
+  renderTiles(st);
+  renderNow(st);
+  renderThroughput(st);
+  renderPer(st);
+  renderCM(st);
+  renderLog(st);
+  if (firstTime) renderHint();
+  if (mode === "seq") renderPlan();
+}
+
+(async function init() {
+  scenarios = await api("/api/scenarios");
+  const opt = (s) => `<option value="${esc(s.name)}">${esc(s.name)}${s.expected_name ? ` — ${s.expected_name}` : ""}</option>`;
+  const complete = scenarios.filter(s => s.complete), partial = scenarios.filter(s => !s.complete);
+  $("scenario").innerHTML =
+    `<optgroup label="Com corrente e temperatura">${complete.map(opt).join("")}</optgroup>` +
+    `<optgroup label="Aux FALLBACK (MLP provisório)">${partial.map(opt).join("")}</optgroup>`;
+  setMode("single");
+  await refresh();
+  setInterval(refresh, 1000);
+  addEventListener("resize", () => last && renderThroughput(last));
+})();
+</script>
+</body>
+</html>

@@ -32,7 +32,18 @@ module top_system #(
     output logic       alert_flag,
 
     // One sticky bit per fault source; see system_types_pkg for the index map
-    output system_types_pkg::error_status_t error_status
+    output system_types_pkg::error_status_t error_status,
+
+    // >>> CLASS_OBSERVE_NOTE <<<
+    // The two verdicts themselves, for scoring against the expected class.
+    // status_leds collapses them to "do the models agree on fault vs normal",
+    // which cannot tell a Bearing verdict from a Misalign one. Class map as in
+    // inference_arbiter: 0 Bearing, 1 Misalign, 2 Normal, 3 Unbalance. Each
+    // class is meaningful while its strobe is high.
+    output logic [1:0] mlp_class,
+    output logic       mlp_class_valid,
+    output logic [1:0] cnn_class,
+    output logic       cnn_class_valid
 );
 
     import system_types_pkg::*;
@@ -175,8 +186,13 @@ module top_system #(
         .cnn_valid        (cnn_valid),
         .status_leds      (status_leds),
         .sensor_fault_mask(sensor_fault_mask),
-        .alert_flag       (alert_flag)
+        .alert_flag       (alert_flag),
+        .cnn_class_idx    (cnn_class)
     );
+
+    assign mlp_class       = mlp_class_idx;
+    assign mlp_class_valid = mlp_done;
+    assign cnn_class_valid = cnn_valid;
 
     // ------------------------------------------------------------------------
     // Health

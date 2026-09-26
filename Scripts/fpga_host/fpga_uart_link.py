@@ -571,8 +571,66 @@ class FrameStream:
 # ============================================================================
 # Sinks
 # ============================================================================
+# top_system_de0cv reports this on GPIO_0[4] every ~500 ms. top_system itself
+# has no transmitter, so on a board built from top_system alone nothing arrives
+# and `telemetry` simply stays None -- the status lines look exactly as before.
+# See RTL/top_system/README.md for the field meanings.
+TELEMETRY_RE = re.compile(rb"B=([0-9A-F]{4}) E=([0-9A-F]{2}) S=([0-9A-F]) "
+                          rb"F=([0-9A-F]) A=([0-9A-F])"
+                          # Verdict classes and counters -- absent on bitstreams
+                          # built before they were added, hence optional.
+                          rb"(?: M=([0-9A-F]) N=([0-9A-F]{2}) C=([0-9A-F]) K=([0-9A-F]{2}))?")
+
+# Class indices as in inference_arbiter / mlp_weights.
+CLASS_NAMES = ["Bearing", "Misalign", "Normal", "Unbalance"]
+
+
+def expected_class(scenario: str) -> Optional[int]:
+    """Scenario name -> the class a correct verdict should report.
+
+    Mirrors expected_class() in tb_top_system.sv, plus "unbal" so the
+    2Nm_Unbalalnce_* captures -- misspelled in the dataset -- still score.
+    """
+    low = scenario.lower()
+    if "normal" in low:
+        return 2
+    if any(k in low for k in ("bpfo", "bpfi", "bsf", "bearing")):
+        return 0
+    if "misalign" in low:
+        return 1
+    if "unbal" in low or "imbalance" in low:
+        return 3
+    return None
+
+ERR_BIT_NAMES = ["UART_FRAME", "VIB_OVERRUN", "MLP_DROP",
+                 "SPEC_DESYNC", "MDC_OVERRUN", "CNN_STALL"]
+VERDICT_NAMES = {0b001: "Normal", 0b010: "Warning", 0b100: "Critical"}
+
+
+def format_telemetry(t: dict) -> str:
+    """One compact tag for the status line, e.g. fpga[rx=230784 Warning F=1111].
+
+    `rx` is the unwrapped total (see poll_telemetry), which is what you want to
+    compare against bytes= on the same line. It lags by up to one report period,
+    so a small shortfall is bytes still in flight, not loss.
+    """
+    errs = [n for i, n in enumerate(ERR_BIT_NAMES) if t["err"] >> i & 1]
+    parts = [f"rx={t['total']}", VERDICT_NAMES.get(t["status"], f"S=0b{t['status']:03b}")]
+    if t["fault"]:
+        parts.append(f"F={t['fault']:04b}")
+    if t["alert"]:
+        parts.append("ALERT")
+    parts.append("E=" + (",".join(errs) if errs else "00"))
+    return "fpga[" + " ".join(parts) + "]"
+
+
 class SerialSink:
-    """The real thing: a blocking 8N1 port. Whole frames per write."""
+    """The real thing: a blocking 8N1 port. Whole frames per write.
+
+    Also drains the receive direction, so a board running top_system_de0cv can
+    report back while the stream is in flight. Reads are non-blocking
+    (timeout=0) and bounded, so this cannot slow the stream down.
+    """
 
     def __init__(self, port: str, baud: int, write_timeout: float = 5.0):
         import serial   # imported here so --dry-run works without pyserial
@@ -588,10 +646,64 @@ class SerialSink:
         self.port.reset_input_buffer()
         self.port.reset_output_buffer()
         self.bytes_written = 0
+        self.telemetry: Optional[dict] = None
+        self._rx = b""
+        self._last_b: Optional[int] = None
+        self._total_seen = 0
 
     def write(self, data: bytes) -> None:
         self.port.write(data)
         self.bytes_written += len(data)
+        self.poll_telemetry()
+
+    def poll_telemetry(self) -> Optional[dict]:
+        """Keeps the most recent complete report the board has sent.
+
+        Returns the freshest one, or None if the board has not reported since
+        the last call. Nothing here blocks: the port was opened with timeout=0.
+
+        The board's B field is a 16-bit counter, which at full rate wraps every
+        ~5.7 s -- consecutive reports appear to go *backwards*. So the wrap is
+        undone here with a modular difference and accumulated into `total`,
+        counting bytes since this sink saw its first report. That is the figure
+        worth comparing against bytes_written; raw B stays available as
+        `bytes`.
+        """
+        try:
+            chunk = self.port.read(4096)
+        except Exception:                      # a closing port mid-shutdown
+            return None
+        if not chunk:
+            return None
+        # Bound the buffer: a board transmitting garbage must not grow it without
+        # limit, and one report is only 25 bytes.
+        self._rx = (self._rx + chunk)[-512:]
+        found = None
+        for m in TELEMETRY_RE.finditer(self._rx):
+            found = m
+        if found is None:
+            return None
+        raw_b = int(found.group(1), 16)
+        if self._last_b is not None:
+            self._total_seen += (raw_b - self._last_b) & 0xFFFF
+        self._last_b = raw_b
+        self.telemetry = {
+            "bytes":  raw_b,
+            "total":  self._total_seen,
+            "err":    int(found.group(2), 16),
+            "status": int(found.group(3), 16),
+            "fault":  int(found.group(4), 16),
+            "alert":  int(found.group(5), 16),
+        }
+        if found.group(6) is not None:
+            self.telemetry.update({
+                "mlp_class": int(found.group(6), 16),
+                "mlp_count": int(found.group(7), 16),
+                "cnn_class": int(found.group(8), 16),
+                "cnn_count": int(found.group(9), 16),
+            })
+        self._rx = self._rx[found.end():]
+        return self.telemetry
 
     def drain(self) -> None:
         self.port.flush()
@@ -721,7 +833,9 @@ def status_line(stream: FrameStream, sink, cfg: LinkConfig, stats: StreamStats) 
             f"bytes={sink.bytes_written:>11d} up={elapsed:8.1f}s "
             f"MLP~{mlp_due} CNN~{cnn_due} wraps={wraps} "
             f"aux[T_A={aux.get('temp_a_degC', 0):.2f}C T_B={aux.get('temp_b_degC', 0):.2f}C "
-            f"I2={aux.get('current_A2', 0):.3f}A2{aux_tag}]")
+            f"I2={aux.get('current_A2', 0):.3f}A2{aux_tag}]"
+            + (" " + format_telemetry(telem) if (telem := getattr(sink, "telemetry", None))
+               else ""))
 
 
 def setup_logging(log_path: Optional[Path], verbose: bool = False) -> Path:

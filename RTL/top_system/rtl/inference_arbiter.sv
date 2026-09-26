@@ -40,7 +40,11 @@ module inference_arbiter #(
     // Outputs
     output logic [2:0]           status_leds,       // [2]=Critical [1]=Warning [0]=Normal
     output logic [N_SENSORS-1:0] sensor_fault_mask, // see FAULT_MASK_NOTE
-    output logic                 alert_flag
+    output logic                 alert_flag,
+    // The CNN argmax below, exported so the class itself can be observed.
+    // status_leds only says whether the two models agree on fault-vs-normal,
+    // which is not enough to score a verdict against the expected class.
+    output logic [1:0]           cnn_class_idx
 );
 
     // ========================================================================
@@ -48,7 +52,6 @@ module inference_arbiter #(
     // ========================================================================
     // The classes map as follows, per mlp_weights.sv:
     // 0: Bearing, 1: Misalign, 2: Normal, 3: Unbalance
-    logic [1:0] cnn_class_idx;
 
     always_comb begin
         logic signed [DATA_WIDTH-1:0] max_val;

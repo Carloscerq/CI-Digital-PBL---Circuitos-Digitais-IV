@@ -5,7 +5,7 @@
 # from every scenario, not just the MLP's (one every 4.3 s).
 
 0Nm_Normal              300
-0Nm_BPFI_10             300
+0Nm_BPFI_03             300
 2Nm_Normal              300
 4Nm_Unbalance_1751mg    300
 0Nm_Misalign_05         300

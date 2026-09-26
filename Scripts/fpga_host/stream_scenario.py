@@ -58,7 +58,16 @@ def parse_args() -> argparse.Namespace:
 
 def resolve_paths(args: argparse.Namespace) -> tuple[Path, Path | None]:
     root = link.find_repo_root()
-    data_root = args.data_root or (root / "Scripts" / "process_dataset" / "dataset_q915" if root else None)
+    # Two layouts exist in the wild: split_dataset.py writes under
+    # Scripts/process_dataset/, but the captures currently sit directly under
+    # Scripts/. Try both before giving up, so --data-root stays optional.
+    data_root = args.data_root
+    if data_root is None and root is not None:
+        for candidate in (root / "Scripts" / "dataset_q915",
+                          root / "Scripts" / "process_dataset" / "dataset_q915"):
+            if candidate.is_dir():
+                data_root = candidate
+                break
     if data_root is None or not data_root.is_dir():
         sys.exit("cannot find the dataset_q915 directory; pass --data-root")
     package = args.package or (root / "RTL" / "top_system" / "rtl" / "system_types_pkg.sv" if root else None)
