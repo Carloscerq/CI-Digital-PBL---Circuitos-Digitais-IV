@@ -1,0 +1,573 @@
+Analysis & Synthesis report for uart_scout
+Sat Sep 12 11:39:59 2026
+Quartus Prime Version 25.1std.0 Build 1129 10/21/2025 SC Lite Edition
+
+
+---------------------
+; Table of Contents ;
+---------------------
+  1. Legal Notice
+  2. Analysis & Synthesis Summary
+  3. Analysis & Synthesis Settings
+  4. Parallel Compilation
+  5. Analysis & Synthesis Source Files Read
+  6. Analysis & Synthesis Resource Usage Summary
+  7. Analysis & Synthesis Resource Utilization by Entity
+  8. Registers Removed During Synthesis
+  9. Removed Registers Triggering Further Register Optimizations
+ 10. General Register Statistics
+ 11. Inverted Register Statistics
+ 12. Multiplexer Restructuring Statistics (Restructuring Performed)
+ 13. Parameter Settings for User Entity Instance: Top-level Entity: |uart_pin_scout
+ 14. Post-Synthesis Netlist Statistics for Top Partition
+ 15. Elapsed Time Per Partition
+ 16. Analysis & Synthesis Messages
+ 17. Analysis & Synthesis Suppressed Messages
+
+
+
+----------------
+; Legal Notice ;
+----------------
+Copyright (C) 2025  Altera Corporation. All rights reserved.
+Your use of Altera Corporation's design tools, logic functions 
+and other software and tools, and any partner logic 
+functions, and any output files from any of the foregoing 
+(including device programming or simulation files), and any 
+associated documentation or information are expressly subject 
+to the terms and conditions of the Altera Program License 
+Subscription Agreement, the Altera Quartus Prime License Agreement,
+the Altera IP License Agreement, or other applicable license
+agreement, including, without limitation, that your use is for
+the sole purpose of programming logic devices manufactured by
+Altera and sold by Altera or its authorized distributors.  Please
+refer to the Altera Software License Subscription Agreements 
+on the Quartus Prime software download page.
+
+
+
++-----------------------------------------------------------------------------------+
+; Analysis & Synthesis Summary                                                      ;
++---------------------------------+-------------------------------------------------+
+; Analysis & Synthesis Status     ; Successful - Sat Sep 12 11:39:59 2026           ;
+; Quartus Prime Version           ; 25.1std.0 Build 1129 10/21/2025 SC Lite Edition ;
+; Revision Name                   ; uart_scout                                      ;
+; Top-level Entity Name           ; uart_pin_scout                                  ;
+; Family                          ; Cyclone V                                       ;
+; Logic utilization (in ALMs)     ; N/A                                             ;
+; Total registers                 ; 516                                             ;
+; Total pins                      ; 99                                              ;
+; Total virtual pins              ; 0                                               ;
+; Total block memory bits         ; 0                                               ;
+; Total DSP Blocks                ; 0                                               ;
+; Total HSSI RX PCSs              ; 0                                               ;
+; Total HSSI PMA RX Deserializers ; 0                                               ;
+; Total HSSI TX PCSs              ; 0                                               ;
+; Total HSSI PMA TX Serializers   ; 0                                               ;
+; Total PLLs                      ; 0                                               ;
+; Total DLLs                      ; 0                                               ;
++---------------------------------+-------------------------------------------------+
+
+
++---------------------------------------------------------------------------------------------------------------------------+
+; Analysis & Synthesis Settings                                                                                             ;
++---------------------------------------------------------------------------------+--------------------+--------------------+
+; Option                                                                          ; Setting            ; Default Value      ;
++---------------------------------------------------------------------------------+--------------------+--------------------+
+; Device                                                                          ; 5CEBA4F23C7        ;                    ;
+; Top-level entity name                                                           ; uart_pin_scout     ; uart_scout         ;
+; Family name                                                                     ; Cyclone V          ; Cyclone V          ;
+; Use smart compilation                                                           ; Off                ; Off                ;
+; Enable parallel Assembler and Timing Analyzer during compilation                ; On                 ; On                 ;
+; Enable compact report table                                                     ; Off                ; Off                ;
+; Restructure Multiplexers                                                        ; Auto               ; Auto               ;
+; MLAB Add Timing Constraints For Mixed-Port Feed-Through Mode Setting Don't Care ; Off                ; Off                ;
+; Create Debugging Nodes for IP Cores                                             ; Off                ; Off                ;
+; Preserve fewer node names                                                       ; On                 ; On                 ;
+; Intel FPGA IP Evaluation Mode                                                   ; Enable             ; Enable             ;
+; Verilog Version                                                                 ; Verilog_2001       ; Verilog_2001       ;
+; VHDL Version                                                                    ; VHDL_1993          ; VHDL_1993          ;
+; State Machine Processing                                                        ; Auto               ; Auto               ;
+; Safe State Machine                                                              ; Off                ; Off                ;
+; Extract Verilog State Machines                                                  ; On                 ; On                 ;
+; Extract VHDL State Machines                                                     ; On                 ; On                 ;
+; Ignore Verilog initial constructs                                               ; Off                ; Off                ;
+; Iteration limit for constant Verilog loops                                      ; 5000               ; 5000               ;
+; Iteration limit for non-constant Verilog loops                                  ; 250                ; 250                ;
+; Add Pass-Through Logic to Inferred RAMs                                         ; On                 ; On                 ;
+; Infer RAMs from Raw Logic                                                       ; On                 ; On                 ;
+; Parallel Synthesis                                                              ; On                 ; On                 ;
+; DSP Block Balancing                                                             ; Auto               ; Auto               ;
+; NOT Gate Push-Back                                                              ; On                 ; On                 ;
+; Power-Up Don't Care                                                             ; On                 ; On                 ;
+; Remove Redundant Logic Cells                                                    ; Off                ; Off                ;
+; Remove Duplicate Registers                                                      ; On                 ; On                 ;
+; Ignore CARRY Buffers                                                            ; Off                ; Off                ;
+; Ignore CASCADE Buffers                                                          ; Off                ; Off                ;
+; Ignore GLOBAL Buffers                                                           ; Off                ; Off                ;
+; Ignore ROW GLOBAL Buffers                                                       ; Off                ; Off                ;
+; Ignore LCELL Buffers                                                            ; Off                ; Off                ;
+; Ignore SOFT Buffers                                                             ; On                 ; On                 ;
+; Limit AHDL Integers to 32 Bits                                                  ; Off                ; Off                ;
+; Optimization Technique                                                          ; Balanced           ; Balanced           ;
+; Carry Chain Length                                                              ; 70                 ; 70                 ;
+; Auto Carry Chains                                                               ; On                 ; On                 ;
+; Auto Open-Drain Pins                                                            ; On                 ; On                 ;
+; Perform WYSIWYG Primitive Resynthesis                                           ; Off                ; Off                ;
+; Auto ROM Replacement                                                            ; On                 ; On                 ;
+; Auto RAM Replacement                                                            ; On                 ; On                 ;
+; Auto DSP Block Replacement                                                      ; On                 ; On                 ;
+; Auto Shift Register Replacement                                                 ; Auto               ; Auto               ;
+; Allow Shift Register Merging across Hierarchies                                 ; Auto               ; Auto               ;
+; Auto Clock Enable Replacement                                                   ; On                 ; On                 ;
+; Strict RAM Replacement                                                          ; Off                ; Off                ;
+; Allow Synchronous Control Signals                                               ; On                 ; On                 ;
+; Force Use of Synchronous Clear Signals                                          ; Off                ; Off                ;
+; Auto Resource Sharing                                                           ; Off                ; Off                ;
+; Allow Any RAM Size For Recognition                                              ; Off                ; Off                ;
+; Allow Any ROM Size For Recognition                                              ; Off                ; Off                ;
+; Allow Any Shift Register Size For Recognition                                   ; Off                ; Off                ;
+; Use LogicLock Constraints during Resource Balancing                             ; On                 ; On                 ;
+; Ignore translate_off and synthesis_off directives                               ; Off                ; Off                ;
+; Timing-Driven Synthesis                                                         ; On                 ; On                 ;
+; Report Parameter Settings                                                       ; On                 ; On                 ;
+; Report Source Assignments                                                       ; On                 ; On                 ;
+; Report Connectivity Checks                                                      ; On                 ; On                 ;
+; Ignore Maximum Fan-Out Assignments                                              ; Off                ; Off                ;
+; Synchronization Register Chain Length                                           ; 3                  ; 3                  ;
+; Power Optimization During Synthesis                                             ; Normal compilation ; Normal compilation ;
+; HDL message level                                                               ; Level2             ; Level2             ;
+; Suppress Register Optimization Related Messages                                 ; Off                ; Off                ;
+; Number of Removed Registers Reported in Synthesis Report                        ; 5000               ; 5000               ;
+; Number of Swept Nodes Reported in Synthesis Report                              ; 5000               ; 5000               ;
+; Number of Inverted Registers Reported in Synthesis Report                       ; 100                ; 100                ;
+; Clock MUX Protection                                                            ; On                 ; On                 ;
+; Auto Gated Clock Conversion                                                     ; Off                ; Off                ;
+; Block Design Naming                                                             ; Auto               ; Auto               ;
+; SDC constraint protection                                                       ; Off                ; Off                ;
+; Synthesis Effort                                                                ; Auto               ; Auto               ;
+; Shift Register Replacement - Allow Asynchronous Clear Signal                    ; On                 ; On                 ;
+; Pre-Mapping Resynthesis Optimization                                            ; Off                ; Off                ;
+; Analysis & Synthesis Message Level                                              ; Medium             ; Medium             ;
+; Disable Register Merging Across Hierarchies                                     ; Auto               ; Auto               ;
+; Resource Aware Inference For Block RAM                                          ; On                 ; On                 ;
+; Automatic Parallel Synthesis                                                    ; On                 ; On                 ;
+; Partial Reconfiguration Bitstream ID                                            ; Off                ; Off                ;
++---------------------------------------------------------------------------------+--------------------+--------------------+
+
+
++------------------------------------------+
+; Parallel Compilation                     ;
++----------------------------+-------------+
+; Processors                 ; Number      ;
++----------------------------+-------------+
+; Number detected on machine ; 8           ;
+; Maximum allowed            ; 4           ;
+;                            ;             ;
+; Average used               ; 1.00        ;
+; Maximum used               ; 4           ;
+;                            ;             ;
+; Usage by Processor         ; % Time Used ;
+;     Processor 1            ; 100.0%      ;
+;     Processor 2            ;   0.0%      ;
+;     Processor 3            ;   0.0%      ;
+;     Processor 4            ;   0.0%      ;
++----------------------------+-------------+
+
+
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+; Analysis & Synthesis Source Files Read                                                                                                                                                      ;
++----------------------------------+-----------------+------------------------------+-----------------------------------------------------------------------------------------------+---------+
+; File Name with User-Entered Path ; Used in Netlist ; File Type                    ; File Name with Absolute Path                                                                  ; Library ;
++----------------------------------+-----------------+------------------------------+-----------------------------------------------------------------------------------------------+---------+
+; ../uart/rtl/uart_pin_scout.sv    ; yes             ; User SystemVerilog HDL File  ; /home/carlos/CI_Digital/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/uart/rtl/uart_pin_scout.sv ;         ;
++----------------------------------+-----------------+------------------------------+-----------------------------------------------------------------------------------------------+---------+
+
+
++--------------------------------------------------------------+
+; Analysis & Synthesis Resource Usage Summary                  ;
++---------------------------------------------+----------------+
+; Resource                                    ; Usage          ;
++---------------------------------------------+----------------+
+; Estimate of Logic utilization (ALMs needed) ; 476            ;
+;                                             ;                ;
+; Combinational ALUT usage for logic          ; 865            ;
+;     -- 7 input functions                    ; 1              ;
+;     -- 6 input functions                    ; 78             ;
+;     -- 5 input functions                    ; 180            ;
+;     -- 4 input functions                    ; 250            ;
+;     -- <=3 input functions                  ; 356            ;
+;                                             ;                ;
+; Dedicated logic registers                   ; 516            ;
+;                                             ;                ;
+; I/O pins                                    ; 99             ;
+;                                             ;                ;
+; Total DSP Blocks                            ; 0              ;
+;                                             ;                ;
+; Maximum fan-out node                        ; CLOCK_50~input ;
+; Maximum fan-out                             ; 516            ;
+; Total fan-out                               ; 4466           ;
+; Average fan-out                             ; 2.77           ;
++---------------------------------------------+----------------+
+
+
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+; Analysis & Synthesis Resource Utilization by Entity                                                                                                                                       ;
++----------------------------+---------------------+---------------------------+-------------------+------------+------+--------------+---------------------+----------------+--------------+
+; Compilation Hierarchy Node ; Combinational ALUTs ; Dedicated Logic Registers ; Block Memory Bits ; DSP Blocks ; Pins ; Virtual Pins ; Full Hierarchy Name ; Entity Name    ; Library Name ;
++----------------------------+---------------------+---------------------------+-------------------+------------+------+--------------+---------------------+----------------+--------------+
+; |uart_pin_scout            ; 865 (865)           ; 516 (516)                 ; 0                 ; 0          ; 99   ; 0            ; |uart_pin_scout     ; uart_pin_scout ; work         ;
++----------------------------+---------------------+---------------------------+-------------------+------------+------+--------------+---------------------+----------------+--------------+
+Note: For table entries with two numbers listed, the numbers in parentheses indicate the number of resources of the given type used by the specific entity alone. The numbers listed outside of parentheses indicate the total resources of the given type used by the specific entity and all of its sub-entities in the hierarchy.
+
+
++---------------------------------------------------------------------------------+
+; Registers Removed During Synthesis                                              ;
++----------------------------------------+----------------------------------------+
+; Register name                          ; Reason for Removal                     ;
++----------------------------------------+----------------------------------------+
+; pin_meta[1,4,10]                       ; Stuck at VCC due to stuck port data_in ;
+; pin_sync[1,4,10]                       ; Stuck at VCC due to stuck port data_in ;
+; edge_cnt[10][0]                        ; Stuck at GND due to stuck port data_in ;
+; edge_cnt[10][1]                        ; Stuck at GND due to stuck port data_in ;
+; edge_cnt[10][2]                        ; Stuck at GND due to stuck port data_in ;
+; edge_cnt[10][3]                        ; Stuck at GND due to stuck port data_in ;
+; edge_cnt[4][0]                         ; Stuck at GND due to stuck port data_in ;
+; edge_cnt[4][1]                         ; Stuck at GND due to stuck port data_in ;
+; edge_cnt[4][2]                         ; Stuck at GND due to stuck port data_in ;
+; edge_cnt[4][3]                         ; Stuck at GND due to stuck port data_in ;
+; edge_cnt[1][0]                         ; Stuck at GND due to stuck port data_in ;
+; edge_cnt[1][1]                         ; Stuck at GND due to stuck port data_in ;
+; edge_cnt[1][2]                         ; Stuck at GND due to stuck port data_in ;
+; edge_cnt[1][3]                         ; Stuck at GND due to stuck port data_in ;
+; pin_low[1,4,10]                        ; Stuck at GND due to stuck port data_in ;
+; byte_idx[4]                            ; Stuck at GND due to stuck port data_in ;
+; Total Number of Removed Registers = 22 ;                                        ;
++----------------------------------------+----------------------------------------+
+
+
++----------------------------------------------------------------------------------------------------------------+
+; Removed Registers Triggering Further Register Optimizations                                                    ;
++---------------+---------------------------+--------------------------------------------------------------------+
+; Register name ; Reason for Removal        ; Registers Removed due to This Register                             ;
++---------------+---------------------------+--------------------------------------------------------------------+
+; pin_meta[1]   ; Stuck at VCC              ; edge_cnt[1][0], edge_cnt[1][1], edge_cnt[1][2], edge_cnt[1][3]     ;
+;               ; due to stuck port data_in ;                                                                    ;
+; pin_meta[4]   ; Stuck at VCC              ; edge_cnt[4][0], edge_cnt[4][1], edge_cnt[4][2], edge_cnt[4][3]     ;
+;               ; due to stuck port data_in ;                                                                    ;
+; pin_meta[10]  ; Stuck at VCC              ; edge_cnt[10][0], edge_cnt[10][1], edge_cnt[10][2], edge_cnt[10][3] ;
+;               ; due to stuck port data_in ;                                                                    ;
+; pin_sync[1]   ; Stuck at VCC              ; pin_low[1]                                                         ;
+;               ; due to stuck port data_in ;                                                                    ;
+; pin_sync[4]   ; Stuck at VCC              ; pin_low[4]                                                         ;
+;               ; due to stuck port data_in ;                                                                    ;
+; pin_sync[10]  ; Stuck at VCC              ; pin_low[10]                                                        ;
+;               ; due to stuck port data_in ;                                                                    ;
++---------------+---------------------------+--------------------------------------------------------------------+
+
+
++------------------------------------------------------+
+; General Register Statistics                          ;
++----------------------------------------------+-------+
+; Statistic                                    ; Value ;
++----------------------------------------------+-------+
+; Total registers                              ; 516   ;
+; Number of registers using Synchronous Clear  ; 78    ;
+; Number of registers using Synchronous Load   ; 3     ;
+; Number of registers using Asynchronous Clear ; 0     ;
+; Number of registers using Asynchronous Load  ; 0     ;
+; Number of registers using Clock Enable       ; 15    ;
+; Number of registers using Preset             ; 0     ;
++----------------------------------------------+-------+
+
+
++-----------------------------------------------------+
+; Inverted Register Statistics                        ;
++-------------------------------------------+---------+
+; Inverted Register                         ; Fan out ;
++-------------------------------------------+---------+
+; pin_sync[0]                               ; 3       ;
+; pin_meta[0]                               ; 3       ;
+; key_sync[0]                               ; 1       ;
+; pin_sync[53]                              ; 3       ;
+; pin_meta[53]                              ; 3       ;
+; pin_sync[54]                              ; 3       ;
+; pin_meta[54]                              ; 3       ;
+; pin_sync[55]                              ; 3       ;
+; pin_meta[55]                              ; 3       ;
+; pin_sync[30]                              ; 3       ;
+; pin_meta[30]                              ; 3       ;
+; pin_sync[34]                              ; 3       ;
+; pin_meta[34]                              ; 3       ;
+; pin_sync[32]                              ; 3       ;
+; pin_meta[32]                              ; 3       ;
+; pin_sync[38]                              ; 3       ;
+; pin_meta[38]                              ; 3       ;
+; pin_sync[36]                              ; 3       ;
+; pin_meta[36]                              ; 3       ;
+; pin_sync[40]                              ; 3       ;
+; pin_meta[40]                              ; 3       ;
+; pin_sync[46]                              ; 3       ;
+; pin_meta[46]                              ; 3       ;
+; pin_sync[42]                              ; 3       ;
+; pin_meta[42]                              ; 3       ;
+; pin_sync[44]                              ; 3       ;
+; pin_meta[44]                              ; 3       ;
+; pin_sync[48]                              ; 3       ;
+; pin_meta[48]                              ; 3       ;
+; pin_sync[50]                              ; 3       ;
+; pin_meta[50]                              ; 3       ;
+; pin_sync[52]                              ; 3       ;
+; pin_meta[52]                              ; 3       ;
+; pin_sync[57]                              ; 3       ;
+; pin_meta[57]                              ; 3       ;
+; pin_sync[58]                              ; 3       ;
+; pin_meta[58]                              ; 3       ;
+; pin_sync[59]                              ; 3       ;
+; pin_meta[59]                              ; 3       ;
+; pin_sync[56]                              ; 3       ;
+; pin_meta[56]                              ; 3       ;
+; pin_sync[33]                              ; 3       ;
+; pin_meta[33]                              ; 3       ;
+; pin_sync[35]                              ; 3       ;
+; pin_meta[35]                              ; 3       ;
+; pin_sync[37]                              ; 3       ;
+; pin_meta[37]                              ; 3       ;
+; pin_sync[39]                              ; 3       ;
+; pin_meta[39]                              ; 3       ;
+; pin_sync[41]                              ; 3       ;
+; pin_meta[41]                              ; 3       ;
+; pin_sync[43]                              ; 3       ;
+; pin_meta[43]                              ; 3       ;
+; pin_sync[29]                              ; 3       ;
+; pin_meta[29]                              ; 3       ;
+; pin_sync[31]                              ; 3       ;
+; pin_meta[31]                              ; 3       ;
+; pin_sync[45]                              ; 3       ;
+; pin_meta[45]                              ; 3       ;
+; pin_sync[47]                              ; 3       ;
+; pin_meta[47]                              ; 3       ;
+; pin_sync[49]                              ; 3       ;
+; pin_meta[49]                              ; 3       ;
+; pin_sync[51]                              ; 3       ;
+; pin_meta[51]                              ; 3       ;
+; pin_sync[61]                              ; 3       ;
+; pin_meta[61]                              ; 3       ;
+; pin_sync[62]                              ; 3       ;
+; pin_meta[62]                              ; 3       ;
+; pin_sync[63]                              ; 3       ;
+; pin_meta[63]                              ; 3       ;
+; pin_sync[60]                              ; 3       ;
+; pin_meta[60]                              ; 3       ;
+; pin_sync[65]                              ; 3       ;
+; pin_meta[65]                              ; 3       ;
+; pin_sync[66]                              ; 3       ;
+; pin_meta[66]                              ; 3       ;
+; pin_sync[67]                              ; 3       ;
+; pin_meta[67]                              ; 3       ;
+; pin_sync[64]                              ; 3       ;
+; pin_meta[64]                              ; 3       ;
+; pin_sync[68]                              ; 3       ;
+; pin_meta[68]                              ; 3       ;
+; pin_sync[69]                              ; 3       ;
+; pin_meta[69]                              ; 3       ;
+; pin_sync[70]                              ; 3       ;
+; pin_meta[70]                              ; 3       ;
+; pin_sync[71]                              ; 3       ;
+; pin_meta[71]                              ; 3       ;
+; pin_sync[16]                              ; 3       ;
+; pin_meta[16]                              ; 3       ;
+; pin_sync[18]                              ; 3       ;
+; pin_meta[18]                              ; 3       ;
+; pin_sync[20]                              ; 3       ;
+; pin_meta[20]                              ; 3       ;
+; pin_sync[22]                              ; 3       ;
+; pin_meta[22]                              ; 3       ;
+; pin_sync[24]                              ; 3       ;
+; pin_meta[24]                              ; 3       ;
+; pin_sync[28]                              ; 3       ;
+; Total number of inverted registers = 140* ;         ;
++-------------------------------------------+---------+
+* Table truncated at 100 items. To change the number of inverted registers reported, set the "Number of Inverted Registers Reported" option under Assignments->Settings->Analysis and Synthesis Settings->More Settings
+
+
++-----------------------------------------------------------------------------------------------------------------------------------------------+
+; Multiplexer Restructuring Statistics (Restructuring Performed)                                                                                ;
++--------------------+-----------+---------------+----------------------+------------------------+------------+---------------------------------+
+; Multiplexer Inputs ; Bus Width ; Baseline Area ; Area if Restructured ; Saving if Restructured ; Registered ; Example Multiplexer Output      ;
++--------------------+-----------+---------------+----------------------+------------------------+------------+---------------------------------+
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[71][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[70][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[69][2] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[68][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[67][0] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[66][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[65][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[64][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[63][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[62][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[61][1] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[60][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[59][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[58][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[57][0] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[56][0] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[55][2] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[54][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[53][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[52][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[51][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[50][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[49][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[48][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[47][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[46][0] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[45][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[44][0] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[43][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[42][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[41][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[40][2] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[39][0] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[38][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[37][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[36][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[35][0] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[34][0] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[33][0] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[32][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[31][0] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[30][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[29][0] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[28][0] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[27][1] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[26][0] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[25][1] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[24][0] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[23][0] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[22][0] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[21][0] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[20][0] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[19][2] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[18][0] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[17][0] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[16][0] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[15][0] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[14][0] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[13][0] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[12][0] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[11][3] ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[9][0]  ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[8][3]  ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[7][0]  ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[6][3]  ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[5][0]  ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[3][3]  ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[2][0]  ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |uart_pin_scout|edge_cnt[0][2]  ;
+; 46:1               ; 2 bits    ; 60 LEs        ; 60 LEs               ; 0 LEs                  ; No         ; |uart_pin_scout|found_idx       ;
+; 62:1               ; 2 bits    ; 82 LEs        ; 82 LEs               ; 0 LEs                  ; No         ; |uart_pin_scout|found_idx       ;
++--------------------+-----------+---------------+----------------------+------------------------+------------+---------------------------------+
+
+
++--------------------------------------------------------------------------------+
+; Parameter Settings for User Entity Instance: Top-level Entity: |uart_pin_scout ;
++----------------+----------+----------------------------------------------------+
+; Parameter Name ; Value    ; Type                                               ;
++----------------+----------+----------------------------------------------------+
+; CLK_FREQ_HZ    ; 50000000 ; Signed Integer                                     ;
+; BAUD_RATE      ; 115200   ; Signed Integer                                     ;
++----------------+----------+----------------------------------------------------+
+Note: In order to hide this table in the UI and the text report file, please set the "Show Parameter Settings in Synthesis Report" option in "Analysis and Synthesis Settings -> More Settings" to "Off".
+
+
++-----------------------------------------------------+
+; Post-Synthesis Netlist Statistics for Top Partition ;
++-----------------------+-----------------------------+
+; Type                  ; Count                       ;
++-----------------------+-----------------------------+
+; arriav_ff             ; 516                         ;
+;     ENA               ; 15                          ;
+;     SCLR              ; 78                          ;
+;     SLD               ; 3                           ;
+;     plain             ; 420                         ;
+; arriav_io_obuf        ; 36                          ;
+; arriav_lcell_comb     ; 866                         ;
+;     arith             ; 19                          ;
+;         1 data inputs ; 18                          ;
+;         2 data inputs ; 1                           ;
+;     extend            ; 1                           ;
+;         7 data inputs ; 1                           ;
+;     normal            ; 846                         ;
+;         0 data inputs ; 1                           ;
+;         1 data inputs ; 73                          ;
+;         2 data inputs ; 100                         ;
+;         3 data inputs ; 164                         ;
+;         4 data inputs ; 250                         ;
+;         5 data inputs ; 180                         ;
+;         6 data inputs ; 78                          ;
+; boundary_port         ; 99                          ;
+;                       ;                             ;
+; Max LUT depth         ; 10.00                       ;
+; Average LUT depth     ; 4.62                        ;
++-----------------------+-----------------------------+
+
+
++-------------------------------+
+; Elapsed Time Per Partition    ;
++----------------+--------------+
+; Partition Name ; Elapsed Time ;
++----------------+--------------+
+; Top            ; 00:00:02     ;
++----------------+--------------+
+
+
++-------------------------------+
+; Analysis & Synthesis Messages ;
++-------------------------------+
+Info: *******************************************************************
+Info: Running Quartus Prime Analysis & Synthesis
+    Info: Version 25.1std.0 Build 1129 10/21/2025 SC Lite Edition
+    Info: Processing started: Sat Sep 12 11:39:47 2026
+Info: Command: quartus_map --read_settings_files=on --write_settings_files=off uart_scout -c uart_scout
+Warning (18236): Number of processors has not been specified which may cause overloading on shared machines.  Set the global assignment NUM_PARALLEL_PROCESSORS in your QSF to an appropriate value for best performance.
+Info (20030): Parallel compilation is enabled and will use 4 of the 4 processors detected
+Info (12021): Found 1 design units, including 1 entities, in source file /home/carlos/CI_Digital/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/uart/rtl/uart_pin_scout.sv
+    Info (12023): Found entity 1: uart_pin_scout File: /home/carlos/CI_Digital/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/uart/rtl/uart_pin_scout.sv Line: 36
+Info (12127): Elaborating entity "uart_pin_scout" for the top level hierarchy
+Warning (10036): Verilog HDL or VHDL warning at uart_pin_scout.sv(172): object "rx_hi" assigned a value but never read File: /home/carlos/CI_Digital/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/uart/rtl/uart_pin_scout.sv Line: 172
+Warning (10036): Verilog HDL or VHDL warning at uart_pin_scout.sv(172): object "rx_lo" assigned a value but never read File: /home/carlos/CI_Digital/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/uart/rtl/uart_pin_scout.sv Line: 172
+Warning (13034): The following nodes have both tri-state and non-tri-state drivers
+    Warning (13035): Inserted always-enabled tri-state buffer between "GPIO_0[1]" and its non-tri-state driver. File: /home/carlos/CI_Digital/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/uart/rtl/uart_pin_scout.sv Line: 42
+    Warning (13035): Inserted always-enabled tri-state buffer between "GPIO_0[4]" and its non-tri-state driver. File: /home/carlos/CI_Digital/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/uart/rtl/uart_pin_scout.sv Line: 42
+    Warning (13035): Inserted always-enabled tri-state buffer between "GPIO_0[10]" and its non-tri-state driver. File: /home/carlos/CI_Digital/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/uart/rtl/uart_pin_scout.sv Line: 42
+Warning (13009): TRI or OPNDRN buffers permanently enabled
+    Warning (13010): Node "GPIO_0[1]~synth" File: /home/carlos/CI_Digital/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/uart/rtl/uart_pin_scout.sv Line: 42
+    Warning (13010): Node "GPIO_0[4]~synth" File: /home/carlos/CI_Digital/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/uart/rtl/uart_pin_scout.sv Line: 42
+    Warning (13010): Node "GPIO_0[10]~synth" File: /home/carlos/CI_Digital/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/uart/rtl/uart_pin_scout.sv Line: 42
+Warning (13024): Output pins are stuck at VCC or GND
+    Warning (13410): Pin "LEDR[7]" is stuck at GND File: /home/carlos/CI_Digital/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/uart/rtl/uart_pin_scout.sv Line: 44
+Info (286030): Timing-Driven Synthesis is running
+Info (144001): Generated suppressed messages file /home/carlos/CI_Digital/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus_uart_scout/output_files/uart_scout.map.smsg
+Info (16010): Generating hard_block partition "hard_block:auto_generated_inst"
+    Info (16011): Adding 0 node(s), including 0 DDIO, 0 PLL, 0 transceiver and 0 LCELL
+Warning (21074): Design contains 1 input pin(s) that do not drive logic
+    Warning (15610): No output dependent on input pin "KEY[1]" File: /home/carlos/CI_Digital/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/uart/rtl/uart_pin_scout.sv Line: 41
+Info (21057): Implemented 1035 device resources after synthesis - the final resource count might be different
+    Info (21058): Implemented 39 input pins
+    Info (21059): Implemented 24 output pins
+    Info (21060): Implemented 36 bidirectional pins
+    Info (21061): Implemented 936 logic cells
+Info: Quartus Prime Analysis & Synthesis was successful. 0 errors, 15 warnings
+    Info: Peak virtual memory: 481 megabytes
+    Info: Processing ended: Sat Sep 12 11:39:59 2026
+    Info: Elapsed time: 00:00:12
+    Info: Total CPU time (on all processors): 00:00:27
+
+
++------------------------------------------+
+; Analysis & Synthesis Suppressed Messages ;
++------------------------------------------+
+The suppressed messages can be found in /home/carlos/CI_Digital/CI-Digital-PBL---Circuitos-Digitais-IV/RTL/quartus_uart_scout/output_files/uart_scout.map.smsg.
+
+

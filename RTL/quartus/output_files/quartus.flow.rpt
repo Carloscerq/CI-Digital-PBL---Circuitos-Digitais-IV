@@ -1,5 +1,5 @@
 Flow report for quartus
-Thu Sep 10 11:05:31 2026
+Sat Sep 26 10:30:35 2026
 Quartus Prime Version 25.1std.0 Build 1129 10/21/2025 SC Lite Edition
 
 
@@ -41,19 +41,19 @@ on the Quartus Prime software download page.
 +-----------------------------------------------------------------------------------+
 ; Flow Summary                                                                      ;
 +---------------------------------+-------------------------------------------------+
-; Flow Status                     ; Successful - Thu Sep 10 11:05:31 2026           ;
+; Flow Status                     ; Successful - Sat Sep 26 10:30:35 2026           ;
 ; Quartus Prime Version           ; 25.1std.0 Build 1129 10/21/2025 SC Lite Edition ;
 ; Revision Name                   ; quartus                                         ;
-; Top-level Entity Name           ; top_system                                      ;
+; Top-level Entity Name           ; top_system_de0cv                                ;
 ; Family                          ; Cyclone V                                       ;
 ; Device                          ; 5CEBA4F23C7                                     ;
 ; Timing Models                   ; Final                                           ;
-; Logic utilization (in ALMs)     ; 9,321 / 18,480 ( 50 % )                         ;
-; Total registers                 ; 15694                                           ;
-; Total pins                      ; 17 / 224 ( 8 % )                                ;
+; Logic utilization (in ALMs)     ; 11,646 / 18,480 ( 63 % )                        ;
+; Total registers                 ; 18402                                           ;
+; Total pins                      ; 43 / 224 ( 19 % )                               ;
 ; Total virtual pins              ; 0                                               ;
-; Total block memory bits         ; 735,928 / 3,153,920 ( 23 % )                    ;
-; Total DSP Blocks                ; 34 / 66 ( 52 % )                                ;
+; Total block memory bits         ; 783,032 / 3,153,920 ( 25 % )                    ;
+; Total DSP Blocks                ; 46 / 66 ( 70 % )                                ;
 ; Total HSSI RX PCSs              ; 0                                               ;
 ; Total HSSI PMA RX Deserializers ; 0                                               ;
 ; Total HSSI TX PCSs              ; 0                                               ;
@@ -68,35 +68,35 @@ on the Quartus Prime software download page.
 +-------------------+---------------------+
 ; Option            ; Setting             ;
 +-------------------+---------------------+
-; Start date & time ; 09/10/2026 11:02:32 ;
+; Start date & time ; 09/26/2026 10:21:31 ;
 ; Main task         ; Compilation         ;
 ; Revision Name     ; quartus             ;
 +-------------------+---------------------+
 
 
-+------------------------------------------------------------------------------------------------------------------------------------------------+
-; Flow Non-Default Global Settings                                                                                                               ;
-+-------------------------------------+----------------------------------------+---------------+-------------+-----------------------------------+
-; Assignment Name                     ; Value                                  ; Default Value ; Entity Name ; Section Id                        ;
-+-------------------------------------+----------------------------------------+---------------+-------------+-----------------------------------+
-; COMPILER_SIGNATURE_ID               ; 207591227786016.178904895206453        ; --            ; --          ; --                                ;
-; EDA_GENERATE_FUNCTIONAL_NETLIST     ; Off                                    ; --            ; --          ; eda_board_design_timing           ;
-; EDA_GENERATE_FUNCTIONAL_NETLIST     ; Off                                    ; --            ; --          ; eda_board_design_boundary_scan    ;
-; EDA_GENERATE_FUNCTIONAL_NETLIST     ; Off                                    ; --            ; --          ; eda_board_design_signal_integrity ;
-; EDA_GENERATE_FUNCTIONAL_NETLIST     ; Off                                    ; --            ; --          ; eda_board_design_symbol           ;
-; EDA_OUTPUT_DATA_FORMAT              ; Systemverilog Hdl                      ; --            ; --          ; eda_simulation                    ;
-; EDA_SIMULATION_TOOL                 ; QuestaSim (SystemVerilog)              ; <None>        ; --          ; --                                ;
-; EDA_TIME_SCALE                      ; 1 ps                                   ; --            ; --          ; eda_simulation                    ;
-; MAX_CORE_JUNCTION_TEMP              ; 85                                     ; --            ; --          ; --                                ;
-; MIN_CORE_JUNCTION_TEMP              ; 0                                      ; --            ; --          ; --                                ;
-; PARTITION_COLOR                     ; -- (Not supported for targeted family) ; --            ; top_system  ; Top                               ;
-; PARTITION_FITTER_PRESERVATION_LEVEL ; -- (Not supported for targeted family) ; --            ; top_system  ; Top                               ;
-; PARTITION_NETLIST_TYPE              ; -- (Not supported for targeted family) ; --            ; top_system  ; Top                               ;
-; POWER_BOARD_THERMAL_MODEL           ; None (CONSERVATIVE)                    ; --            ; --          ; --                                ;
-; POWER_PRESET_COOLING_SOLUTION       ; 23 MM HEAT SINK WITH 200 LFPM AIRFLOW  ; --            ; --          ; --                                ;
-; PROJECT_OUTPUT_DIRECTORY            ; output_files                           ; --            ; --          ; --                                ;
-; TOP_LEVEL_ENTITY                    ; top_system                             ; quartus       ; --          ; --                                ;
-+-------------------------------------+----------------------------------------+---------------+-------------+-----------------------------------+
++-----------------------------------------------------------------------------------------------------------------------------------------------------+
+; Flow Non-Default Global Settings                                                                                                                    ;
++-------------------------------------+----------------------------------------+---------------+------------------+-----------------------------------+
+; Assignment Name                     ; Value                                  ; Default Value ; Entity Name      ; Section Id                        ;
++-------------------------------------+----------------------------------------+---------------+------------------+-----------------------------------+
+; COMPILER_SIGNATURE_ID               ; 40607208329113.179042889153395         ; --            ; --               ; --                                ;
+; EDA_GENERATE_FUNCTIONAL_NETLIST     ; Off                                    ; --            ; --               ; eda_board_design_timing           ;
+; EDA_GENERATE_FUNCTIONAL_NETLIST     ; Off                                    ; --            ; --               ; eda_board_design_boundary_scan    ;
+; EDA_GENERATE_FUNCTIONAL_NETLIST     ; Off                                    ; --            ; --               ; eda_board_design_signal_integrity ;
+; EDA_GENERATE_FUNCTIONAL_NETLIST     ; Off                                    ; --            ; --               ; eda_board_design_symbol           ;
+; EDA_OUTPUT_DATA_FORMAT              ; Systemverilog Hdl                      ; --            ; --               ; eda_simulation                    ;
+; EDA_SIMULATION_TOOL                 ; QuestaSim (SystemVerilog)              ; <None>        ; --               ; --                                ;
+; EDA_TIME_SCALE                      ; 1 ps                                   ; --            ; --               ; eda_simulation                    ;
+; MAX_CORE_JUNCTION_TEMP              ; 85                                     ; --            ; --               ; --                                ;
+; MIN_CORE_JUNCTION_TEMP              ; 0                                      ; --            ; --               ; --                                ;
+; PARTITION_COLOR                     ; -- (Not supported for targeted family) ; --            ; top_system_de0cv ; Top                               ;
+; PARTITION_FITTER_PRESERVATION_LEVEL ; -- (Not supported for targeted family) ; --            ; top_system_de0cv ; Top                               ;
+; PARTITION_NETLIST_TYPE              ; -- (Not supported for targeted family) ; --            ; top_system_de0cv ; Top                               ;
+; POWER_BOARD_THERMAL_MODEL           ; None (CONSERVATIVE)                    ; --            ; --               ; --                                ;
+; POWER_PRESET_COOLING_SOLUTION       ; 23 MM HEAT SINK WITH 200 LFPM AIRFLOW  ; --            ; --               ; --                                ;
+; PROJECT_OUTPUT_DIRECTORY            ; output_files                           ; --            ; --               ; --                                ;
+; TOP_LEVEL_ENTITY                    ; top_system_de0cv                       ; quartus       ; --               ; --                                ;
++-------------------------------------+----------------------------------------+---------------+------------------+-----------------------------------+
 
 
 +--------------------------------------------------------------------------------------------------------------------------+
@@ -104,26 +104,26 @@ on the Quartus Prime software download page.
 +----------------------+--------------+-------------------------+---------------------+------------------------------------+
 ; Module Name          ; Elapsed Time ; Average Processors Used ; Peak Virtual Memory ; Total CPU Time (on all processors) ;
 +----------------------+--------------+-------------------------+---------------------+------------------------------------+
-; Analysis & Synthesis ; 00:00:38     ; 2.6                     ; 1046 MB             ; 00:01:08                           ;
-; Fitter               ; 00:01:56     ; 2.0                     ; 2855 MB             ; 00:05:27                           ;
-; Assembler            ; 00:00:04     ; 1.0                     ; 686 MB              ; 00:00:04                           ;
-; Timing Analyzer      ; 00:00:11     ; 6.2                     ; 1260 MB             ; 00:00:53                           ;
-; EDA Netlist Writer   ; 00:00:03     ; 1.0                     ; 863 MB              ; 00:00:02                           ;
-; Total                ; 00:02:52     ; --                      ; --                  ; 00:07:34                           ;
+; Analysis & Synthesis ; 00:02:08     ; 1.4                     ; 1068 MB             ; 00:02:41                           ;
+; Fitter               ; 00:05:34     ; 1.4                     ; 2177 MB             ; 00:13:25                           ;
+; Assembler            ; 00:00:11     ; 1.0                     ; 721 MB              ; 00:00:11                           ;
+; Timing Analyzer      ; 00:00:45     ; 2.9                     ; 1304 MB             ; 00:02:04                           ;
+; EDA Netlist Writer   ; 00:00:08     ; 1.0                     ; 913 MB              ; 00:00:08                           ;
+; Total                ; 00:08:46     ; --                      ; --                  ; 00:18:29                           ;
 +----------------------+--------------+-------------------------+---------------------+------------------------------------+
 
 
-+---------------------------------------------------------------------------------+
-; Flow OS Summary                                                                 ;
-+----------------------+------------------+---------+------------+----------------+
-; Module Name          ; Machine Hostname ; OS Name ; OS Version ; Processor type ;
-+----------------------+------------------+---------+------------+----------------+
-; Analysis & Synthesis ; ubuntu           ; Ubuntu  ; 26         ; x86_64         ;
-; Fitter               ; ubuntu           ; Ubuntu  ; 26         ; x86_64         ;
-; Assembler            ; ubuntu           ; Ubuntu  ; 26         ; x86_64         ;
-; Timing Analyzer      ; ubuntu           ; Ubuntu  ; 26         ; x86_64         ;
-; EDA Netlist Writer   ; ubuntu           ; Ubuntu  ; 26         ; x86_64         ;
-+----------------------+------------------+---------+------------+----------------+
++-------------------------------------------------------------------------------------+
+; Flow OS Summary                                                                     ;
++----------------------+----------------------+---------+------------+----------------+
+; Module Name          ; Machine Hostname     ; OS Name ; OS Version ; Processor type ;
++----------------------+----------------------+---------+------------+----------------+
+; Analysis & Synthesis ; carlos-ThinkPad-T480 ; Ubuntu  ; 24         ; x86_64         ;
+; Fitter               ; carlos-ThinkPad-T480 ; Ubuntu  ; 24         ; x86_64         ;
+; Assembler            ; carlos-ThinkPad-T480 ; Ubuntu  ; 24         ; x86_64         ;
+; Timing Analyzer      ; carlos-ThinkPad-T480 ; Ubuntu  ; 24         ; x86_64         ;
+; EDA Netlist Writer   ; carlos-ThinkPad-T480 ; Ubuntu  ; 24         ; x86_64         ;
++----------------------+----------------------+---------+------------+----------------+
 
 
 ------------

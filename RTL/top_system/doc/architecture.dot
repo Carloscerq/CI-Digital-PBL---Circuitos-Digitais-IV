@@ -1,0 +1,84 @@
+digraph arch {
+  graph [rankdir=TB, fontname="Helvetica", fontsize=12, bgcolor="white", pad=0.3, nodesep=0.35, ranksep=0.45, compound=true,
+         label="Condition monitoring pipeline — host PC ⇄ DE0-CV (Cyclone V)", labelloc=t, fontsize=18];
+  node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=11, fillcolor="#ffffff", color="#555555"];
+  edge  [fontname="Helvetica", fontsize=9, color="#444444"];
+
+  subgraph cluster_host {
+    label="Host PC  (Scripts/fpga_host)"; style="rounded,filled"; fillcolor="#e8f1fb"; color="#4a7bb7";
+    dataset  [label="dataset_q915\nQ9.15 captures\n4× vib, current, 2× temp", shape=cylinder, fillcolor="#d6e6f7"];
+    link     [label="fpga_uart_link.py\nFrameStream · AuxAggregator\npacing · logging"];
+    cli      [label="stream_scenario.py\nrun_schedule.py"];
+    server   [label="bench_server.py\nserial I/O thread\nverdict scoring\n/api/state"];
+    dash     [label="dashboard/index.html\n(browser, :8050)", fillcolor="#d6e6f7"];
+    dataset -> link;
+    cli -> link [label="uses"];
+    server -> link [label="uses"];
+    server -> dash [label="HTTP poll 1 s"];
+  }
+
+  usb [label="CP2102\nUSB-UART 3.3 V\n115200 8N1", shape=component, fillcolor="#fff4d6", color="#b08a2e"];
+
+  subgraph cluster_board {
+    label="top_system_de0cv  (board wrapper · synthesis top)"; style="rounded,filled"; fillcolor="#f3f3f3"; color="#777777";
+
+    snoop  [label="snoop UART RX\nbyte counter (B)", fillcolor="#fde9e7"];
+    telem  [label="telemetry TX  ~500 ms\nB E S F A M N C K", fillcolor="#fde9e7"];
+    io     [label="KEY/SW reset\nLEDR[9:0] · HEX3..0", shape=note, fillcolor="#fde9e7"];
+
+    subgraph cluster_top {
+      label="top_system  (50 MHz)"; style="rounded,filled"; fillcolor="#eaf6ea"; color="#4d9a4d";
+
+      subgraph cluster_ing {
+        label="sensor_ingestion_subsystem"; style="rounded"; color="#4d9a4d";
+        urx   [label="baudrate + UART receiver"];
+        frx   [label="uart_sensor_frame_rx\n24-B frame: A5 5A | 7×24 b | XOR"];
+        fifo  [label="elastic_fifo\n(vibration)"];
+        urx -> frx -> fifo;
+      }
+
+      subgraph cluster_dsp {
+        label="dsp_preprocessing_subsystem"; style="rounded"; color="#4d9a4d";
+        fft  [label="4-ch shared FFT pipeline\n(decimator opt. · LMS / no-LMS)"];
+        skid [label="skid_buffer"];
+        fft -> skid;
+      }
+
+      subgraph cluster_mlp {
+        label="mlp_inference_path  (snoop)"; style="rounded"; color="#4d9a4d";
+        mdc  [label="fft_peak_mdc"];
+        col  [label="fft_to_mlp_collector\n+ aux (current, temps)"];
+        mlp  [label="MLP", fillcolor="#d9efd9"];
+        mdc -> col -> mlp;
+      }
+
+      subgraph cluster_cnn {
+        label="cnn_inference_path  (owns ready)"; style="rounded"; color="#4d9a4d";
+        ad   [label="fft_to_stream_adapter\n×4"];
+        spec [label="spectrogram_generator\n×4"];
+        join [label="spectrogram_4ch_join"];
+        pp   [label="frame_pingpong_buffer"];
+        cnn  [label="cnn_top", fillcolor="#d9efd9"];
+        ad -> spec -> join -> pp -> cnn;
+      }
+
+      arb [label="inference_arbiter\nstatus · fault mask · alert", fillcolor="#d9efd9"];
+
+      fifo -> fft  [label="vib samples"];
+      frx  -> col  [label="aux words", style=dashed];
+      skid -> mdc  [label="FFT beats"];
+      skid -> ad   [label="FFT beats\n(shared accept)"];
+      mlp  -> arb  [label="class / 2048 frames"];
+      cnn  -> arb  [label="class / 65536 frames"];
+    }
+  }
+
+  link -> usb  [label="sensor frames\n480 fr/s", color="#2f6db5", fontcolor="#2f6db5", penwidth=1.6];
+  usb  -> urx  [label="GPIO_1[4]", color="#2f6db5", fontcolor="#2f6db5", penwidth=1.6];
+  usb  -> snoop [color="#2f6db5", style=dashed];
+  arb  -> telem [label="S F A M N C K"];
+  arb  -> io;
+  snoop -> telem;
+  telem -> usb [label="GPIO_0[4]", color="#b5412f", fontcolor="#b5412f", penwidth=1.6, constraint=false];
+  usb -> server [label="telemetry lines", color="#b5412f", fontcolor="#b5412f", penwidth=1.6, constraint=false];
+}

@@ -41,3 +41,7 @@ waves.shm/
 xcelium.d/
 xrun.history
 xrun.log
+
+# UART host driver logs (Scripts/fpga_host)
+Scripts/fpga_host/logs/
+Scripts/fpga_host/__pycache__/

@@ -1,0 +1,12 @@
+# Example schedule for run_schedule.py --schedule-file bench_example.txt
+# One entry per line: <scenario> <seconds>. '#' starts a comment.
+# With DECIM_RATE = 32 the fabric needs 136.5 s of frames per CNN verdict at
+# 115200 baud, so give each entry at least that if you want a CNN verdict
+# from every scenario, not just the MLP's (one every 4.3 s).
+
+0Nm_Normal              300
+0Nm_BPFI_03             300
+2Nm_Normal              300
+4Nm_Unbalance_1751mg    300
+0Nm_Misalign_05         300
+4Nm_BPFO_30             300
