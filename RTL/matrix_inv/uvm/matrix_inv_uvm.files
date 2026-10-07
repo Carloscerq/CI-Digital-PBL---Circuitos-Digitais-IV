@@ -1,0 +1,5 @@
+matrix_inv/matrix_inv_ref_pkg.sv
+matrix_inv/matrix_inv.sv
+matrix_inv/uvm/matrix_inv_if.sv
+matrix_inv/uvm/matrix_inv_pkg.sv
+matrix_inv/uvm/tb/matrix_inv_uvm_top.sv
